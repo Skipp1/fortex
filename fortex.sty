@@ -1,0 +1,240 @@
+\RequirePackage{expl3}
+\ProvidesExplPackage{fortex}{2022-02-01} {0.0.3a} {somewhere between Jupyter and WEB}
+
+\RequirePackage {l3keys2e}
+
+% fancyvrb is required to write stuff to file & to define custom verb environment
+\RequirePackage{fancyvrb}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Package Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% package options
+\keys_define:nn {fortex} {
+	% print code to console
+	verbose .bool_set:N = \l_fortex_verbose_bool,
+	verbose .default:n  = { true },
+	verbose .initial:n  = { false },
+	
+	% what backend to make the pdf
+	print .tl_set:N  = \l_fortex_preprintend_str,
+	print .default:n = { listings },
+	print .initial:n = { listings },
+	
+	% what language we talkn
+	language .tl_set:N  = \l_fortex_lang_str,
+	language .default:n = {text},
+	language .initial:n = {text},
+	
+  %	override extension detection
+	ext .tl_set:N  = \l_fortex_ext_str,
+	ext .initial:n = {},
+	ext .default:n = {},
+}
+\ProcessKeysOptions {fortex}
+
+
+%
+% set alternative printing names
+%
+\msg_new:nnn{fortex}{printend}{Unknown~keyval~"print=#1".~defaulting~to~"print=listings"}
+\str_case_e:nnF {\l_fortex_preprintend_str} {
+	{minted}      {\tl_set:Nn \l_fortex_printend_str {m}}
+	{mint}        {\tl_set:Nn \l_fortex_printend_str {m}}
+	{m}           {\tl_set:Nn \l_fortex_printend_str {m}}
+	
+	{lstlistings} {\tl_set:Nn \l_fortex_printend_str {l}}
+	{lstlisting}  {\tl_set:Nn \l_fortex_printend_str {l}}
+	{listings}    {\tl_set:Nn \l_fortex_printend_str {l}}
+	{listing}     {\tl_set:Nn \l_fortex_printend_str {l}}
+	{lst}         {\tl_set:Nn \l_fortex_printend_str {l}}
+	{l}           {\tl_set:Nn \l_fortex_printend_str {l}}
+}{
+	\tl_set:Nn \l_fortex_printend_str {l}
+	\msg_warning:nnx {fortex} {printend} {\l_fortex_preprintend_str}
+}
+
+
+%
+% load minted or listings
+%
+\str_if_eq:NNTF{\l_fortex_printend_str} {m} {
+	\RequirePackage{minted}
+	% figure out how to remove race conditions so cache need not be false and compilation speeds up
+	\minted@cachefalse
+}{
+	\RequirePackage{listings}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%% Filename Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% guess the file extension if none is provided - default to .txt
+%
+\tl_if_empty:NT {\l_fortex_ext_str} {
+	\msg_new:nnn {fortex} {language} {Unable~to~guess~file~extension~for~"language=#1".~defaulting~to~.txt}
+	\str_case_e:nnF {\l_fortex_lang_str} {
+		{python}      {\tl_set:Nn \l_fortex_ext_str {py} }
+		{fortran}     {\tl_set:Nn \l_fortex_ext_str {f90}}
+		{fortranfixed}{\tl_set:Nn \l_fortex_ext_str {f}  }
+		{bash}        {\tl_set:Nn \l_fortex_ext_str {sh} }
+		{text}        {\tl_set:Nn \l_fortex_ext_str {txt}}
+		{octave}      {\tl_set:Nn \l_fortex_ext_str {m}  }
+		{matlab}      {\tl_set:Nn \l_fortex_ext_str {m}  }
+		{cpp}         {\tl_set:Nn \l_fortex_ext_str {cpp}}
+		{c}           {\tl_set:Nn \l_fortex_ext_str {c}  }
+		{tcl}         {\tl_set:Nn \l_fortex_ext_str {tcl}}
+		{nasm}        {\tl_set:Nn \l_fortex_ext_str {s}  }
+		{makefile}    {\tl_set:Nn \l_fortex_ext_str {mk} }
+		% TODO more language / file extensions relations, but these are all the ones I will use 
+		% myself. Idk if anyone else will use this.
+	}{
+		\tl_set:Nn \l_fortex_ext_str {txt}
+		\msg_warning:nnx {fortex} {language} {\l_fortex_lang_str}
+	} 
+}
+
+
+%
+% build tmp folder
+%
+\tl_set:Nn \l_fortex_tmpfolder_tl {\c_underscore_str fortex- \c_sys_jobname_str}
+
+
+%
+% check if tmp folder exists, and create it if it doesnt / if we can.
+% not gunna lie this is kinda hacky, but LaTeX doesnt support checking if a folder exists.
+% ideally find a better method of doing this.
+%
+% \sys_if_folder_exists:F {       %% this doesnt exist sadly
+%
+\file_if_exist:nF  {\l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp}  {
+
+	\sys_if_shell_unrestricted:TF {
+		\tl_set:Nx \l_tmpa_tl {mkdir~\l_fortex_tmpfolder_tl}
+		\sys_shell_now:x {\exp_not:V {\l_tmpa_tl}}
+	}{
+		% throw a warning that we cannot open out test file & explain how to resolve it
+		\msg_new:nnn   {fortex} {make_folder}
+		{Unable~to~find~folder~"#1"~please~create~it~manually,~
+		  ~or~execute~with~-shell-esc~to~create~automatically}
+		\msg_warning:nnx {fortex} {make_folder} {\l_fortex_tmpfolder_tl}
+	}
+	% create file for next time -- this will cause an error if the folder still does not exist
+	\iow_new:N \l_fortex_testfile_iow
+	\iow_open:Nn \l_fortex_testfile_iow {\l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp}
+	\iow_close:N \l_fortex_testfile_iow
+}
+
+
+%
+% build the tmp filenames - filename increments on every call 
+%
+\int_new:N \l_fortex_namecount_int
+\cs_set:Nn \__fortex_inctmpname: {
+	\int_gincr:N \l_fortex_namecount_int
+	\tl_set:Nn \c_fortex_tmp_filename_tl { \l_fortex_tmpfolder_tl / \c_sys_jobname_str - \int_to_arabic:n{\l_fortex_namecount_int} .tmp}
+}
+
+%
+% build the filename we are going to save the concatinated code segments to
+%
+\tl_set:Nn \c_fortex_out_filename_tl {\c_sys_jobname_str.\l_fortex_ext_str}
+
+
+%%%%%%%%%%%%%%%%%%%% Code Printing %%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% because we need to expand the the args fully - something minted/listings doesnt do
+% it is easier to pass this out to a function and use \exp_args:No
+%
+% bugs: this function is weird, and I have no idea why onn or xnn doesnt work?
+%       but calling \exp_args:No \__inputcode{}{}{} does work?
+%
+\cs_set:Npn \__inputcode:nnn #1#2#3 {
+	\str_if_eq:NNTF{\l_fortex_printend_str} {m} {
+		\inputminted [ #1 ] { #2 } { #3 }
+	}{
+		% listings doesnt support language=text
+		\str_if_eq:NNTF{#2}{text}{
+			\lstinputlisting[#1]{#3}
+		}{
+			\lstinputlisting[language=#2, #1]{#3}
+		}
+	}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%% Code Saving %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% set catcodes required to not mangle the file. 
+%
+\cs_set:Nn \__fortex_setcatcode: {
+	\endlinechar=`\^^J                % fallback to 2ε, expl3 has yet to make an interface that isnt :D
+	\char_set_catcode_other:N \^^J
+	\char_set_catcode_other:N \^^I
+	\char_set_catcode_other:N \       % trailing spaces after \ needed
+	\char_set_catcode_active:N \#
+}
+
+
+%
+% general save code function.
+% this function mainly just performs a concatination of the previous code segment to the new one
+% however as LaTeX does not support opening files in append mode, we need to do a read-write op
+% in order to simulate it
+%
+\bool_new:N \l_fortex_notfirstrun_bool % false by default
+\iow_new:N \c_fortex_outfile_iow
+\cs_set:Nn \__fortex_writecode: {
+	% clear the file on first run
+	\bool_if:nTF {\l_fortex_notfirstrun_bool} {} {
+		\iow_open:Nn {\c_fortex_outfile_iow}{\c_fortex_out_filename_tl}
+		\iow_close:N \c_fortex_outfile_iow
+		\bool_gset_true:N \l_fortex_notfirstrun_bool
+	}
+	
+	\file_get:nnN {\c_fortex_out_filename_tl} {\__fortex_setcatcode:} \l_tmpa_tl
+	\file_get:nnN {\c_fortex_tmp_filename_tl} {\__fortex_setcatcode:} \l_tmpb_tl
+	
+	% print tmpfile to terminal for debugging
+	\bool_if:nT {\l_fortex_verbose_bool}{
+		\iow_term:x {\exp_not:V {\l_tmpb_tl}}
+	}
+	
+	% write what previously was in the file & our new stuff 
+	\iow_open:Nn {\c_fortex_outfile_iow} {\c_fortex_out_filename_tl}
+	\iow_now:Nx \c_fortex_outfile_iow {\exp_not:V \l_tmpa_tl}
+	\iow_now:Nx \c_fortex_outfile_iow {\exp_not:V \l_tmpb_tl}
+	\iow_close:N \c_fortex_outfile_iow
+}
+
+
+%%%%%%%%%%%%%%%%% Interface %%%%%%%%%%%%%%%%%
+
+%
+% keep fortex options seperate from global minted/listings options
+%
+\tl_set:Nn \l_fortex_formatopt_tl {}
+\NewDocumentCommand\setfortex{m}{
+	\tl_set:Nn \l_fortex_formatopt_tl {#1}
+}
+
+%
+% the actual environment (\VerbatimEnvironment is needed to detect the end of the environment)
+%
+\NewDocumentEnvironment{code}{}{%
+	\VerbatimEnvironment
+	\__fortex_inctmpname:
+	% \char_set_catcode_other \^^I has problems in XeLaTeX and pLaTeX due to not using real tab chars?
+	% tex.stackexchange.com/questions/14771
+	% tex.stackexchange.com/questions/58732
+	% tex.stackexchange.com/questions/264461
+	\VerbatimOut [ codes={\char_set_catcode_other:N \^^I} ] {\c_fortex_tmp_filename_tl}
+}{
+	\endVerbatimOut
+% 	\__inputcode:wnn {\l_fortex_formatopt_tl} {\l_fortex_lang_str} {\c_fortex_tmp_filename_tl}
+	\exp_args:No \__inputcode:nnn {\l_fortex_formatopt_tl} {\l_fortex_lang_str} {\c_fortex_tmp_filename_tl}
+	\__fortex_writecode:
+}
