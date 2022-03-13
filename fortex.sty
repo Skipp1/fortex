@@ -1,15 +1,15 @@
-\RequirePackage{expl3}
-\ProvidesExplPackage{fortex}{2022-02-01} {0.0.3a} {somewhere between Jupyter and WEB}
+\RequirePackage { expl3 }
+\ProvidesExplPackage { fortex } { 2022-02-01 } { 0.0.3a } { somewhere between Jupyter and WEB }
 
-\RequirePackage {l3keys2e}
+\RequirePackage { l3keys2e }
 
 % fancyvrb is required to write stuff to file & to define custom verb environment
-\RequirePackage{fancyvrb}
+\RequirePackage { fancyvrb }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Package Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % package options
-\keys_define:nn {fortex} {
+\keys_define:nn { fortex } {
 	% print code to console
 	verbose .bool_set:N = \l_fortex_verbose_bool,
 	verbose .default:n  = { true },
@@ -22,47 +22,50 @@
 	
 	% what language we talkn
 	language .tl_set:N  = \l_fortex_lang_str,
-	language .default:n = {text},
-	language .initial:n = {text},
+	language .default:n = { text },
+	language .initial:n = { text },
 	
   %	override extension detection
 	ext .tl_set:N  = \l_fortex_ext_str,
 	ext .initial:n = {},
 	ext .default:n = {},
 }
-\ProcessKeysOptions {fortex}
+\ProcessKeysOptions { fortex }
 
 
 %
 % set alternative printing names
 %
-\msg_new:nnn{fortex}{printend}{Unknown~keyval~"print=#1".~defaulting~to~"print=listings"}
-\str_case_e:nnF {\l_fortex_preprintend_str} {
-	{minted}      {\tl_set:Nn \l_fortex_printend_str {m}}
-	{mint}        {\tl_set:Nn \l_fortex_printend_str {m}}
-	{m}           {\tl_set:Nn \l_fortex_printend_str {m}}
-	
-	{lstlistings} {\tl_set:Nn \l_fortex_printend_str {l}}
-	{lstlisting}  {\tl_set:Nn \l_fortex_printend_str {l}}
-	{listings}    {\tl_set:Nn \l_fortex_printend_str {l}}
-	{listing}     {\tl_set:Nn \l_fortex_printend_str {l}}
-	{lst}         {\tl_set:Nn \l_fortex_printend_str {l}}
-	{l}           {\tl_set:Nn \l_fortex_printend_str {l}}
+\msg_new:nnn { fortex } { printend } {
+	Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
+}
+
+\str_case_e:nnF { \l_fortex_preprintend_str} {
+	{minted}      { \tl_set:Nn \l_fortex_printend_str {mint} }
+	{mint}        { \tl_set:Nn \l_fortex_printend_str {mint} }
+	{m}           { \tl_set:Nn \l_fortex_printend_str {mint} }
+
+	{lstlistings} { \tl_set:Nn \l_fortex_printend_str {lst} }
+	{lstlisting}  { \tl_set:Nn \l_fortex_printend_str {lst} }
+	{listings}    { \tl_set:Nn \l_fortex_printend_str {lst} }
+	{listing}     { \tl_set:Nn \l_fortex_printend_str {lst} }
+	{lst}         { \tl_set:Nn \l_fortex_printend_str {lst} }
+	{l}           { \tl_set:Nn \l_fortex_printend_str {lst} }
 }{
-	\tl_set:Nn \l_fortex_printend_str {l}
-	\msg_warning:nnx {fortex} {printend} {\l_fortex_preprintend_str}
+	\tl_set:Nn \l_fortex_printend_str {list}
+	\msg_warning:nnx { fortex } { printend } { \l_fortex_preprintend_str }
 }
 
 
 %
 % load minted or listings
 %
-\str_if_eq:NNTF{\l_fortex_printend_str} {m} {
-	\RequirePackage{minted}
-	% figure out how to remove race conditions so cache need not be false and compilation speeds up
+\str_if_eq:NNTF { \l_fortex_printend_str } { mint } {
+	\RequirePackage { minted }
 	\minted@cachefalse
+	% figure out how to remove race conditions so cache need not be false and compilation speeds up
 }{
-	\RequirePackage{listings}
+	\RequirePackage { listings }
 }
 
 
@@ -71,75 +74,99 @@
 %
 % guess the file extension if none is provided - default to .txt
 %
-\tl_if_empty:NT {\l_fortex_ext_str} {
-	\msg_new:nnn {fortex} {language} {Unable~to~guess~file~extension~for~"language=#1".~defaulting~to~.txt}
-	\str_case_e:nnF {\l_fortex_lang_str} {
-		{python}      {\tl_set:Nn \l_fortex_ext_str {py} }
-		{fortran}     {\tl_set:Nn \l_fortex_ext_str {f90}}
-		{fortranfixed}{\tl_set:Nn \l_fortex_ext_str {f}  }
-		{bash}        {\tl_set:Nn \l_fortex_ext_str {sh} }
-		{text}        {\tl_set:Nn \l_fortex_ext_str {txt}}
-		{octave}      {\tl_set:Nn \l_fortex_ext_str {m}  }
-		{matlab}      {\tl_set:Nn \l_fortex_ext_str {m}  }
-		{cpp}         {\tl_set:Nn \l_fortex_ext_str {cpp}}
-		{c}           {\tl_set:Nn \l_fortex_ext_str {c}  }
-		{tcl}         {\tl_set:Nn \l_fortex_ext_str {tcl}}
-		{nasm}        {\tl_set:Nn \l_fortex_ext_str {s}  }
-		{makefile}    {\tl_set:Nn \l_fortex_ext_str {mk} }
+\tl_if_empty:NT \l_fortex_ext_str {
+	
+	\msg_new:nnn { fortex } { language } {
+		Unable ~ to ~ guess ~ file ~ extension ~ for ~ "language=#1". ~ defaulting ~ to ~ .txt
+	}
+	
+	\str_case_e:nnF { \l_fortex_lang_str } {
+		{python}      { \tl_set:Nn \l_fortex_ext_str {py}  }
+		{fortran}     { \tl_set:Nn \l_fortex_ext_str {f90} }
+		{fortranfixed}{ \tl_set:Nn \l_fortex_ext_str {f}   }
+		{bash}        { \tl_set:Nn \l_fortex_ext_str {sh}  }
+		{text}        { \tl_set:Nn \l_fortex_ext_str {txt} }
+		{octave}      { \tl_set:Nn \l_fortex_ext_str {m}   }
+		{matlab}      { \tl_set:Nn \l_fortex_ext_str {m}   }
+		{cpp}         { \tl_set:Nn \l_fortex_ext_str {cpp} }
+		{c}           { \tl_set:Nn \l_fortex_ext_str {c}   }
+		{tcl}         { \tl_set:Nn \l_fortex_ext_str {tcl} }
+		{nasm}        { \tl_set:Nn \l_fortex_ext_str {s}   }
+		{makefile}    { \tl_set:Nn \l_fortex_ext_str {mk}  }
 		% TODO more language / file extensions relations, but these are all the ones I will use 
 		% myself. Idk if anyone else will use this.
 	}{
-		\tl_set:Nn \l_fortex_ext_str {txt}
-		\msg_warning:nnx {fortex} {language} {\l_fortex_lang_str}
+		% default to .txt if we cannot figure it out
+		\tl_set:Nn \l_fortex_ext_str { txt }
+		\msg_warning:nnx { fortex } { language } { \l_fortex_lang_str }
 	} 
 }
 
 
 %
 % build tmp folder
+% tmpfolder = _fortex-jobname/ 
 %
-\tl_set:Nn \l_fortex_tmpfolder_tl {\c_underscore_str fortex- \c_sys_jobname_str}
+\tl_set:Nn \l_fortex_tmpfolder_tl { \c_underscore_str fortex- \c_sys_jobname_str }
 
 
 %
 % check if tmp folder exists, and create it if it doesnt / if we can.
-% not gunna lie this is kinda hacky, but LaTeX doesnt support checking if a folder exists.
+% not gunna lie this is kinda janky, but LaTeX doesnt support checking if a folder exists.
 % ideally find a better method of doing this.
 %
-% \sys_if_folder_exists:F {       %% this doesnt exist sadly
+% \sys_if_folder_exists:nF {       %% this doesnt exist sadly
 %
-\file_if_exist:nF  {\l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp}  {
+% to do this we check if the text file _fortex-jobname/jobname-0.tmp exists:
+% if it doesn't, maybe the folder doesn't? 
+% if the folder doesn't exist, this will say the same thing as the file not existing
+% 
+% if shell-esc is enabled, we run mkdir and move on.
+% if not we warn the user that the next step may fail and stop the compilation 
+%
+% finally we try writing to the test file. if the folder doesnt exist this will stop the compilation 
+% (we dont have shell-esc permissions to make a folder anyway do no big deal.)
+%
+\file_if_exist:nF { \l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp }  {
 
 	\sys_if_shell_unrestricted:TF {
-		\tl_set:Nx \l_tmpa_tl {mkdir~\l_fortex_tmpfolder_tl}
-		\sys_shell_now:x {\exp_not:V {\l_tmpa_tl}}
+		\sys_shell_now:x {mkdir ~ \l_fortex_tmpfolder_tl}
 	}{
 		% throw a warning that we cannot open out test file & explain how to resolve it
-		\msg_new:nnn   {fortex} {make_folder}
-		{Unable~to~find~folder~"#1"~please~create~it~manually,~
-		  ~or~execute~with~-shell-esc~to~create~automatically}
-		\msg_warning:nnx {fortex} {make_folder} {\l_fortex_tmpfolder_tl}
+		\msg_new:nnn { fortex } { make_folder } {
+			Unable ~ to ~ find ~ folder ~ "#1" ~ please ~ create ~ it ~ manually, ~
+			~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
+		}
+		\msg_warning:nnx { fortex } { make_folder } { \l_fortex_tmpfolder_tl }
 	}
 	% create file for next time -- this will cause an error if the folder still does not exist
-	\iow_new:N \l_fortex_testfile_iow
-	\iow_open:Nn \l_fortex_testfile_iow {\l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp}
-	\iow_close:N \l_fortex_testfile_iow
+	\iow_new:N  \l_fortex_testfile_iow
+	\iow_open:Nn \l_fortex_testfile_iow { \l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp }
+	\iow_close:N  \l_fortex_testfile_iow
+	
 }
 
 
 %
 % build the tmp filenames - filename increments on every call 
 %
-\int_new:N \l_fortex_namecount_int
-\cs_set:Nn \__fortex_inctmpname: {
-	\int_gincr:N \l_fortex_namecount_int
-	\tl_set:Nn \c_fortex_tmp_filename_tl { \l_fortex_tmpfolder_tl / \c_sys_jobname_str - \int_to_arabic:n{\l_fortex_namecount_int} .tmp}
+% first call is 
+% #1 = _fortex-jobname/jobname-1.tmp
+% 
+\int_new:N \l_fortex_inctmpname_namecount_int
+
+\cs_set:Npn \__fortex_inctmpname:N #1 {
+	\int_gincr:N \l_fortex_inctmpname_namecount_int
+	\tl_set:Nn \l_tmpa_tl { \c_sys_jobname_str - \int_to_arabic:n{\l_fortex_inctmpname_namecount_int} .tmp }
+	\tl_gset:Nn #1 { \l_fortex_tmpfolder_tl / \l_tmpa_tl }
 }
 
 %
 % build the filename we are going to save the concatinated code segments to
 %
-\tl_set:Nn \c_fortex_out_filename_tl {\c_sys_jobname_str.\l_fortex_ext_str}
+% jobname.ext
+% 
+\tl_set:Nn \c_fortex_out_filename_tl { \c_sys_jobname_str.\l_fortex_ext_str }
 
 
 %%%%%%%%%%%%%%%%%%%% Code Printing %%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,20 +175,24 @@
 % because we need to expand the the args fully - something minted/listings doesnt do
 % it is easier to pass this out to a function and use \exp_args:No
 %
+% \__inputcode:nnn {printing keys} {langauge} {filename}
+%
 % bugs: this function is weird, and I have no idea why onn or xnn doesnt work?
 %       but calling \exp_args:No \__inputcode{}{}{} does work?
 %
 \cs_set:Npn \__inputcode:nnn #1#2#3 {
-	\str_if_eq:NNTF{\l_fortex_printend_str} {m} {
+	
+	\str_if_eq:NNTF { \l_fortex_printend_str } { mint } {
 		\inputminted [ #1 ] { #2 } { #3 }
 	}{
-		% listings doesnt support language=text
-		\str_if_eq:NNTF{#2}{text}{
-			\lstinputlisting[#1]{#3}
+		\str_if_eq:NNTF { #2 } { text } {
+			% listings doesnt support language=text
+			\lstinputlisting [ #1 ] { #3 }
 		}{
-			\lstinputlisting[language=#2, #1]{#3}
+			\lstinputlisting [ language=#2, #1 ] { #3 }
 		}
 	}
+	
 }
 
 
@@ -170,8 +201,9 @@
 %
 % set catcodes required to not mangle the file. 
 %
+
 \cs_set:Nn \__fortex_setcatcode: {
-	\endlinechar=`\^^J                % fallback to 2ε, expl3 has yet to make an interface that isnt :D
+	\endlinechar=`\^^J                % fallback to 2ε, expl3 has yet to make an interface
 	\char_set_catcode_other:N \^^J
 	\char_set_catcode_other:N \^^I
 	\char_set_catcode_other:N \       % trailing spaces after \ needed
@@ -180,33 +212,47 @@
 
 
 %
-% general save code function.
+% \__fortex_writecode:nn {out_filename} {tmp_filename}
+%
+% save code function.
+%
+% appeand the contents of tmp_filename to out_filename
+% if this is the first call, clear the previous contents of out_filename before appending
+%
 % this function mainly just performs a concatination of the previous code segment to the new one
 % however as LaTeX does not support opening files in append mode, we need to do a read-write op
-% in order to simulate it
+% in order to simulate it 
 %
-\bool_new:N \l_fortex_notfirstrun_bool % false by default
+\bool_const:Nn \l_fortex_firstrun_bool { \c_true_bool }
 \iow_new:N \c_fortex_outfile_iow
-\cs_set:Nn \__fortex_writecode: {
+
+\cs_set:Npn \__fortex_writecode:nn #1#2 {
+	
+	% set to tmp variables as \file_get:nnN doesn't like filename=#1 
+	\str_set:Nx \l_tmpa_str #1
+	\str_set:Nx \l_tmpb_str #2
+	
 	% clear the file on first run
-	\bool_if:nTF {\l_fortex_notfirstrun_bool} {} {
-		\iow_open:Nn {\c_fortex_outfile_iow}{\c_fortex_out_filename_tl}
+	\bool_if:nT { \l_fortex_firstrun_bool } {
+		\iow_term:x { \exp_not:V { \l_fortex_firstrun_bool } }
+		\iow_open:Nn \c_fortex_outfile_iow { \l_tmpa_str }
 		\iow_close:N \c_fortex_outfile_iow
-		\bool_gset_true:N \l_fortex_notfirstrun_bool
+		\bool_gset_false:N \l_fortex_firstrun_bool
 	}
 	
-	\file_get:nnN {\c_fortex_out_filename_tl} {\__fortex_setcatcode:} \l_tmpa_tl
-	\file_get:nnN {\c_fortex_tmp_filename_tl} {\__fortex_setcatcode:} \l_tmpb_tl
+	% read from out_filename and tmp_filename
+	\file_get:nnN { \l_tmpa_str } { \__fortex_setcatcode: } \l_tmpa_tl
+	\file_get:nnN { \l_tmpb_str } { \__fortex_setcatcode: } \l_tmpb_tl
 	
 	% print tmpfile to terminal for debugging
-	\bool_if:nT {\l_fortex_verbose_bool}{
-		\iow_term:x {\exp_not:V {\l_tmpb_tl}}
+	\bool_if:nT { \l_fortex_verbose_bool }{
+		\iow_term:x { \exp_not:V { \l_tmpb_tl } }
 	}
 	
 	% write what previously was in the file & our new stuff 
-	\iow_open:Nn {\c_fortex_outfile_iow} {\c_fortex_out_filename_tl}
-	\iow_now:Nx \c_fortex_outfile_iow {\exp_not:V \l_tmpa_tl}
-	\iow_now:Nx \c_fortex_outfile_iow {\exp_not:V \l_tmpb_tl}
+	\iow_open:Nn \c_fortex_outfile_iow { \l_tmpa_str }
+	\iow_now:Nx  \c_fortex_outfile_iow { \exp_not:V \l_tmpa_tl }
+	\iow_now:Nx  \c_fortex_outfile_iow { \exp_not:V \l_tmpb_tl }
 	\iow_close:N \c_fortex_outfile_iow
 }
 
@@ -215,26 +261,33 @@
 
 %
 % keep fortex options seperate from global minted/listings options
+% (this just gets passed though. But is seperate to allow \mintinline{}{} to behave diffrently 
+% to \begin{code} )
+%
+% default = {}
 %
 \tl_set:Nn \l_fortex_formatopt_tl {}
-\NewDocumentCommand\setfortex{m}{
-	\tl_set:Nn \l_fortex_formatopt_tl {#1}
+
+\NewDocumentCommand \setfortex { m } {
+	\tl_set:Nn \l_fortex_formatopt_tl { #1 }
 }
 
 %
-% the actual environment (\VerbatimEnvironment is needed to detect the end of the environment)
+% the actual environment
 %
-\NewDocumentEnvironment{code}{}{%
+% (\VerbatimEnvironment is needed to detect the end of the environment)
+% 
+%
+\NewDocumentEnvironment { code } {} {%
 	\VerbatimEnvironment
-	\__fortex_inctmpname:
+	\__fortex_inctmpname:N \l_fortex_tmp_filename_tl
 	% \char_set_catcode_other \^^I has problems in XeLaTeX and pLaTeX due to not using real tab chars?
 	% tex.stackexchange.com/questions/14771
 	% tex.stackexchange.com/questions/58732
 	% tex.stackexchange.com/questions/264461
-	\VerbatimOut [ codes={\char_set_catcode_other:N \^^I} ] {\c_fortex_tmp_filename_tl}
+	\VerbatimOut [ codes={\char_set_catcode_other:N \^^I} ] { \l_fortex_tmp_filename_tl }
 }{
 	\endVerbatimOut
-% 	\__inputcode:wnn {\l_fortex_formatopt_tl} {\l_fortex_lang_str} {\c_fortex_tmp_filename_tl}
-	\exp_args:No \__inputcode:nnn {\l_fortex_formatopt_tl} {\l_fortex_lang_str} {\c_fortex_tmp_filename_tl}
-	\__fortex_writecode:
+	\exp_args:No \__inputcode:nnn { \l_fortex_formatopt_tl } \l_fortex_lang_str \l_fortex_tmp_filename_tl
+	\__fortex_writecode:nn {\c_fortex_out_filename_tl} {\l_fortex_tmp_filename_tl}
 }
