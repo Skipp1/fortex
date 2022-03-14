@@ -1,10 +1,11 @@
 \RequirePackage { expl3 }
-\ProvidesExplPackage { fortex } { 2022-02-01 } { 0.0.3a } { somewhere between Jupyter and WEB }
+\ProvidesExplPackage {fortex} {2022-02-01} {0.0.3a} {somewhere between Jupyter and WEB}
 
 \RequirePackage { l3keys2e }
 
 % fancyvrb is required to write stuff to file & to define custom verb environment
 \RequirePackage { fancyvrb }
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Package Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -68,6 +69,30 @@
 	\RequirePackage { listings }
 }
 
+%%%%%%%%%%%%%%%%%%%%%%%%%% Engine Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \char_set_catcode_other \^^I has problems in XeTeX pTeX and uptex due to not using real tab chars?
+% this seems to be resolved by using -8bit
+% tex.stackexchange.com/questions/14771
+% tex.stackexchange.com/questions/58732
+% tex.stackexchange.com/questions/264461
+\bool_if:nT { \l_fortex_verbose_bool } {
+	
+	\msg_new:nnn { fortex } { itab } {
+		#1 ~ has ~ problems ~ printing ~ tabs ~ to ~ files. (tabs ~ may ~ turn ~ into ~ 
+		~ \c_circumflex_str \c_circumflex_str I) ~ Executing ~ with ~ -8bit ~ may ~ fix ~ this.
+	}
+	\str_case_e:nnT { \c_sys_engine_str } {
+		{ xetex  } {}
+		{ eptex  } {}
+		{ euptex } {}
+		{ ptex   } {}
+		{ uptex  } {}
+	} {
+		\msg_warning:nnx { fortex } { itab } { \c_sys_engine_str }
+	}
+	
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%% Filename Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -281,10 +306,7 @@
 \NewDocumentEnvironment { code } {} {%
 	\VerbatimEnvironment
 	\__fortex_inctmpname:N \l_fortex_tmp_filename_tl
-	% \char_set_catcode_other \^^I has problems in XeLaTeX and pLaTeX due to not using real tab chars?
-	% tex.stackexchange.com/questions/14771
-	% tex.stackexchange.com/questions/58732
-	% tex.stackexchange.com/questions/264461
+
 	\VerbatimOut [ codes={\char_set_catcode_other:N \^^I} ] { \l_fortex_tmp_filename_tl }
 }{
 	\endVerbatimOut
