@@ -1,13 +1,14 @@
-\RequirePackage { expl3 }
-\ProvidesExplPackage {fortex} {2022-02-01} {0.0.3a} {somewhere between Jupyter and WEB}
+\RequirePackage[enable-debug]{ expl3 }
+\ProvidesExplPackage {fortex} {2022-02-01} {0.0.4a} {somewhere between Jupyter and WEB}
 
 \RequirePackage { l3keys2e }
 
 % fancyvrb is required to write stuff to file & to define custom verb environment
 \RequirePackage { fancyvrb }
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%% Package Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \debug_on:n {all}
 
 % package options
 \keys_define:nn { fortex } {
@@ -40,7 +41,6 @@
 \msg_new:nnn { fortex } { printend } {
 	Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
 }
-
 \str_case_e:nnF { \l_fortex_preprintend_str} {
 	{minted}      { \tl_set:Nn \l_fortex_printend_str {mint} }
 	{mint}        { \tl_set:Nn \l_fortex_printend_str {mint} }
@@ -58,16 +58,6 @@
 }
 
 
-%
-% load minted or listings
-%
-\str_if_eq:NNTF { \l_fortex_printend_str } { mint } {
-	\RequirePackage { minted }
-	\minted@cachefalse
-	% figure out how to remove race conditions so cache need not be false and compilation speeds up
-}{
-	\RequirePackage { listings }
-}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Engine Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -79,20 +69,143 @@
 \bool_if:nT { \l_fortex_verbose_bool } {
 	
 	\msg_new:nnn { fortex } { itab } {
-		#1 ~ has ~ problems ~ printing ~ tabs ~ to ~ files. (tabs ~ may ~ turn ~ into ~ 
+		#1 ~ has ~ problems ~ printing ~ tabs ~ to ~ files. ~ (tabs ~ may ~ turn ~ into ~ 
 		~ \c_circumflex_str \c_circumflex_str I) ~ Executing ~ with ~ -8bit ~ may ~ fix ~ this.
 	}
 	\str_case_e:nnT { \c_sys_engine_str } {
-		{ xetex  } {}
 		{ eptex  } {}
 		{ euptex } {}
 		{ ptex   } {}
 		{ uptex  } {}
+		{ xetex  } {}
 	} {
 		\msg_warning:nnx { fortex } { itab } { \c_sys_engine_str }
 	}
 	
 }
+ 
+ 
+%%%%%%%%%%%%%%%%%%%% Helper Functions %%%%%%%%%%%%%%%%%%%%%
+
+
+%
+% if LaTeX is used with -output-directory, \sys_shell_now:x {mkdir ...} will ignore it and make
+% it's directory in the .tex directory. However \VerbatimOut will write to the file indicated 
+% by -output-directory. This causes problems if \VerbatimOut tries to write into our newly made 
+% directory.
+%
+% we try to work around this by using a little bit of regex and a quirk of log files:
+% for this example let the command be "latex -output-dir=outdir jobdir/jobname.tex"
+%
+% if there is a .aux file aleady in jobdir/ then the log file will list the lines
+%
+% (/path/to/jobdir/jobname.aux)
+% \openout1 = `jobname.aux'.
+%
+% however if there _IS NOT_ an .aux file already in jobdir/ it is a diffrent story:
+%
+% (/path/to/outdir/jobname.aux)
+% \openout1 = `jobname.aux'.
+%
+% moreover jobname.aux will always have the string
+%
+% /path/to/jobname/jobname.tex
+%
+% from this we can tell if we are running using -output-dir, and if so what -output-dir is   
+%
+% things to note however: 
+% this trick ONLY works if there is not .aux in jobdir/
+% with fortex, we can check if this is a first time run by checking the presence of a test file 
+% but if you are copying this code into your own LaTeX file you will need to make sure that you 
+% have a clean jobdir.
+%
+% also note: this command cannot be executed on setup - very sad, as the .aux log line appears 
+% after most packages are loaded
+% Maybe a hook in the future?
+%
+%
+% also also note: this seems to be crahsing on XeLaTeX:
+% ! Bad register code (32768)
+% A register must be between 0 and 32767
+% TODO: FIXME
+
+\cs_set:Npn \__fortex_outputdir:N #1 {
+		
+	% read log file 
+	\file_get:nnN { \c_sys_jobname_str .log } {
+		\endlinechar=`\^^J
+		\char_set_catcode_other:N \^^J
+	} \l_tmpa_tl
+	
+	% get full path of .aux
+	\exp_args:Nno \regex_extract_once:nnN {\.?/[-\.\w+/]*\.aux} { \l_tmpa_tl } \l_tmpa_seq
+	\seq_pop_left:NN \l_tmpa_seq \l_fortex_realauxpath_tl
+	
+	% get full path of .tex
+	\exp_args:Nno \regex_extract_once:nnN {\.?/[-\.\w+/]*\.tex} { \l_tmpa_tl } \l_tmpa_seq
+	\seq_pop_left:NN \l_tmpa_seq \l_fortex_realtexpath_tl
+	
+	% log file is big so clean up 
+	\tl_clear:N \l_tmpa_tl
+	
+	% strip the filenames off the end of the paths - makes it easier to check if aux is in a diffrent dir 
+	\file_parse_full_name:VNNN {\l_fortex_realauxpath_tl} \l_fortex_realauxpath_tl \l_tmpa_tl \l_tmpa_tl
+	\file_parse_full_name:VNNN {\l_fortex_realtexpath_tl} \l_fortex_realtexpath_tl \l_tmpa_tl \l_tmpa_tl
+	
+	% finally return the location of -output-dir=outdir if we have one, otherwise return nothing
+	\str_if_eq:NNTF { \l_fortex_realauxpath_tl }{ \l_fortex_realtexpath_tl } {
+		\tl_set:Nn #1 {}
+	}{
+		\tl_set:Nn #1 { \l_fortex_realauxpath_tl }
+		\seq_gpush:NV \l_file_search_path_seq { \l_fortex_realauxpath_tl }
+	}
+	
+	\bool_if:NT \l_fortex_verbose_bool {
+		\iow_term:x { .aux path ~ \exp_not:V { \l_fortex_realauxpath_tl } }
+		\iow_term:x { .tex path ~ \exp_not:V { \l_fortex_realtexpath_tl } }
+	}
+}
+
+
+ 
+%%%%%%%%%%%%%%%%%%%% Code Printing %%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% load minted or listings
+%
+\str_if_eq:NNTF { \l_fortex_printend_str } { mint } {
+	\RequirePackage { minted }
+	\minted@cachefalse
+	% figure out how to remove race conditions so cache need not be false and compilation speeds up
+}{
+	\RequirePackage { listings }
+}
+
+
+%
+% because we need to expand the the args fully - something minted/listings doesnt do
+% it is easier to pass this out to a function and use \exp_args:No
+%
+% \__inputcode:nnn {printing keys} {langauge} {filename}
+%
+% bugs: this function is weird, and I have no idea why onn or xnn doesnt work?
+%       but calling \exp_args:No \__inputcode{}{}{} does work?
+%
+\cs_set:Npn \__inputcode:nnn #1#2#3 {
+	
+	\str_if_eq:NNTF { \l_fortex_printend_str } { mint } {
+		\inputminted [ #1 ] { #2 } { #3 }
+	}{
+		\str_if_eq:NNTF { #2 } { text } {
+			% listings doesnt support language=text
+			\lstinputlisting [ #1 ] { #3 }
+		}{
+			\lstinputlisting [ language=#2, #1 ] { #3 }
+		}
+	}
+	
+}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%% Filename Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -118,7 +231,7 @@
 		{tcl}         { \tl_set:Nn \l_fortex_ext_str {tcl} }
 		{nasm}        { \tl_set:Nn \l_fortex_ext_str {s}   }
 		{makefile}    { \tl_set:Nn \l_fortex_ext_str {mk}  }
-		% TODO more language / file extensions relations, but these are all the ones I will use 
+		% need to add more language / file extensions relations, but these are all the ones I will use 
 		% myself. Idk if anyone else will use this.
 	}{
 		% default to .txt if we cannot figure it out
@@ -152,25 +265,34 @@
 % finally we try writing to the test file. if the folder doesnt exist this will stop the compilation 
 % (we dont have shell-esc permissions to make a folder anyway do no big deal.)
 %
-\file_if_exist:nF { \l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp }  {
+\cs_set:Npn \__fortex_mktmpdir: {
 
-	\sys_if_shell_unrestricted:TF {
-		\sys_shell_now:x {mkdir ~ \l_fortex_tmpfolder_tl}
-	}{
-		% throw a warning that we cannot open out test file & explain how to resolve it
-		\msg_new:nnn { fortex } { make_folder } {
-			Unable ~ to ~ find ~ folder ~ "#1" ~ please ~ create ~ it ~ manually, ~
-			~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
+	\file_if_exist:nF { \l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp } {
+		
+		% get the -output-dir flag 
+		% don't run on xetex due to horrible crashing
+ 		\str_if_eq:NNF { \c_sys_engine_str } { xetex } {
+			\__fortex_outputdir:N \l_fortex_outputdir_tl 
 		}
-		\msg_warning:nnx { fortex } { make_folder } { \l_fortex_tmpfolder_tl }
+		
+		\sys_if_shell_unrestricted:TF {
+			\sys_shell_now:x { mkdir ~ \l_fortex_outputdir_tl/\l_fortex_tmpfolder_tl }
+		}{
+			% throw a warning that we cannot open out test file & explain how to resolve it
+			\msg_new:nnn { fortex } { make_folder } {
+				Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it ~ manually, ~
+				~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
+			}
+			\msg_warning:nnx { fortex } { make_folder } { \l_fortex_tmpfolder_tl }
+		}
+		% create file for next time -- this will cause an error if the folder still does not exist
+		\iow_new:N   \l_fortex_testfile_iow
+		\iow_open:Nn \l_fortex_testfile_iow { \l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp }
+		\iow_now:Nx  \l_fortex_testfile_iow { \exp_not:x \l_fortex_outputdir_tl }
+		\iow_close:N \l_fortex_testfile_iow
 	}
-	% create file for next time -- this will cause an error if the folder still does not exist
-	\iow_new:N  \l_fortex_testfile_iow
-	\iow_open:Nn \l_fortex_testfile_iow { \l_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp }
-	\iow_close:N  \l_fortex_testfile_iow
 	
 }
-
 
 %
 % build the tmp filenames - filename increments on every call 
@@ -179,7 +301,6 @@
 % #1 = _fortex-jobname/jobname-1.tmp
 % 
 \int_new:N \l_fortex_inctmpname_namecount_int
-
 \cs_set:Npn \__fortex_inctmpname:N #1 {
 	\int_gincr:N \l_fortex_inctmpname_namecount_int
 	\tl_set:Nn \l_tmpa_tl { \c_sys_jobname_str - \int_to_arabic:n{\l_fortex_inctmpname_namecount_int} .tmp }
@@ -193,33 +314,28 @@
 % 
 \tl_set:Nn \c_fortex_out_filename_tl { \c_sys_jobname_str.\l_fortex_ext_str }
 
+%
+% some setup code that should happen on the first call after everything is loaded
+%
 
-%%%%%%%%%%%%%%%%%%%% Code Printing %%%%%%%%%%%%%%%%%%%%%%%%
+\iow_new:N \c_fortex_outfile_iow
+\bool_const:Nn \l_fortex_firstrun_bool { \c_true_bool }
 
-%
-% because we need to expand the the args fully - something minted/listings doesnt do
-% it is easier to pass this out to a function and use \exp_args:No
-%
-% \__inputcode:nnn {printing keys} {langauge} {filename}
-%
-% bugs: this function is weird, and I have no idea why onn or xnn doesnt work?
-%       but calling \exp_args:No \__inputcode{}{}{} does work?
-%
-\cs_set:Npn \__inputcode:nnn #1#2#3 {
-	
-	\str_if_eq:NNTF { \l_fortex_printend_str } { mint } {
-		\inputminted [ #1 ] { #2 } { #3 }
-	}{
-		\str_if_eq:NNTF { #2 } { text } {
-			% listings doesnt support language=text
-			\lstinputlisting [ #1 ] { #3 }
-		}{
-			\lstinputlisting [ language=#2, #1 ] { #3 }
-		}
+\cs_set:Npn \__fortex_firstcall:N #1 {
+	\bool_if:nT { \l_fortex_firstrun_bool } {
+		
+		% create the tmpfolder
+		\__fortex_mktmpdir:
+		
+		% clear the file on first run
+		\str_set:Nx \l_tmpa_str #1
+		\iow_open:Nn \c_fortex_outfile_iow { \l_tmpa_str }
+		\iow_close:N \c_fortex_outfile_iow
+		
+		% no longer first run
+		\bool_gset_false:N \l_fortex_firstrun_bool
 	}
-	
 }
-
 
 %%%%%%%%%%%%%%%%%%%%% Code Saving %%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -248,22 +364,12 @@
 % however as LaTeX does not support opening files in append mode, we need to do a read-write op
 % in order to simulate it 
 %
-\bool_const:Nn \l_fortex_firstrun_bool { \c_true_bool }
-\iow_new:N \c_fortex_outfile_iow
 
 \cs_set:Npn \__fortex_writecode:nn #1#2 {
 	
 	% set to tmp variables as \file_get:nnN doesn't like filename=#1 
 	\str_set:Nx \l_tmpa_str #1
 	\str_set:Nx \l_tmpb_str #2
-	
-	% clear the file on first run
-	\bool_if:nT { \l_fortex_firstrun_bool } {
-		\iow_term:x { \exp_not:V { \l_fortex_firstrun_bool } }
-		\iow_open:Nn \c_fortex_outfile_iow { \l_tmpa_str }
-		\iow_close:N \c_fortex_outfile_iow
-		\bool_gset_false:N \l_fortex_firstrun_bool
-	}
 	
 	% read from out_filename and tmp_filename
 	\file_get:nnN { \l_tmpa_str } { \__fortex_setcatcode: } \l_tmpa_tl
@@ -301,10 +407,11 @@
 % the actual environment
 %
 % (\VerbatimEnvironment is needed to detect the end of the environment)
-% 
+%  
 %
 \NewDocumentEnvironment { code } {} {%
 	\VerbatimEnvironment
+	\__fortex_firstcall:N \c_fortex_out_filename_tl
 	\__fortex_inctmpname:N \l_fortex_tmp_filename_tl
 
 	\VerbatimOut [ codes={\char_set_catcode_other:N \^^I} ] { \l_fortex_tmp_filename_tl }
