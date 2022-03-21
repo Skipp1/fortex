@@ -1,4 +1,5 @@
-\RequirePackage[enable-debug]{ expl3 }
+\RequirePackage{ expl3 }
+% \RequirePackage[enable-debug]{ expl3 }
 \ProvidesExplPackage {fortex} {2022-02-01} {0.0.4a} {like noweb without external tooling}
 
 \RequirePackage { l3keys2e }
@@ -8,7 +9,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Package Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\debug_on:n {all}
+% \debug_on:n {all}
 
 % package options
 \keys_define:nn { fortex } {
@@ -35,31 +36,6 @@
 \ProcessKeysOptions { fortex }
 
 
-%
-% set alternative printing names
-%
-\tl_new:N \g_fortex_printend_tl
-\msg_new:nnn { fortex } { printend } {
-	Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
-}
-\str_case_e:nnF { \g_fortex_preprintend_tl} {
-	{minted}      { \str_gset:Nn \g_fortex_printend_tl {mint} }
-	{mint}        { \str_gset:Nn \g_fortex_printend_tl {mint} }
-	{m}           { \str_gset:Nn \g_fortex_printend_tl {mint} }
-
-	{lstlistings} { \str_gset:Nn \g_fortex_printend_tl {lst} }
-	{lstlisting}  { \str_gset:Nn \g_fortex_printend_tl {lst} }
-	{listings}    { \str_gset:Nn \g_fortex_printend_tl {lst} }
-	{listing}     { \str_gset:Nn \g_fortex_printend_tl {lst} }
-	{lst}         { \str_gset:Nn \g_fortex_printend_tl {lst} }
-	{l}           { \str_gset:Nn \g_fortex_printend_tl {lst} }
-}{
-	\str_gset:Nn \g_fortex_printend_tl {lst}
-	\msg_warning:nnx { fortex } { printend } { \g_fortex_preprintend_tl }
-}
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%% Engine Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % \char_set_catcode_other \^^I has problems in XeTeX pTeX and uptex due to not using real tab chars?
@@ -82,8 +58,7 @@
 	}
 	
 }
- 
- 
+
 %%%%%%%%%%%%%%%%%%%% Output directory Functions %%%%%%%%%%%%%%%%%%%%%
  
 %
@@ -237,6 +212,30 @@
  
 %%%%%%%%%%%%%%%%%%%% Code Printing %%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%
+% set alternative printing names
+%
+\tl_new:N \g_fortex_printend_tl
+\msg_new:nnn { fortex } { printend } {
+	Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
+}
+\str_case_e:nnF { \g_fortex_preprintend_tl} {
+	{minted}      { \str_gset:Nn \g_fortex_printend_tl {mint} }
+	{mint}        { \str_gset:Nn \g_fortex_printend_tl {mint} }
+	{m}           { \str_gset:Nn \g_fortex_printend_tl {mint} }
+
+	{lstlistings} { \str_gset:Nn \g_fortex_printend_tl {lst} }
+	{lstlisting}  { \str_gset:Nn \g_fortex_printend_tl {lst} }
+	{listings}    { \str_gset:Nn \g_fortex_printend_tl {lst} }
+	{listing}     { \str_gset:Nn \g_fortex_printend_tl {lst} }
+	{lst}         { \str_gset:Nn \g_fortex_printend_tl {lst} }
+	{l}           { \str_gset:Nn \g_fortex_printend_tl {lst} }
+}{
+	\str_gset:Nn \g_fortex_printend_tl {lst}
+	\msg_warning:nnx { fortex } { printend } { \g_fortex_preprintend_tl }
+}
+
 %
 % load minted or listings
 %
@@ -335,7 +334,7 @@
 %
 \cs_set:Npn \__fortex_mktmpdir: {
 
-	\file_if_exist:nF { \c_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp } {
+	\file_if_exist:nF { \g_fortex_outputdir_tl \c_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp } {
 		
 		
 		\sys_if_shell_unrestricted:TF {
@@ -343,8 +342,8 @@
 		}{
 			% throw a warning that we cannot open out test file & explain how to resolve it
 			\msg_new:nnn { fortex } { make_folder } {
-				Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it ~ manually, ~
-				~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
+				Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it \\
+				manually ~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
 			}
 			\msg_warning:nnx { fortex } { make_folder } { \c_fortex_tmpfolder_tl }
 		}
@@ -460,6 +459,7 @@
 
 %%%%%%%%%%%%%%%%% Interface %%%%%%%%%%%%%%%%%
 
+
 %
 % keep fortex options seperate from global minted/listings options
 % (this just gets passed though. But is seperate to allow \mintinline{}{} to behave diffrently 
@@ -479,7 +479,7 @@
 % (\VerbatimEnvironment is needed to detect the end of the environment)
 %  
 %
-\NewDocumentEnvironment { code } {} {%
+\NewDocumentEnvironment { code } {} {
 	\VerbatimEnvironment
 	\__fortex_firstcall:
 	\__fortex_inctmpname:
