@@ -459,6 +459,39 @@
 
 %%%%%%%%%%%%%%%%% Interface %%%%%%%%%%%%%%%%%
 
+%
+% Its often usefull to create an index of all the functions/classes/etc at the bottom of the file.
+% However, its impossible to pass code to search for meaning. 
+%
+% the aim of this macro is to be a wrapper to \index{} that places the arguments in a \verb 
+% environment so functions/etc can contain things like _ and be set in monospace. 
+% (The trick is to keep ! out of the verb)
+%
+% the use of \index{} in this function is expected to be overwritten by makeidx/xindy/etc
+%
+	
+\NewDocumentCommand \vindex { v } {
+	% the \verb delimiters used are ^^a4 ( ¤ in lualatex, € in pdflatex) because I dont know 
+	% of any programming language that uses these in identifiers. (There is probs one, but this
+	% is the best delimiter that works that I can think of)
+	
+	\str_set:Nn \l_fortex_idxvar_str  { #1 }
+	\str_set:Nn \l_fortex_verbstr_str { \verb }
+	\str_set:Nn \l_fortex_verbdelim_str { ^^a4 }
+	
+	\exp_args:Nnno \tl_replace_all:Nnn \l_fortex_idxvar_str {!}
+			{\l_fortex_verbdelim_str!\l_fortex_verbstr_str\l_fortex_verbdelim_str}
+			
+	\tl_set:Nx \l_fortex_idxvar_str { 
+			\exp_not:V { \l_fortex_verbstr_str   }
+			\exp_not:V { \l_fortex_verbdelim_str }
+			\l_fortex_idxvar_str
+			\exp_not:V { \l_fortex_verbdelim_str }
+	}
+	
+	\exp_args:No \index { \l_fortex_idxvar_str }
+}
+
 
 %
 % keep fortex options seperate from global minted/listings options
