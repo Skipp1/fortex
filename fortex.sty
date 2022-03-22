@@ -120,35 +120,52 @@
 % check to see if the value is already cached in aux, as getting the value can be very slow 
 % due to needing to read the large file
 \cs_set:Nn \__fortex_outputdir: {
-	
+
 	% check if it was in cache
 	\tl_if_exist:NTF { \fortex@outputdir } {
 		\tl_gset:Nx \g_fortex_outputdir_tl { \fortex@outputdir }
-	}{
-		% if not found we generate it 
-		% note: xetex has problems with regexing large files
-		% note: lualatex has problems reading from output-dir (no biggie, just fall back on lua extensions)
-		\str_case_e:nn { \c_sys_engine_str } {
-			{ luatex } { \__fortex_outputdir_luaaux: }
-			{ ptex   } { \__fortex_outputdir_aux: }
-			{ pdftex } { \__fortex_outputdir_aux: }
-			{ uptex  } { \__fortex_outputdir_aux: }
-			{ xetex  } { \tl_gset:Nn \g_fortex_outputdir_tl {} }
+		
+		% cache invalidation:
+		% if the code has been run before \g_fortex_outputdir_tl will be cached, but also out test file 
+		% used in \__mktmpdir will be present. If it is not present, then the value in the aux file is 
+		% probs invalid. (or is the user has deleted _fortex-jobname/, but that happens rare enough that 
+		% I dont feel bad invalidating the cache when that happens) 
+		\file_if_exist:nF { \g_fortex_outputdir_tl \c_fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp } {
+			\__fortex_outputdir_aux:
 		}
+		
+	}{
+		\__fortex_outputdir_aux:
 	}
-	
-	% cache to aux 
-	\iow_now:cx { @auxout } {
-		\tl_to_str:N { \gdef\fortex@outputdir } { \exp_not:V { \g_fortex_outputdir_tl } }
-	}
-	
 	\bool_if:NT \g_fortex_verbose_bool {
 		\iow_term:x { -output-dir ~ path: ~ \exp_not:V { \g_fortex_outputdir_tl } }
 	}
 }
 
+%
+% if \g_fortex_outputdir_tl is not in the cache we generate it 
+%
+\cs_set:Nn \__fortex_outputdir_aux: {
+	
+	% note: xetex has problems with regexing large files
+	% note: lualatex has problems reading from output-dir (no biggie, just fall back on lua extensions)
+	\str_case_e:nn { \c_sys_engine_str } {
+		{ luatex } { \__fortex_outputdir_lua_auxi: }
+		{ ptex   } { \__fortex_outputdir_auxi: }
+		{ pdftex } { \__fortex_outputdir_auxi: }
+		{ uptex  } { \__fortex_outputdir_auxi: }
+		{ xetex  } { \tl_gset:Nn \g_fortex_outputdir_tl {} }
+	}	
+	
+	% cache to aux 
+	\iow_now:cx { @auxout } {
+		\tl_to_str:N { \gdef\fortex@outputdir } { \exp_not:V { \g_fortex_outputdir_tl } }
+	}
+}
+
+
 % luatex specific 
-\cs_set:Nn \__fortex_outputdir_luaaux: {
+\cs_set:Nn \__fortex_outputdir_lua_auxi: {
 	
 	% tex.print(arg) returns lualatex -synctex=1 -output-directoty=outdir jobname.tex
 	\tl_set:Nn \l_tmpa_tl { \lua_now:n { tex.print(arg) } }
@@ -168,7 +185,7 @@
 
 
 % the actual function called for all other engines except lualatex
-\cs_set:Nn \__fortex_outputdir_aux: {
+\cs_set:Nn \__fortex_outputdir_auxi: {
 	
 	\tl_new:N \l_fortex_reallogpath_tl
 	\tl_new:N \l_fortex_realtexpath_tl
@@ -475,6 +492,7 @@
 	% of any programming language that uses these in identifiers. (There is probs one, but this
 	% is the best delimiter that works that I can think of)
 	
+	% poor mans verb - catcode_letter 
 	\str_set:Nn \l_fortex_idxvar_str  { #1 }
 	\str_set:Nn \l_fortex_verbstr_str { \verb }
 	\str_set:Nn \l_fortex_verbdelim_str { ^^a4 }
@@ -491,7 +509,6 @@
 	
 	\exp_args:No \index { \l_fortex_idxvar_str }
 }
-
 
 %
 % keep fortex options seperate from global minted/listings options
