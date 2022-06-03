@@ -19,6 +19,7 @@
 %% version 2005/12/01 or later.
 %% 
 \RequirePackage{ expl3 }
+\RequirePackage{ l3benchmark }
 \ProvidesExplPackage {fortex} {2022-03-27} {0.0.5$\alpha$}
 {like noweb without external tooling}
 \RequirePackage { l3keys2e }
@@ -27,15 +28,18 @@
   verbose .bool_gset:N = \g__fortex_verbose_bool,
   verbose .default:n  = { true },
   verbose .initial:n  = { false },
-  print .tl_gset:N  = \g__fortex_preprintend_tl,
+  print .tl_gset:N  = \g__fortex_printend_tl,
   print .default:n = { listings },
   print .initial:n = { listings },
-  language .tl_gset:N  = \g__fortex_lang_tl,
-  language .default:n = { text },
-  language .initial:n = { text },
+  lang .tl_gset:N  = \g__fortex_lang_tl,
+  lang .default:n = { text },
+  lang .initial:n = { text },
   ext .tl_gset:N  = \g__fortex_ext_tl,
   ext .initial:n = {},
   ext .default:n = {},
+  ext .bool_gset:N  = \g__fortex_intext_bool,
+  ext .initial:n = { true },
+  ext .default:n = { false },
 }
 \ProcessKeysOptions { fortex }
 \bool_if:nT { \g__fortex_verbose_bool } {
@@ -66,6 +70,10 @@
   }{
     \__fortex_outputdir_aux:
   }
+  \iow_now:cx { @auxout } {
+     \exp_not:n { \gdef\fortex@outputdir }
+   { \exp_not:V { \g__fortex_outputdir_tl } }
+  }
   \bool_if:NT \g__fortex_verbose_bool {
     \iow_term:x { -output-dir~path:~ \exp_not:V { \g__fortex_outputdir_tl } }
   }
@@ -78,15 +86,11 @@
     { uptex  } { \__fortex_outputdir_auxi: }
     { xetex  } { \tl_gset:Nn \g__fortex_outputdir_tl {} }
   }
-  \iow_now:cx { @auxout } {
-    \tl_to_str:N { \gdef\fortex@outputdir }
-                 { \exp_not:V { \g__fortex_outputdir_tl } }
-  }
 }
 \cs_set:Nn \__fortex_outputdir_lua_auxi: {
   \tl_set:Nn \l_tmpa_tl { \lua_now:n { tex.print(arg) } }
   \exp_args:Nnf \regex_extract_once:nnN
-                {-??output-dir(ectory)?=([-\.\w+/]*)}
+                {--?output-dir(ectory)?=([-\.\w+/]*)}
                 { \l_tmpa_tl } \l_tmpa_seq
   \seq_get_right:NN \l_tmpa_seq \l_tmpa_tl
   \quark_if_no_value:NF \l_tmpa_tl {
@@ -124,33 +128,35 @@
     }
   }
 }
-\tl_new:N \g__fortex_printend_tl
 \msg_new:nnn { fortex } { printend } {
   Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
 }
-\str_case_e:nnF { \g__fortex_preprintend_tl} {
-  {minted}      { \str_gset:Nn \g__fortex_printend_tl {mint} }
-  {mint}        { \str_gset:Nn \g__fortex_printend_tl {mint} }
-  {m}           { \str_gset:Nn \g__fortex_printend_tl {mint} }
-  {lstlistings} { \str_gset:Nn \g__fortex_printend_tl {lst} }
-  {lstlisting}  { \str_gset:Nn \g__fortex_printend_tl {lst} }
-  {listings}    { \str_gset:Nn \g__fortex_printend_tl {lst} }
-  {listing}     { \str_gset:Nn \g__fortex_printend_tl {lst} }
-  {lst}         { \str_gset:Nn \g__fortex_printend_tl {lst} }
-  {l}           { \str_gset:Nn \g__fortex_printend_tl {lst} }
-}{
-  \str_gset:Nn \g__fortex_printend_tl {lst}
-  \msg_warning:nnx { fortex } { printend } { \g__fortex_preprintend_tl }
+\str_gset:Nx \g__fortex_printend_tl {
+  \str_case_e:nnF { \g__fortex_printend_tl} {
+    { minted      }{ mint }
+    { mint        }{ mint }
+    { m           }{ mint }
+    { lstlistings }{ lst  }
+    { lstlisting  }{ lst  }
+    { listings    }{ lst  }
+    { listing     }{ lst  }
+    { lst         }{ lst  }
+    { l           }{ lst  }
+  }{
+    lst
+    \msg_warning:nnx { fortex } { printend } { \g__fortex_printend_tl }
+  }
 }
 \str_if_eq:NNTF { \g__fortex_printend_tl } { mint } {
   \RequirePackage { minted }
-  \minted@cachefalse
 }{
   \RequirePackage { listings }
 }
 \cs_set:Npn \__fortex_printcode:nnn #1#2#3 {
   \str_if_eq:NNTF { \g__fortex_printend_tl } { mint } {
-    \inputminted [ #1 ] { #2 } { #3 }
+    \tl_set:Nn \minted@cachedir {\g__fortex_outputdir_tl \c__fortex_tmpfolder_tl}
+    \__fortex_codesafedelim:N \l_tmpa_str
+    \inputminted [escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
   }{
     \str_if_eq:NNTF { #2 } { text } {
       \lstinputlisting [ #1 ] { #3 }
@@ -164,22 +170,24 @@
     Unable ~ to ~ guess ~ file ~ extension ~ for ~ "language=#1". ~
     ~ defaulting ~ to ~ .txt
   }
-  \str_case_e:nnF { \g__fortex_lang_tl } {
-    {python}      { \tl_gset:Nn \g__fortex_ext_tl {py}  }
-    {fortran}     { \tl_gset:Nn \g__fortex_ext_tl {f90} }
-    {fortranfixed}{ \tl_gset:Nn \g__fortex_ext_tl {f}   }
-    {bash}        { \tl_gset:Nn \g__fortex_ext_tl {sh}  }
-    {text}        { \tl_gset:Nn \g__fortex_ext_tl {txt} }
-    {octave}      { \tl_gset:Nn \g__fortex_ext_tl {m}   }
-    {matlab}      { \tl_gset:Nn \g__fortex_ext_tl {m}   }
-    {cpp}         { \tl_gset:Nn \g__fortex_ext_tl {cpp} }
-    {c}           { \tl_gset:Nn \g__fortex_ext_tl {c}   }
-    {tcl}         { \tl_gset:Nn \g__fortex_ext_tl {tcl} }
-    {nasm}        { \tl_gset:Nn \g__fortex_ext_tl {s}   }
-    {makefile}    { \tl_gset:Nn \g__fortex_ext_tl {mk}  }
-  }{
-    \tl_gset:Nn \g__fortex_ext_tl { txt }
-    \msg_warning:nnx { fortex } { language } { \g__fortex_lang_tl }
+  \tl_gset:Nx \g__fortex_ext_tl {
+    \str_case_e:nnF { \g__fortex_lang_tl } {
+      { python       }{ py  }
+      { fortran      }{ f90 }
+      { fortranfixed }{ f   }
+      { bash         }{ sh  }
+      { text         }{ txt }
+      { octave       }{ m   }
+      { matlab       }{ m   }
+      { cpp          }{ cpp }
+      { c            }{ c   }
+      { tcl          }{ tcl }
+      { nasm         }{ s   }
+      { makefile     }{ mk  }
+    }{
+      txt
+      \msg_warning:nnx { fortex } { language } { \g__fortex_lang_tl }
+    }
   }
 }
 \tl_const:Nn \c__fortex_tmpfolder_tl {
@@ -224,6 +232,9 @@
   \bool_if:nT { \g__fortex_firstrun_bool } {
     \__fortex_outputdir:
     \__fortex_mktmpdir:
+    \str_if_eq:NNT { \g__fortex_printend_tl } { mint } {
+      \tl_set:Nn \minted@cachedir {.}
+    }
     \iow_open:Nn \c__fortex_outfile_iow { \c__fortex_out_filename_tl }
     \iow_close:N \c__fortex_outfile_iow
     \bool_gset_false:N \g__fortex_firstrun_bool
@@ -233,8 +244,14 @@
   \endlinechar=`\^^J
   \char_set_catcode_other:N \^^J
   \char_set_catcode_other:N \^^I
-  \char_set_catcode_other:N \ %
-  \char_set_catcode_active:N \#
+  \char_set_catcode_other:N \
+  \char_set_catcode_other:N \%
+  \char_set_catcode_other:N \#
+  \char_set_catcode_other:N \{
+  \char_set_catcode_other:N \}
+  \char_set_catcode_other:N \\
+  \char_set_catcode_other:N \\
+  \char_set_catcode_other:N ^
 }
 \cs_set:Npn \__fortex_concat_files: {
   \file_get:nnN { \g__fortex_outputdir_tl \c__fortex_out_filename_tl }
@@ -249,10 +266,19 @@
   \iow_now:Nx  \c__fortex_outfile_iow { \exp_not:V \l_tmpb_tl }
   \iow_close:N \c__fortex_outfile_iow
 }
-\NewDocumentCommand \vindex { v } {
+\cs_set:Npn \__fortex_codesafedelim:N #1 {
+  \str_case_e:nn { \c_sys_engine_str } {
+    { pdftex } { \str_set:Nn #1 { ^^c2^^a4 } }
+    { luatex } { \str_set:Nn #1 {     ^^a4 } }
+    { ptex   } { \str_set:Nn #1 { ^^c2^^a4 } }
+    { uptex  } { \str_set:Nn #1 { ^^c2^^a4 } }
+    { xetex  } { \str_set:Nn #1 {     ^^a4 } }
+  }
+}
+\cs_set:Npn \__fortex_vindex_aux:n #1 {
   \str_set:Nn \l__fortex_idxvar_str  { #1 }
-  \str_set:Nn \l__fortex_verbstr_str { \verb }
-  \str_set:Nn \l__fortex_verbdelim_str { ^^a4 }
+  \tl_set:No \l__fortex_verbstr_str { \c_backslash_str verb }
+   \str_set:Nn \l__fortex_verbdelim_str { ^^a4 }
   \exp_args:Nnno \tl_replace_all:Nnn \l__fortex_idxvar_str {!} {
     \l__fortex_verbdelim_str!\l__fortex_verbstr_str\l__fortex_verbdelim_str
   }
@@ -263,6 +289,80 @@
       \exp_not:V { \l__fortex_verbdelim_str }
   }
   \exp_args:No \index { \l__fortex_idxvar_str }
+}
+\NewDocumentCommand \vindex { v } {
+  \str_set:Nn \l_tmpa_str  { #1 }
+  \exp_args:No \label { code: \l_tmpa_str }
+  \exp_args:No \__fortex_vindex_aux:n \l_tmpa_str
+}
+\NewDocumentCommand \psudoverb { m } {
+  \texttt{ \detokenize { #1 } }
+}
+\cs_set:Npn \__fortex_mkref_file:nN #1#2 {
+  \tl_if_exist:NT { \fortex@outputdir } {
+    \tl_set:Nx \l__fortex_ref_cache_filename_tl { \c__fortex_tmpfolder_tl/
+                                             \file_mdfive_hash:n { #1 } .tmp
+    }
+    \file_if_exist:nF { \g__fortex_outputdir_tl \l__fortex_ref_cache_filename_tl } {
+      \exp_args:Nxx \__fortex_mkref_file_aux:nn { #1 } { \l__fortex_ref_cache_filename_tl }
+    }
+    \tl_set:Nx { #2 } { \l__fortex_ref_cache_filename_tl }
+  }
+}
+\iow_new:N \c__fortex_reffile_iow
+\cs_set:Npn \__fortex_mkref_file_aux:nn #1#2 {
+  \file_get:nnN { #1 } { \__fortex_setcatcode: } \l__fortex_filecontents_tl
+  \seq_if_empty:NF \g__fortex_href_codebock_regex_seq {
+    \tl_set:Nf \l_tmpa_tl { \seq_use:Nn \g__fortex_href_codebock_regex_seq { } }
+    \exp_args:NV \regex_replace_case_all:nN {
+      \l_tmpa_tl
+    } \l__fortex_filecontents_tl
+  }
+  \iow_open:Nn \c__fortex_reffile_iow { #2 }
+  \iow_now:Nx  \c__fortex_reffile_iow { \exp_not:V { \l__fortex_filecontents_tl } }
+  \iow_close:N \c__fortex_reffile_iow
+}
+\seq_new:N \g__fortex_codenest_seq
+\seq_new:N \g__fortex_href_codebock_regex_seq
+\NewDocumentEnvironment { codeblock } { O{} m } {
+  \group_begin:
+  \seq_set_from_clist:Nn \l__fortex_argv_seq { #1 }
+  \str_set:Nn \l__fortex_codename_str { #2 }
+  \seq_gput_right:Nx \g__fortex_codenest_seq \l__fortex_codename_str
+  \seq_if_in:NnF \l__fortex_argv_seq { noref } {
+    \tl_set:No \l__fortex_verbstr_str { \c_backslash_str verb }
+    \__fortex_codesafedelim:N \l__fortex_printdelim_str
+    \tl_set:Nn \l_tmpa_regex {(\W?[^:])#2(\W)}
+    \str_set:Nx \l_tmpa_str {
+                  \exp_not:n { \1                     }
+                              \l__fortex_printdelim_str
+                  \exp_not:n { \\hyperref[ code:      }
+                              \seq_use:Nn \g__fortex_codenest_seq {:} ]
+                  \exp_not:n { \{ \\psudoverb \{      }
+                              \l__fortex_codename_str
+                  \exp_not:n { \} \}                  }
+                              \l__fortex_printdelim_str
+                  \exp_not:n { \2                     }
+    }
+    \seq_gpush:Nx \g__fortex_href_codebock_regex_seq { { \exp_not:V \l_tmpa_str }  }
+    \seq_gpush:Nx \g__fortex_href_codebock_regex_seq { { \exp_not:V \l_tmpa_regex } }
+    \exp_args:Nx \label { code: \seq_use:Nn \g__fortex_codenest_seq {:}  }
+  }
+  \seq_if_in:NnF \l__fortex_argv_seq { noindex } {
+    \exp_args:Nx \__fortex_vindex_aux:n { \seq_use:Nn \g__fortex_codenest_seq {!} }
+  }
+
+} {
+  \noindent\textit{
+    \small
+    End~of~code~block~
+    \seq_if_in:NnF \l__fortex_argv_seq { noref } {
+      \hyperref [ code: \seq_use:Nn \g__fortex_codenest_seq {:} ]
+    }
+                { \psudoverb{ #2 }}.\\
+    \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
+  }
+  \group_end:
 }
 \clist_new:N \g__fortex_formatopt_clist
 \NewDocumentCommand \setfortex { m } {
@@ -276,11 +376,16 @@
                                { \g__fortex_tmp_filename_tl }
 }{
   \endVerbatimOut
-  \exp_args:No \__fortex_printcode:nnn { \g__fortex_formatopt_clist }
-                                         \g__fortex_lang_tl
-                                       { \g__fortex_outputdir_tl
-                                         \g__fortex_tmp_filename_tl }
-  \__fortex_concat_files:
+  \tl_if_exist:NT { \fortex@outputdir } {
+    \__fortex_concat_files:
+    \benchmark_tic:
+    \__fortex_mkref_file:nN { \g__fortex_outputdir_tl\g__fortex_tmp_filename_tl }
+                              \l_tmpa_tl
+    \benchmark_toc:
+    \exp_args:No \__fortex_printcode:nnn { \g__fortex_formatopt_clist }
+                                           \g__fortex_lang_tl
+                                         { \g__fortex_outputdir_tl\l_tmpa_tl }
+  }
 }
 \endinput
 %%
