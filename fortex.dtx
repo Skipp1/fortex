@@ -23,10 +23,7 @@
 \usepackage{fortex}
 % \usepackage[scale=0.85]{sourcecodepro} % sourcecodepro is a little bit bigger than CM 
 \usepackage{microtype}
-\usepackage[backend=biber, style=ieee]{biblatex}
 \usepackage{bookmark}
-\addbibresource{fortex.bib}
-\bibliography{}
 \EnableCrossrefs
 \begin{document}
   \DocInput{\jobname.dtx}
@@ -193,7 +190,7 @@
 % \RequirePackage[enable-debug]{ expl3 }
 \RequirePackage{ expl3 }
 \RequirePackage{ l3benchmark }
-\ProvidesExplPackage {fortex} {2022-03-27} {0.0.5$\alpha$}
+\ProvidesExplPackage {fortex} {2022-03-27} {0.0.7$\alpha$}
 {like noweb without external tooling}
 %    \end{macrocode}
 %
@@ -1021,6 +1018,18 @@
 % 
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
 % \begin{macro}{\@@_safedelim:N}
+%
+% Here the letter |¤| has been chosen to be the delimiter for the \pkg{minted}/\pkg{listings} environments
+%
+% Each \LaTeX{} engine treats unicode a little bit differently. 
+% In \pdfTeX{} one needs to define the full utf-8 hex code, but in \LuaTeX{} and \XeTeX{} one only needs the Unicode number. 
+% 
+% This results in a difference when calling between the two.
+% Normally this would not be a big deal but because we are using these are the delimiters for Verbatim Environments we \emph{require} only a single character. 
+%
+% If we use |^^a4| in all engines \pdfTeX{} creates an error about not being utf-8. 
+% If we use |^^c2^^a4| in all engines \LuaTeX{}/\XeTeX{} makes 2 characters and the delimiting doesn't work.
+%
 %    \begin{macrocode}
 \cs_set:Npn \@@_codesafedelim:N #1 {
   \str_case_e:nn { \c_sys_engine_str } {
@@ -1034,9 +1043,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function, so it can be used in other functions}
+% \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
 %
-%  \begin{macro}{\@@_vindex_aux:n}
+%  \begin{macro}{\@@_vindex_aux:nx}
 % This is the implementation of \cs{vindex}. 
 % The reason that we use this aux function is to get around the restrictions of using verbatim commands inside other commands. 
 % We use this function in both \cs{vindex} and \env{var} etc. 
@@ -1045,8 +1054,9 @@
 % I do plan on refactoring into something more readable.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_vindex_aux:n #1 {
-  \str_set:Nn \l_@@_idxvar_str  { #1 }
+\cs_set:Npn \@@_vindex_aux:nx #1#2 {
+  \str_set:Nn \l_@@_idxvar_str { #1 }
+  \tl_set:Nx \l_@@_idxfmt_tl { #2 }
 %    \end{macrocode}
 %    \begin{macrocode}
   \tl_set:No \l_@@_verbstr_str { \c_backslash_str verb }
@@ -1071,7 +1081,7 @@
     \l_@@_verbdelim_str!\l_@@_verbstr_str\l_@@_verbdelim_str
   }
 %    \end{macrocode}
-% This is just a convoluted way of saying ``|\verb¤|\cs{l_@@_idxvar_str}|¤|'', but using catcode other. 
+% This is just a convoluted way of saying ``|\verb¤|\cs{l_@@_idxvar_str}|¤|"|"\cs{indexfmt}'', but using catcode letter/other. 
 %
 %    \begin{macrocode}
   \tl_set:Nx \l_@@_idxvar_str { 
@@ -1079,7 +1089,9 @@
       \exp_not:V { \l_@@_verbdelim_str }
       \l_@@_idxvar_str
       \exp_not:V { \l_@@_verbdelim_str }
+      | \l_@@_idxfmt_tl
   }
+  \iow_term:x { \exp_not:o \l_@@_idxvar_str}
 %    \end{macrocode}
 % As mentioned, but with reiterating, \tn{index} is designed to be overwitten by whatever indexing package is being used. There is no need for a hard requirement on a specific package. 
 %
@@ -1109,26 +1121,61 @@
 \NewDocumentCommand \vindex { v } {
   \str_set:Nn \l_tmpa_str  { #1 }
   \exp_args:No \label { code: \l_tmpa_str }
-  \exp_args:No \@@_vindex_aux:n \l_tmpa_str 
+  \exp_args:No \@@_vindex_aux:nx \l_tmpa_str { \vindexfmt }
 }
+%    \end{macrocode}
+%\end{macro}
+%
+% \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls.}
+% \begin{macro}{\vindexfmtdef, \vindexfmtcall, \vindexfmt}
+% Here we are defining a small collection of formatting options for the index. 
+% 
+% By default we make the pagenumber with the definition \textit{italic}, and all the calls to that definition \textrm{roman}. 
+% Similarly, any \cs{vindex} call is going to be roman.
+%
+% These macros are left here incase someone wants to redefine them for their own style. 
+%
+%    \begin{macrocode}
+\tl_set:Nn \vindexfmtdef { textit }
+\tl_set:Nn \vindexfmtcall { textrm }
+\tl_set:Nn \vindexfmt { textrm }
 %    \end{macrocode}
 %\end{macro}
 %
 % \subsection{hyperref}
 %
-% \begin{macro}{\psudoverb}
-% I am kinda annoyed that this function exists.
-% All I want is a way to call verb inside the command to another function.
-% 
-% This Implementation does have some issues.
-% The main one being that it will add a space after any latex-like commands.
-% This is bad if we want to make a faithful printing of the code. 
-% I have looked online if there is a way to remove the spaces, and the way suggested in Stack exchange seems to be scanning the outputted chars and seeing if there could be a command sequence.
-% Doing it this way is really not ideal though as the whole hyperref thing is already really slow and I don't want to add any more slowness to this. 
+% \changes{0.0.7$\alpha$}{2022/06/05}{Add calls of a function to the index.}
+% \begin{macro}{\fortexhyperinsert}
+% Because we have a few things that we want to do at the location of the regex insertion, we create our own macro to handle them.
+%
+% Here 3 things happen, the function gets registered into the index. 
+% (unless noindex is specified, here by the $\ast$).
+% As well as a hyperref link inserted with the text being the name of the function in the correct formatting.
+%
+% There is however a little bit of cruft around these calls due to a few limitations with \pkg{minted}'s escaping mechanism. 
+% The main issue is that minted will not escape a string or a comment.
+% Normally this isn't a huge deal but some languages I use (Fortran) use |!| as comments.
+% This causes issues when inserting a string like |¤should be ! escaped¤| where |¤| is the escape char. 
+% In this instance the escaped section does not actually get escaped and instead gets inserted into the minted formatting.
+%
+% To work around this we make sure to pass the code nesting structure as |class:function| and then do a string replacement to get it back into the form we want for indexing. 
+% The reason that we use |:| and not a less frequently used character is to avoid the overhead of a second replacement.
+% This may become an issue in the future, but for the languages that I work with it isn't. 
+%
+% The final interesting thing about this function is that it has to be callable with the default selection of letter catcodes. This means no |@| or |_:| characters. This is due to the contents being \tn{insert} by minted in the middle of the document, characters like |@_:| are still defined as catcode other. 
+%
+% Its not ideal, but it is the easiest way to deal with it
 %
 %    \begin{macrocode}
-\NewDocumentCommand \psudoverb { m } {
-  \texttt{ \detokenize { #1 } }
+\NewDocumentCommand \fortexhyperinsert { s m m } {
+  \tl_set:Nn \l_tmpa_tl { #3 }
+  \str_replace_all:Nnn \l_tmpa_tl {:} {!}
+  \bool_if:NF { #1 } {
+    \exp_args:Nx \@@_vindex_aux:nx { \l_tmpa_tl } { \vindexfmtcall }
+  }
+  \hyperref [ code: #3 ] {
+            \texttt{ \detokenize { #2 } } 
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1146,7 +1193,7 @@
 % Because we don't care about the first pass, before the |.aux| file is created, it is quickest to not even bother regexing the code. 
 %
 %    \begin{macrocode}
-  \tl_if_exist:NT { \fortex@outputdir } {
+  \tl_if_exist:NT { \fortex@codeblockregex } {
 %    \end{macrocode}
 % Here we are going to be using the md5 hash of the code we want to highlight as a simple way to check if we have already done the hard work.
 % This is the biggest time-saver of the hyperrefing process, as nobody wants to do the same work twice.
@@ -1184,10 +1231,9 @@
 %
 % However it seems to be working now and I don't want to touch it. 
 %    \begin{macrocode}
-  \seq_if_empty:NF \g_@@_href_codebock_regex_seq { 
-    \tl_set:Nf \l_tmpa_tl { \seq_use:Nn \g_@@_href_codebock_regex_seq { } }
+  \seq_if_empty:NF \fortex@codeblockregex { 
     \exp_args:NV \regex_replace_case_all:nN {
-      \l_tmpa_tl
+      \fortex@codeblockregex
     } \l_@@_filecontents_tl
   }
   \iow_open:Nn \c_@@_reffile_iow { #2 }
@@ -1199,6 +1245,7 @@
 % \end{macro}
 %
 % \changes{0.0.6$\alpha$}{2022/03/30}{Add macro-like environments}
+% \changes{0.0.7$\alpha$}{2022/06/04}{finish automatic hyperref}
 % 
 % This function exists to automatically add hyperlinks from the usage of a function to its definition somewhere else in the code. 
 % At the moment this is not complete and I am still yet to add the * interfaces. 
@@ -1208,7 +1255,7 @@
 % \begin{variable}{\g_@@_codenest_seq, \c_@@_codeblock_types_seq}
 %    \begin{macrocode}
 \seq_new:N \g_@@_codenest_seq
-\seq_new:N \g_@@_href_codebock_regex_seq
+\seq_new:N \g_@@_codeblock_regex_toaux_seq
 %    \end{macrocode}
 % \end{variable}
 %
@@ -1268,15 +1315,22 @@
 %
 % where |\1| and |\2| are the two previously captured groups.
 %    \begin{macrocode}
+    \seq_if_in:NnTF \l_@@_argv_seq { noindex } {
+        \tl_set:Nn \l_tmpa_tl { fortexhyperinsert* }
+    }{
+        \tl_set:Nn \l_tmpa_tl { fortexhyperinsert }
+    }
     \tl_set:Nn \l_tmpa_regex {(\W?[^:])#2(\W)}
     \str_set:Nx \l_tmpa_str {
                   \exp_not:n { \1                     }
                               \l_@@_printdelim_str
-                  \exp_not:n { \\hyperref[ code:      } 
-                              \seq_use:Nn \g_@@_codenest_seq {:} ] 
-                  \exp_not:n { \{ \\psudoverb \{      }
+                  \exp_not:n { \\                     }
+                              \l_tmpa_tl
+                  \exp_not:n { \{                     }
                               \l_@@_codename_str
-                  \exp_not:n { \} \}                  }
+                  \exp_not:n { \} \{                  }
+                              \seq_use:Nn \g_@@_codenest_seq {:}
+                  \exp_not:n { \}                     }
                               \l_@@_printdelim_str
                   \exp_not:n { \2                     }
     }
@@ -1299,8 +1353,8 @@
 % In the future I would like to have a fallback method that will work with \TeX{}Live 2015, due to that's what the stable distros seem to be supporting. 
 %
 %    \begin{macrocode}
-    \seq_gpush:Nx \g_@@_href_codebock_regex_seq { { \exp_not:V \l_tmpa_str }  }
-    \seq_gpush:Nx \g_@@_href_codebock_regex_seq { { \exp_not:V \l_tmpa_regex } }
+    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq { { \exp_not:V \l_tmpa_str }  }
+    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq { { \exp_not:V \l_tmpa_regex } }
 %    \end{macrocode}
 % Finally we add the bits of code that are linked to. 
 % At the moment this is a \label{identifier}, as well as adding the name to the index.
@@ -1312,7 +1366,7 @@
     \exp_args:Nx \label { code: \seq_use:Nn \g_@@_codenest_seq {:}  }
   }
   \seq_if_in:NnF \l_@@_argv_seq { noindex } {
-    \exp_args:Nx \@@_vindex_aux:n { \seq_use:Nn \g_@@_codenest_seq {!} }
+    \exp_args:Nx \@@_vindex_aux:nx { \seq_use:Nn \g_@@_codenest_seq {!} } { \vindexfmtdef }
   }
 
 } {
@@ -1333,10 +1387,25 @@
     \seq_if_in:NnF \l_@@_argv_seq { noref } {
       \hyperref [ code: \seq_use:Nn \g_@@_codenest_seq {:} ]
     }
-                { \psudoverb{ #2 }}.\\
+                { \texttt{\detokenize{ #2 }}}.\\
     \seq_gpop_right:NN \g_@@_codenest_seq \l_tmpa_tl
   }
   \group_end:
+}
+%    \end{macrocode}
+% Because we are adding the functions we want to tracked as they are defined, we are unable to add a hyperref a usage before the definition. 
+% 
+% For this reason we don't bother hyperrefing on the first passthough and instead just generate the regex for the next. 
+% This way we are able to get the correct hyperrefing on the second passthough. 
+%
+% Like the previous write to |.aux| we use the old \LaTeXe{} syntax to prevent the insertion of \tn{ExplSyntaxOn} in the |.aux| file.
+% 
+%    \begin{macrocode}
+\hook_gput_code:nnn { enddocument } { fortex } {
+  \iow_now:cx { @auxout } {
+     \exp_not:n { \gdef\fortex@codeblockregex }
+     { \seq_use:Nn \g_@@_codeblock_regex_toaux_seq { } }
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1420,7 +1489,6 @@
 %</package>
 %    \end{macrocode}
 %
-% \printbibliography
 % \PrintChanges
 % \PrintIndex
 %
