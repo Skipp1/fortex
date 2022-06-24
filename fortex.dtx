@@ -20,8 +20,8 @@
 %
 %<*driver>
 \documentclass[cm-default]{l3doc}
-\usepackage{fortex}
-% \usepackage[scale=0.85]{sourcecodepro} % sourcecodepro is a little bit bigger than CM 
+\usepackage[UKenglish]{babel}
+\usepackage[verbose]{fortex}
 \usepackage{microtype}
 \usepackage{bookmark}
 \EnableCrossrefs
@@ -32,6 +32,7 @@
 % \fi
 %
 % ^^A Misc changes
+% \changes{0.0.7$\alpha$}{2022/06/09}{Shuffle functions around to make more logical sense}
 % \changes{0.0.5$\alpha$}{2022/03/26}{Initial conversion to .dtx}
 % \changes{0.0.3$\alpha$}{2022/03/10}{Move to git}
 % \changes{0.0.2$\alpha$}{2022/03/02}{Translate to \pkg{expl3}}
@@ -64,34 +65,71 @@
 %
 % \section{Usage}
 %
-% TODO:
-% \begin{function}{\vindex}
-% \begin{syntax}
-% \cs{vindex}\Arg{index entry}
-% \end{syntax}
-% \end{function}
-%
-% \begin{function}{\setfortex}
-% \begin{syntax}
-% \cs{setfortex}\Arg{\pkg{minted}/\pkg{listings} options}
-% \end{syntax}
-% \end{function}
+% \changes{0.0.7$\alpha$}{{24th June 2022}}{Start writing usage docs}
 % 
 % \begin{environment}{code}
 % \begin{syntax}
 % |\begin{code}|
 % \qquad \meta{code}
 % |\end{code}|
-% \end{syntax}
+% \end{syntax} \vspace{1ex}
+%
+% This is the main environment that does all of the work. 
+% anything that is written inside this environment will be outputted to the file |jobname.ext|
+% 
+% In addition the code included will be syntax highlighted and included in the generated |pdf| file. 
+% As mentioned this is an environment to help the idea of literate coding. 
+%
 % \end{environment}
 %
 % \begin{environment}{codeblock}
 % \begin{syntax}
-% |\begin{codeblock}|\Arg{block name}
+% |\begin{codeblock}[|\meta{noindex}, \meta{noref}|]|\Arg{block name}
 % \qquad \meta{block definition}
 % |\end{codeblock}|
-% \end{syntax}
+% \end{syntax} \vspace{1ex}
+% 
+% This environment is supposed to be a helper environment to the above \env{code} environment.
+% One of the nice things you can do with regular text editors/IDE's is you can jump to a definition.
+% 
+% By creating a \env{codeblock} environment, the usage of \meta{blockname} will be tracked thoughout the code and hyperref links will be inserted allowing jumping back to the definition.
+% Moreover if indexing is enabled it will insert the name of the function with it's definition in \textit{italics} and usages in \textrm{roman} (can be customised)
+%
+% The optional flag \meta{noindex} prevents a codeblock from appearing in the index.
+% The flag \meta{noref} prevents the tracking of the usages and the insertion of hyperlinks.
+%
+% This is not a new idea in \LaTeX{} and it is done in the \pkg{pgf/tikz} and \pkg{pgfplots} manuals.
+% However they seem to be using a very different implementation to what I have done here. 
+%
 % \end{environment}
+%
+% \begin{function}{\vindex}
+% \begin{syntax}
+% \cs{vindex}\Arg{index entry}
+% \end{syntax} 
+%
+% Short for Verbatim index. This makes sure that \tn{index} prints the argument verbatim, and things like underscores and \& do not get mangled. 
+%
+% \end{function}
+%
+% \begin{function}{\setfortex}
+% \begin{syntax}
+% \cs{setfortex}\Arg{\pkg{minted}/\pkg{listings} options}
+% \end{syntax}
+%
+% None of the highlighting here is done by \pkg{fortex}
+%
+% \end{function}
+%
+% \begin{function}{\vindexfmtdef}
+% \end{function}
+% \begin{function}{\vindexfmtcall}
+% \end{function}
+% \begin{function}{\vindexfmt}
+% \end{function}
+%
+% \begin{function}{\fortexhypercodelinkfmt}
+% \end{function}
 %
 % \section {Things left to do}
 %
@@ -99,35 +137,11 @@
 % \item{Finish of |.dtx| by adding Usage instructions}
 % \item{Get line numbering working}
 % \item{Short verbatim (preferably default "|" with highlighting, and |"| without) should be configurable}  
-% \item{Defines / Used linking: \\ 
-% This should do 2 things - emulate the begin\{macro\} from the \pkg{doc} class.
-% (in the sense it automatically adds to the index, but also we should be able to say ``this function'' was used in ``these locations'')}
 % \item{Allow multiple files in the same document (e.g. |.c| and |.h| files)---still need to figure out an interface (this will probably require changing the outputted filename in the \env{code} environment)}
-% \item{Code definitions earlier on in the document (more of a traditional standalone documentation thing)}
 % \item{Changelog interface (just a wrapper for glossaries)?}
-% \item{Automated Regression Testing}
 % \end{enumerate}
 %
 % \paragraph{What I will be working on next:}
-% A \pkg{doc}--like interface that is a bunch of environments that allow linking and documentation similar to \tn{macro}, and \tn{variable} environments from the \pkg{doc} package. 
-%
-% Envs to include:
-% Function, Method, Class, Variable, Macro, Interface, Module(?), Namespace, file(?)  
-%
-% Optional Arguments:
-% \begin{itemize}
-% \item nonest
-% \item internal/external 
-% \item noindex
-% \item pure (only function/macro/method?)
-% \item Arbitrary text? 
-% \end{itemize}
-%
-% Also provide generic version that can be customised. 
-% The plan is for this to eventually be used by a |\uses| macro that will automatically add links to the index and hyperref links to the definition.
-%
-%
-% \paragraph{shortverb with highlighting}
 %
 % I found this, on stack exchange and could be useful in making a version of shortverb that does highlighting.
 %
@@ -135,20 +149,17 @@
 %
 % \begin{verbatim}
 % \documentclass{article}
-%
-%\usepackage{minted}
-%
-%\newmintinline[code]{latex}{}
-%
-%\catcode`\|=\active
-%\protected\def|{%
-%  \ifmmode
-%    \expandafter\@firstoftwo
-%  \else
-%    \expandafter\@secondoftwo
-%  \fi
-%  {\string|}{\code|}%
-%}
+% \usepackage{minted}
+% \newmintinline[code]{latex}{}
+% \catcode`\|=\active
+% \protected\def|{%
+%   \ifmmode
+%     \expandafter\@firstoftwo
+%   \else
+%     \expandafter\@secondoftwo
+%   \fi
+%   {\string|}{\code|}%
+% }
 % \end{verbatim}
 %
 %
@@ -189,8 +200,7 @@
 %    \begin{macrocode}
 % \RequirePackage[enable-debug]{ expl3 }
 \RequirePackage{ expl3 }
-\RequirePackage{ l3benchmark }
-\ProvidesExplPackage {fortex} {2022-03-27} {0.0.7$\alpha$}
+\ProvidesExplPackage {fortex} {2022-06-24} {0.0.7$\alpha$}
 {like noweb without external tooling}
 %    \end{macrocode}
 %
@@ -333,7 +343,130 @@
   }
 }
 %    \end{macrocode}
+
+% \subsection{Code printing}
+% 
+% The next collections of functions is to do with the code printing and how it is displayed in the \file{.pdf} itself.
+% Most of the functions are about switching between \pkg{minted} and \pkg{listings}. 
 %
+% \changes{0.0.3$\alpha$}{2022/03/08}{Add \pkg{listings}/\pkg{minted} option}
+% \changes{0.0.6$\alpha$}{2022/04/02}{Be more structured}
+% \begin{variable}{\g_@@_printend_tl}
+%
+% This next code Section defines a bunch of aliases for switching between \pkg{listings} and \pkg{minted}.
+% This is because I tend to be lazy and like to shorthand stuff as opposed to write out the full name.
+% 
+% If an invalid key is found, we default to \pkg{listings} mainly because it is the older/more established package. 
+% \pkg{listings} also has the advantage of not requiring |-shell-esc| and I would like to avoid as much |-shell-esc| as possible.
+%
+% 
+%    \begin{macrocode}
+\msg_new:nnn { fortex } { printend } {
+  Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
+}
+\str_gset:Nx \g_@@_printend_tl {
+  \str_case_e:nnF { \g_@@_printend_tl} {
+    { minted      }{ mint }
+    { mint        }{ mint }
+    { m           }{ mint }
+    { lstlistings }{ lst  }
+    { lstlisting  }{ lst  }
+    { listings    }{ lst  }
+    { listing     }{ lst  }
+    { lst         }{ lst  }
+    { l           }{ lst  }
+  }{
+    lst
+    \msg_warning:nnx { fortex } { printend } { \g_@@_printend_tl }
+  }
+}
+%    \end{macrocode}
+% \end{variable}
+%
+% \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
+%
+% We now laod the required highlighting/formatting package.
+% I wanted to avoid only relying on one backend. 
+% (Mainly because I prefer minted, but requiring |-shell-esc| should not be a hard requirement).
+%
+% Note: we set the \pkg{minted} cache to the current folder ``\file{.}'' to prevent it from making any new folders. 
+% At the first call of the \env{document} environment, we calculate the output directory we will be using and update the cache location. 
+%
+% Note: This now introduces a new bug where any calls to minted before the code environment will cause the minted cache to appear in the \file{jobdir/} folder.
+% This should be solvable with a hook at the start of the \env{document} environment, but I need to figure out some stuff with the output dir calculations. 
+%
+%    \begin{macrocode}
+\str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
+  \RequirePackage { minted }
+  \tl_set:Nn \minted@cachedir {.}
+}{
+  \RequirePackage { listings }
+}
+%    \end{macrocode}
+%
+% \begin{macro}{\setfortex}
+%
+% Keep fortex options separate from global \pkg{minted}/\pkg{listings} options.
+% (this just gets passed though. But is separate to allow separate calls (e.g. inline code examples) to \pkg{minted}/\pkg{listings} to behave differently to the \env{code} environment ).
+% 
+% At the moment we are using a token list, and I would like to change this sometime so other parts of the code are better handled.
+% (My suspicion is that I can avoid the required \cs{exp_args:No} in the call to \cs{@@_printcode:} by using a better type.)
+%
+%    \begin{macrocode}
+\clist_new:N \g_@@_formatopt_clist
+\NewDocumentCommand \setfortex { m } {
+  \clist_gset:Nn \g_@@_formatopt_clist { #1 }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Setting up filenames}
+%
+% \changes{0.0.2$\alpha$}{2022/03/04}{Add extension detection}
+% \changes{0.0.6$\alpha$}{2022/04/02}{Be more structured}
+% \begin{variable}{\g_@@_ext_tl}
+%
+% We guess the file extension defaulting to |.txt| if we don't know.
+% The file extension can be explicitly overwritten using the package level option |ext|.
+% 
+% I need to add more language / file extensions relations, but these are all the ones I will use myself.
+% I cannot for now be bothered to add any more language/extension pairs.
+% A smarter way might be to have an external datafile of all the language/extension pairs, but for now this will do.
+% If anyone else wants to add a language for autodetection, go ahead.
+%
+%    \begin{macrocode}
+\tl_if_empty:NT \g_@@_ext_tl {
+  \msg_new:nnn { fortex } { language } {
+    Unable ~ to ~ guess ~ file ~ extension ~ for ~ "language=#1". ~
+    ~ defaulting ~ to ~ .txt
+  }
+  \tl_gset:Nx \g_@@_ext_tl { 
+    \str_case_e:nnF { \g_@@_lang_tl } {
+      { python       }{ py  }
+      { fortran      }{ f90 }
+      { fortranfixed }{ f   }
+      { bash         }{ sh  }
+      { text         }{ txt }
+      { octave       }{ m   }
+      { matlab       }{ m   }
+      { cpp          }{ cpp }
+      { c            }{ c   }
+      { tcl          }{ tcl }
+      { nasm         }{ s   }
+      { makefile     }{ mk  }
+    }{
+%    \end{macrocode}
+% We default to |.txt| extension if we cannot figure it out from the language.
+%
+%    \begin{macrocode}
+      txt 
+      \msg_warning:nnx { fortex } { language } { \g_@@_lang_tl }
+    } 
+  }
+}
+%    \end{macrocode}
+% \end{variable}
+
 % \subsection{Getting \texttt{-output-dir}}
 %
 % \changes{0.0.4$\alpha$}{2022/03/15}{Add -output-dir detection}
@@ -391,9 +524,9 @@
 % \begin{verbatim}
 % ! Bad register code (32768)
 % A register must be between 0 and 32767
-% TODO: FIXME
 % \end{verbatim}
 % }
+% TODO: FIXME
 %
 % \item { Calling the actual function \cs{@@_outputdir_auxi:} is \emph{very} slow, especially if the log file is large (e.g. loading lots of packages). 
 % So it's important that the value is cached in \file{jobname.aux} }
@@ -610,6 +743,19 @@
 %    \begin{macrocode}
       \tl_clear:N \l_tmpa_tl
 %    \end{macrocode}
+% 
+% In rare situations the log file may not contain any mention of the tex or log paths. 
+% If this is the case then latex will freeze and just hang. 
+% Obviously this is not ideal, so we just clear the value of \cs{l_@@_reallogpath_tl} or \cs{l_@@_realtexpath_tl} and just hope it works out 
+% 
+%    \begin{macrocode}
+      \quark_if_no_value:NT \l_@@_realtexpath_tl {
+        \tl_set:Nn \l_@@_realtexpath_tl { }
+      }
+      \quark_if_no_value:NT \l_@@_reallogpath_tl {
+        \tl_set:Nn \l_@@_realtexpath_tl { }
+      }
+%    \end{macrocode}
 % Finally we strip the filenames (\file{jobname.tex}/ \file{jobname.log}) from the end of the paths - makes it easier to check if log is in a different directory.
 % Here the scratch variable \cs{l_tmpa_tl} is only used to match the function signature and is not used anywhere else. 
 % We only care about the leading path to the files anyway.
@@ -637,149 +783,6 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \subsection{Code printing}
-% 
-% The next collections of functions is to do with the code printing and how it is displayed in the \file{.pdf} itself.
-% Most of the functions are about switching between \pkg{minted} and \pkg{listings}. 
-%
-% \changes{0.0.3$\alpha$}{2022/03/08}{Add \pkg{listings}/\pkg{minted} option}
-% \changes{0.0.6$\alpha$}{2022/04/02}{Be more structured}
-% \begin{variable}{\g_@@_printend_tl}
-%
-% This next code Section defines a bunch of aliases for switching between \pkg{listings} and \pkg{minted}.
-% This is because I tend to be lazy and like to shorthand stuff as opposed to write out the full name.
-% 
-% If an invalid key is found, we default to \pkg{listings} mainly because it is the older/more established package. 
-% \pkg{listings} also has the advantage of not requiring |-shell-esc| and I would like to avoid as much |-shell-esc| as possible.
-%
-% 
-%    \begin{macrocode}
-\msg_new:nnn { fortex } { printend } {
-  Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
-}
-\str_gset:Nx \g_@@_printend_tl {
-  \str_case_e:nnF { \g_@@_printend_tl} {
-    { minted      }{ mint }
-    { mint        }{ mint }
-    { m           }{ mint }
-    { lstlistings }{ lst  }
-    { lstlisting  }{ lst  }
-    { listings    }{ lst  }
-    { listing     }{ lst  }
-    { lst         }{ lst  }
-    { l           }{ lst  }
-  }{
-    lst
-    \msg_warning:nnx { fortex } { printend } { \g_@@_printend_tl }
-  }
-}
-%    \end{macrocode}
-% \end{variable}
-%
-% \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
-%
-% We now laod the required highlighting/formatting package.
-% I wanted to avoid only relying on one backend. 
-% (Mainly because I prefer minted, but requiring |-shell-esc| should not be a hard requirement).
-%
-% Note: we set the \pkg{minted} cache to the current folder ``\file{.}'' to prevent it from making any new folders. 
-% At the first call of the \env{code} environment \cs{@@_firstcall:}, we calculate the output directory we will be using and update the cache location before that call. 
-%
-% Note: This now introduces a new bug where any calls to minted before the code environment will cause the minted cache to appear in the \file{jobdir/} folder.
-% This should be solvable with a hook at the start of the \env{document} environment, but I need to figure out some stuff with the output dir calculations. 
-%
-%
-%    \begin{macrocode}
-\str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
-  \RequirePackage { minted }
-}{
-  \RequirePackage { listings }
-}
-%    \end{macrocode}
-%
-% \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
-%\begin{macro}{\@@_printcode:nnn}
-% \begin{arguments}
-% \item{ keyvals to pass to \pkg{minted}/\pkg{listings} (must be expanded with \cs{exp_args:No} when this function is called)}
-% \item{ programming language we want to highlight}
-% \item{ tmp filename we are going to use (absolute path)}
-% \end{arguments}
-%
-% Load the saved tmp file and do all the highlighting/formatting and then place into the pdf.
-% Note that we need to pass the full path when using |-output-dir|.  
-%
-% \begin{itemize}[label={Bugs:}]
-% \item{This function is weird, and I have no idea why |:onn| or |:xnn| signatures don't work?
-%       but calling \cs{exp_args:No} \cs{@@_printcode:nnn} does work?}
-% \end{itemize}
-%
-%    \begin{macrocode}
-\cs_set:Npn \@@_printcode:nnn #1#2#3 {
-  \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
-    \tl_set:Nn \minted@cachedir {\g_@@_outputdir_tl \c_@@_tmpfolder_tl}
-    \@@_codesafedelim:N \l_tmpa_str
-    \inputminted [escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
-  }{
-    \str_if_eq:NNTF { #2 } { text } {
-%    \end{macrocode}
-% \pkg{listings} doesn't support no highlighting by setting the key |language=text|, so we need to explicitly \emph{not} pass in a language key. 
-%
-%    \begin{macrocode}
-      \lstinputlisting [ #1 ] { #3 }
-    }{
-      \lstinputlisting [ language=#2, #1 ] { #3 }
-    }
-  }
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \subsection{Setting up filenames}
-%
-% \changes{0.0.2$\alpha$}{2022/03/04}{Add extension detection}
-% \changes{0.0.6$\alpha$}{2022/04/02}{Be more structured}
-% \begin{variable}{\g_@@_ext_tl}
-%
-% We guess the file extension defaulting to |.txt| if we don't know.
-% The file extension can be explicitly overwritten using the package level option |ext|.
-% 
-% I need to add more language / file extensions relations, but these are all the ones I will use myself.
-% I cannot for now be bothered to add any more language/extension pairs.
-% A smarter way might be to have an external datafile of all the language/extension pairs, but for now this will do.
-% If anyone else wants to add a language for autodetection, go ahead.
-%
-%    \begin{macrocode}
-\tl_if_empty:NT \g_@@_ext_tl {
-  \msg_new:nnn { fortex } { language } {
-    Unable ~ to ~ guess ~ file ~ extension ~ for ~ "language=#1". ~
-    ~ defaulting ~ to ~ .txt
-  }
-  \tl_gset:Nx \g_@@_ext_tl { 
-    \str_case_e:nnF { \g_@@_lang_tl } {
-      { python       }{ py  }
-      { fortran      }{ f90 }
-      { fortranfixed }{ f   }
-      { bash         }{ sh  }
-      { text         }{ txt }
-      { octave       }{ m   }
-      { matlab       }{ m   }
-      { cpp          }{ cpp }
-      { c            }{ c   }
-      { tcl          }{ tcl }
-      { nasm         }{ s   }
-      { makefile     }{ mk  }
-    }{
-%    \end{macrocode}
-% We default to |.txt| extension if we cannot figure it out from the language.
-%
-%    \begin{macrocode}
-      txt 
-      \msg_warning:nnx { fortex } { language } { \g_@@_lang_tl }
-    } 
-  }
-}
-%    \end{macrocode}
-%\end{variable}
 %
 % \begin{variable}{\c_@@_tmpfolder_tl}
 % We build the folder that we save all of the tmp files into. 
@@ -792,230 +795,23 @@
 %    \end{macrocode}
 % \end{variable} 
 %
-% \changes{0.0.3$\alpha$}{2022/03/10}{Add automatic folder creation}
 %
-% \begin{macro}{\@@_mktmpdir}
-% If we are writing files into a folder, we need to make sure that the folder exists, and if we not we will either create it ourselves or say a warning that the folder can be created manually.
-% I want to avoid explicitly depending on |-shell-esc|, so as a consequence this function is on the jankier side.  
-% The main issue is that \LaTeX{} doesn't support doing anything with folders. As such we cannot check if a folder exists, or create a new folder without |-shell-esc| permissions. 
+% \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls.}
+% \begin{macro}{\vindexfmtdef, \vindexfmtcall, \vindexfmt}
+% Here we are defining a small collection of formatting options for the index. 
 % 
-% The basic idea is to check if a test file: \file{outdir/_fortex-jobname/jobname-0.tmp} exists in our output folder.
-% If the folder doesn't exist the \cs{file_if_exist:nF}, will not cause any errors, but will just say the file doesn't exist. 
-% If we don't find the file and we don't have |-shell-esc| permissions, we warn the user, and try to write a new test file. 
-% If the folder doesn't exist trying to write to the file will cause a critical error.
+% By default we make the pagenumber with the definition \textit{italic}, and all the calls to that definition \textrm{roman}. 
+% Similarly, any \cs{vindex} call is going to be roman.
 %
-% If we do have |-shell-esc| permissions, we create a folder and continue on our way. 
-% 
-%    \begin{macrocode}
-\cs_set:Npn \@@_mktmpdir: {
-  \file_if_exist:nF { \g_@@_outputdir_tl
-                      \c_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
-  }{
-    \sys_if_shell_unrestricted:TF {
-      \sys_shell_now:x { mkdir~\g_@@_outputdir_tl \c_@@_tmpfolder_tl }
-    }{
-%    \end{macrocode}
-% We throw a warning if we cannot open our test file explaining how to resolve the issue.
+% These macros are left here incase someone wants to redefine them for their own style. 
 %
 %    \begin{macrocode}
-      \msg_new:nnn { fortex } { make_folder } {
-        Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it ~ 
-        ~ manually ~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
-      }
-      \msg_warning:nnx { fortex } { make_folder } { \c_@@_tmpfolder_tl }
-    }
-%    \end{macrocode}
-% Create file for next time, or if we do not have |-shell-esc| and the tmp folder does not exist, stop compilation.
-%
-%    \begin{macrocode}
-    \iow_new:N   \l_@@_testfile_iow
-    \iow_open:Nn \l_@@_testfile_iow { 
-                 \c_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
-    }
-    \iow_close:N \l_@@_testfile_iow
-  }
-}
+\tl_set:Nn \vindexfmtdef { textit }
+\tl_set:Nn \vindexfmtcall { textrm }
+\tl_set:Nn \vindexfmt { textrm }
 %    \end{macrocode}
 % \end{macro}
 %
-%
-% \begin{macro}{\@@_inctmpname:}
-% \begin{variable}{\g_@@_tmp_filename_tl}
-% Build the series of tmp filenames by incrementing the number on the end of the filename on every call.
-% The general output is of the form \file{_fortex-jobname/jobname-1.tmp}.
-% Note that there is no |-output-dir| on the front of the path.  
-%
-%    \begin{macrocode}
-\int_new:N \g_@@_inctmpname_namecount_int
-\tl_new:N \g_@@_tmp_filename_tl
-\cs_set:Npn \@@_inctmpname: {
-  \int_gincr:N \g_@@_inctmpname_namecount_int
-  \tl_gset:Nn \g_@@_tmp_filename_tl {
-    \c_@@_tmpfolder_tl /
-    \c_sys_jobname_str -
-    \int_to_arabic:n { \g_@@_inctmpname_namecount_int } .tmp
-  }
-}
-%    \end{macrocode}
-% \end{variable}
-% \end{macro}
-%
-% \begin{variable}{\c_@@_out_filename_tl}
-% Build the filename we are going to save the concatenated code segments to. This is \file{jobname.ext}.
-%
-%    \begin{macrocode}
-\tl_const:Nn \c_@@_out_filename_tl
-           { \c_sys_jobname_str.\g_@@_ext_tl }
-%    \end{macrocode}
-% \end{variable}
-%
-% \begin{macro}{\_@@_firstcall:}
-% \begin{variable}{\g_@@_firstrun_bool, \c_@@_outfile_iow}
-%
-% Some setup code that should happen on the first call after everything is loaded.
-% It is at this point that we figure out the |-output-dir|.
-% I have tried a little running this as a hook, but I have never used hooks before and I am probs just doing something wrong. 
-% 
-% Only two functions need to be called, at this point:
-% \begin{enumerate}
-% \item{Calculating |-output-dir| }
-% \item{Clearing the previous contents of the output file \file{jobname.ext}. }
-% \end{enumerate}
-%
-% However, \cs{@@_mktmpdir:} and \tn{minted@cachedir} is also called at this point due to needing to know the |-output-dir| value. 
-%
-%    \begin{macrocode}
-\iow_new:N \c_@@_outfile_iow
-\bool_new:N   \g_@@_firstrun_bool
-\bool_gset:Nn \g_@@_firstrun_bool { \c_true_bool }
-\cs_set:Npn \@@_firstcall: {
-  \bool_if:nT { \g_@@_firstrun_bool } {
-%    \end{macrocode}
-%    \begin{macrocode}
-    \@@_outputdir:
-%    \end{macrocode}
-%    \begin{macrocode}
-    \@@_mktmpdir:
-%    \end{macrocode}
-% 
-% Set our new cache location for \pkg{minted}'s calls to \pkg{pygments} so we keep all the tmp files in one place.
-%    \begin{macrocode}
-    \str_if_eq:NNT { \g_@@_printend_tl } { mint } {
-      \tl_set:Nn \minted@cachedir {.}
-    }
-%    \end{macrocode}
-% Clear the previous contents of the output file \file{jobname.ext}.
-%
-%    \begin{macrocode}
-    \iow_open:Nn \c_@@_outfile_iow { \c_@@_out_filename_tl }
-    \iow_close:N \c_@@_outfile_iow
-%    \end{macrocode}
-%    \begin{macrocode}
-    \bool_gset_false:N \g_@@_firstrun_bool
-  }
-}
-%    \end{macrocode}
-% \end{variable}
-% \end{macro}
-%
-% \subsection{File saving}
-%
-% \changes{0.0.6$\alpha$}{2022/04/1}{Figure out a bunch more catcodes that need setting when reading files }
-% \begin{macro}{\@@_setcatcode:}
-% Set catcodes required to not mangle the file when reading.
-% 
-% In the below code |^^J| is a newline.
-% and |^^I| is a tab character.
-%
-% |\| is kinda interesting as it will insert a space after the next word ``|\str|'' will turn into ``|\str |'' (note the trailing space).
-% This is an issue mostly for using hyperref labels in the typeset sections.
-%
-% Note: This is probably not a comprehensive list, however I am yet to find any more.
-% There is probably a list of all characters in a certain catcode, but for now this seems to work. 
-%
-%    \begin{macrocode}
-\cs_set:Nn \@@_setcatcode: {
-%    \end{macrocode}
-% Fallback to 2$\varepsilon$ interface or \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isnt marked as do not use (|:D|)
-%
-%    \begin{macrocode}
-  \endlinechar=`\^^J               
-%    \end{macrocode}
-% Try and protect some whitespace (Currently we have a few stray newlines but whatever)
-%
-%    \begin{macrocode}
-  \char_set_catcode_other:N \^^J
-  \char_set_catcode_other:N \^^I
-  \char_set_catcode_other:N \ 
-%    \end{macrocode}
-% Prevent lines beginning with \% from being removed as comments
-%
-%    \begin{macrocode}
-  \char_set_catcode_other:N \%
-%    \end{macrocode}
-% Prevent \LaTeX{} Command chars from being evaluated/expanded 
-%
-%    \begin{macrocode}
-  \char_set_catcode_other:N \#
-  \char_set_catcode_other:N \{
-  \char_set_catcode_other:N \}
-  \char_set_catcode_other:N \\
-  \char_set_catcode_other:N \\
-%    \end{macrocode}
-% LaTeX{} uses commands like |^^|\meta{Letter} to indicate the \textsc{ascii} code of the letter.
-% For example \c_circumflex_str\c_circumflex_str{}J corresponds to $0\times0a$ - a newline in Linux-land.
-% However as we want to write this all verbatim we disable this.
-% Note: Defining this catcode should be last.
-%    \begin{macrocode}
-  \char_set_catcode_other:N ^
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \subsubsection{Writing the code to the output file}
-%
-% \changes{0.0.5$\alpha$}{2022/03/29}{Rename writeoutput to concat\_files}
-% \begin{macro}{\@@_concat_files:}
-%
-% Append the contents of the tmp file to the output file.
-% Ideally we would open \cs{c_@@_outfile_iow} in append mode, however \LaTeX{} does not support append mode. 
-% 
-% As such this function exists to emulate the effects of opening a file in append mode, by copying the previous content of the file, then writing it back with the new content.
-%
-% This is the function that is actually responsible for writing the output file.
-%
-%    \begin{macrocode}
-\cs_set:Npn \@@_concat_files: {
-%    \end{macrocode}
-%
-%    \begin{macrocode}
-  \file_get:nnN { \g_@@_outputdir_tl \c_@@_out_filename_tl }
-                { \@@_setcatcode: } \l_tmpa_tl
-%    \end{macrocode}
-%    \begin{macrocode}
-  \file_get:nnN { \g_@@_outputdir_tl \g_@@_tmp_filename_tl }
-                { \@@_setcatcode: } \l_tmpb_tl
-%    \end{macrocode}
-% Print the tmp file to terminal for debugging
-%
-%    \begin{macrocode}
-  \bool_if:nT { \g_@@_verbose_bool }{
-    \iow_term:x { \exp_not:V { \l_tmpb_tl } }
-  }
-%    \end{macrocode}
-% Write what previously was in the file as well as our new stuff.
-%
-%    \begin{macrocode}
-  \iow_open:Nn \c_@@_outfile_iow { \c_@@_out_filename_tl }
-  \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpa_tl }
-  \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpb_tl }
-  \iow_close:N \c_@@_outfile_iow
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \subsection{Indexing}
-% 
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
 % \begin{macro}{\@@_safedelim:N}
 %
@@ -1039,6 +835,29 @@
     { uptex  } { \str_set:Nn #1 { ^^c2^^a4 } }
     { xetex  } { \str_set:Nn #1 {     ^^a4 } }
   }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
+%
+% \changes{0.0.4$\alpha$}{2022/03/21}{Add \cs{vindex}}
+%
+% \begin{macro}{\vindex}
+% Its often useful to create an index of all the functions/classes/etc at the bottom of the file.
+% However, its impossible to pass code to search for meaning. 
+%
+% The aim of this macro is to be a wrapper to \tn{index} that places the arguments in a \tn{verb} environment so functions/etc can contain things like |_| and be set in monospace. 
+% (The trick is to keep |!| out of the \tn{verb})
+%
+% The use of \tn{index} in this function is expected to be overwritten by \pkg{makeidx}/\pkg{xindy}/etc
+%
+%
+%    \begin{macrocode}
+\NewDocumentCommand \vindex { v } {
+  \str_set:Nn \l_tmpa_str  { #1 }
+  \exp_args:No \label { code: \l_tmpa_str }
+  \exp_args:No \@@_vindex_aux:nx \l_tmpa_str { \vindexfmt }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1101,48 +920,21 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsection{Interfaces}
+% \subsection{hyperref}
 %
-% \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
-%
-% \changes{0.0.4$\alpha$}{2022/03/21}{Add \cs{vindex}}
-%
-% \begin{macro}{\vindex}
-% Its often useful to create an index of all the functions/classes/etc at the bottom of the file.
-% However, its impossible to pass code to search for meaning. 
-%
-% The aim of this macro is to be a wrapper to \tn{index} that places the arguments in a \tn{verb} environment so functions/etc can contain things like |_| and be set in monospace. 
-% (The trick is to keep |!| out of the \tn{verb})
-%
-% The use of \tn{index} in this function is expected to be overwritten by \pkg{makeidx}/\pkg{xindy}/etc
-%
+% \changes{0.0.7$\alpha$}{2022/06/09}{Allow hyperrefed code to not be monospaced}
+% \begin{macro}{\fortexhypercodelinkfmt}
+% Because the code may not always be monospace. 
+% Some weird people done like monospace code. 
+% However The real reason is that because listings isn't monospace by default (although everyone makes it as the first step).
+% So we just abstract this function out that can easily be redefined by the user if they so please. 
 %
 %    \begin{macrocode}
-\NewDocumentCommand \vindex { v } {
-  \str_set:Nn \l_tmpa_str  { #1 }
-  \exp_args:No \label { code: \l_tmpa_str }
-  \exp_args:No \@@_vindex_aux:nx \l_tmpa_str { \vindexfmt }
+\NewDocumentCommand \fortexhypercodelinkfmt { m } {
+  \texttt { #1 }
 }
 %    \end{macrocode}
-%\end{macro}
-%
-% \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls.}
-% \begin{macro}{\vindexfmtdef, \vindexfmtcall, \vindexfmt}
-% Here we are defining a small collection of formatting options for the index. 
-% 
-% By default we make the pagenumber with the definition \textit{italic}, and all the calls to that definition \textrm{roman}. 
-% Similarly, any \cs{vindex} call is going to be roman.
-%
-% These macros are left here incase someone wants to redefine them for their own style. 
-%
-%    \begin{macrocode}
-\tl_set:Nn \vindexfmtdef { textit }
-\tl_set:Nn \vindexfmtcall { textrm }
-\tl_set:Nn \vindexfmt { textrm }
-%    \end{macrocode}
-%\end{macro}
-%
-% \subsection{hyperref}
+% \end{macro}
 %
 % \changes{0.0.7$\alpha$}{2022/06/05}{Add calls of a function to the index.}
 % \begin{macro}{\fortexhyperinsert}
@@ -1162,7 +954,8 @@
 % The reason that we use |:| and not a less frequently used character is to avoid the overhead of a second replacement.
 % This may become an issue in the future, but for the languages that I work with it isn't. 
 %
-% The final interesting thing about this function is that it has to be callable with the default selection of letter catcodes. This means no |@| or |_:| characters. This is due to the contents being \tn{insert} by minted in the middle of the document, characters like |@_:| are still defined as catcode other. 
+% The final interesting thing about this function is that it has to be callable with the default selection of letter catcodes. 
+% This means no |@| or |_:| characters. This is due to the contents being \tn{insert} by minted in the middle of the document, characters like |@_:| are still defined as catcode other. 
 %
 % Its not ideal, but it is the easiest way to deal with it
 %
@@ -1174,7 +967,7 @@
     \exp_args:Nx \@@_vindex_aux:nx { \l_tmpa_tl } { \vindexfmtcall }
   }
   \hyperref [ code: #3 ] {
-            \texttt{ \detokenize { #2 } } 
+            \fortexhypercodelinkfmt{ \detokenize { #2 } } 
   }
 }
 %    \end{macrocode}
@@ -1214,6 +1007,8 @@
   }
 }
 %    \end{macrocode}
+% \end{macro}
+% \changes{0.0.7$\alpha$}{2022/06/24}{fix crash when no codeblock is used}
 % \begin{macro}{\@@_mkref_file_aux:nnn}
 % This Macro does the hard work of doing the actual regexing and substituting. Before writing the contents back out to a file. 
 % 
@@ -1231,7 +1026,7 @@
 %
 % However it seems to be working now and I don't want to touch it. 
 %    \begin{macrocode}
-  \seq_if_empty:NF \fortex@codeblockregex { 
+  \tl_if_empty:NF { \fortex@codeblockregex } {
     \exp_args:NV \regex_replace_case_all:nN {
       \fortex@codeblockregex
     } \l_@@_filecontents_tl
@@ -1242,10 +1037,9 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \end{macro}
 %
 % \changes{0.0.6$\alpha$}{2022/03/30}{Add macro-like environments}
-% \changes{0.0.7$\alpha$}{2022/06/04}{finish automatic hyperref}
+% \changes{0.0.7$\alpha$}{2022/06/04}{Finish automatic hyperref}
 % 
 % This function exists to automatically add hyperlinks from the usage of a function to its definition somewhere else in the code. 
 % At the moment this is not complete and I am still yet to add the * interfaces. 
@@ -1258,7 +1052,7 @@
 \seq_new:N \g_@@_codeblock_regex_toaux_seq
 %    \end{macrocode}
 % \end{variable}
-%
+% \changes{0.0.7$\alpha$}{2022/06/24}{update hyperref regex}
 % \begin{macro}{codeblock*, codeblock}
 %    \begin{macrocode}
 \NewDocumentEnvironment { codeblock } { O{} m } {
@@ -1299,28 +1093,29 @@
 % The regex is in 3 basic sections as follows
 % \begin{table}[!h]
 % \begin{tabular}{|c|p{10cm}|} \hline
-% |(\W?[^:])| & The first |W| matches any non-letter character, the |?| modifies it so that it is able to match 0 or 1 occurrences greedily. \newline
-% We then have a list of chars that we are going to say should never precede an identifier, but are accidentally matched by |\W|.
+% |([^\w:])| & The |[^\w]| matches any non-letter character, note that at the moment this is equivalent to |\W| \newline
+% We then have a list of chars that we are going to say should never precede an identifier, but are accidentally matched by |\w|.
 % At the moment this is only ``|:|''. \emph{This is important} because we could accidentally overwrite a previously inserted hyperref link as identifiers are formatted as code:name. If another search were to pass through I have seen it nest replacements. \newline 
 % Finally we place this all in a capturing group to allow us to reinsert the char we would otherwise be replacing \\\hline
-% |##1|       & This active sequence inserts the name of the function that we want to find. \\\hline
-% |(\W)|      & Finally we match any non-letter and capture it to reinsert later. \\\hline
+% |#2|       & This active sequence inserts the name of the function that we want to find. \\\hline
+% |\b|      & Finally we match a word boundary. \\\hline
 % \end{tabular}
 % \end{table}
 %
 % The text that is getting replaced by looks complex, but simplifying is merely
 % \begin{verbatim}
-% \1¤\hyperref[code:identifier]{\psudoverb{name}}¤\2
+% \1¤\hyperref[code:identifier]{\psudoverb{name}}¤
 % \end{verbatim}
 %
-% where |\1| and |\2| are the two previously captured groups.
+% where |\1| is the previously captured group from the first row in the above table. 
+%
 %    \begin{macrocode}
     \seq_if_in:NnTF \l_@@_argv_seq { noindex } {
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert* }
     }{
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert }
     }
-    \tl_set:Nn \l_tmpa_regex {(\W?[^:])#2(\W)}
+    \tl_set:Nn \l_tmpa_regex {([^\w:])#2\b}
     \str_set:Nx \l_tmpa_str {
                   \exp_not:n { \1                     }
                               \l_@@_printdelim_str
@@ -1332,7 +1127,6 @@
                               \seq_use:Nn \g_@@_codenest_seq {:}
                   \exp_not:n { \}                     }
                               \l_@@_printdelim_str
-                  \exp_not:n { \2                     }
     }
 %    \end{macrocode}
 % One thing I should not is that yes: I do actually know about pre-compiling regex using \cs{regex_set:Nn}.
@@ -1368,10 +1162,8 @@
   \seq_if_in:NnF \l_@@_argv_seq { noindex } {
     \exp_args:Nx \@@_vindex_aux:nx { \seq_use:Nn \g_@@_codenest_seq {!} } { \vindexfmtdef }
   }
-
 } {
 %    \end{macrocode}
-% 
 % This next section will insert into the |.pdf| after the codeblock:
 % \begin{center}
 % \noindent\textit{\small{End of code block |codeblock|}}\\
@@ -1393,6 +1185,7 @@
   \group_end:
 }
 %    \end{macrocode}
+% \end{macro}
 % Because we are adding the functions we want to tracked as they are defined, we are unable to add a hyperref a usage before the definition. 
 % 
 % For this reason we don't bother hyperrefing on the first passthough and instead just generate the regex for the next. 
@@ -1408,26 +1201,243 @@
   }
 }
 %    \end{macrocode}
-% \end{macro}
 %
-% \subsection{Other interfaces}
-% 
-% \begin{macro}{\setfortex}
+% \subsection{File saving}
 %
-% Keep fortex options separate from global \pkg{minted}/\pkg{listings} options.
-% (this just gets passed though. But is separate to allow separate calls (e.g. inline code examples) to \pkg{minted}/\pkg{listings} to behave differently to the \env{code} environment ).
+% \changes{0.0.6$\alpha$}{2022/04/1}{Figure out a bunch more catcodes that need setting when reading files }
+% \begin{macro}{\@@_setcatcode:}
+% Set catcodes required to not mangle the file when reading.
 % 
-% At the moment we are using a token list, and I would like to change this sometime so other parts of the code are better handled.
-% (My suspicion is that I can avoid the required \cs{exp_args:No} in the call to \cs{@@_printcode:} by using a better type.)
+% In the below code |^^J| is a newline.
+% and |^^I| is a tab character.
+%
+% |\| is kinda interesting as it will insert a space after the next word ``|\str|'' will turn into ``|\str |'' (note the trailing space).
+% This is an issue mostly for using hyperref labels in the typeset sections.
+%
+% Note: This is probably not a comprehensive list, however I am yet to find any more.
+% There is probably a list of all characters in a certain catcode, but for now this seems to work. 
 %
 %    \begin{macrocode}
-\clist_new:N \g_@@_formatopt_clist
-\NewDocumentCommand \setfortex { m } {
-  \clist_gset:Nn \g_@@_formatopt_clist { #1 }
+\cs_set:Nn \@@_setcatcode: {
+%    \end{macrocode}
+% Fallback to 2$\varepsilon$ interface or \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isnt marked as do not use (|:D|)
+%
+%    \begin{macrocode}
+  \endlinechar=`\^^J               
+%    \end{macrocode}
+% Try and protect some whitespace (Currently we have a few stray newlines but whatever)
+%
+%    \begin{macrocode}
+  \char_set_catcode_other:N \^^J
+  \char_set_catcode_other:N \^^I
+  \char_set_catcode_other:N \ 
+%    \end{macrocode}
+% Prevent lines beginning with \% from being removed as comments
+%
+%    \begin{macrocode}
+  \char_set_catcode_other:N \%
+%    \end{macrocode}
+% Prevent \LaTeX{} Command chars from being evaluated/expanded 
+%
+%    \begin{macrocode}
+  \char_set_catcode_other:N \#
+  \char_set_catcode_other:N \{
+  \char_set_catcode_other:N \}
+  \char_set_catcode_other:N \\
+  \char_set_catcode_other:N \\
+%    \end{macrocode}
+% LaTeX{} uses commands like |^^|\meta{Letter} to indicate the \textsc{ascii} code of the letter.
+% For example \c_circumflex_str\c_circumflex_str{}J corresponds to $0\times0a$ - a newline in Linux-land.
+% However as we want to write this all verbatim we disable this.
+% Note: Defining this catcode should be last.
+%    \begin{macrocode}
+  \char_set_catcode_other:N ^
 }
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{0.0.3$\alpha$}{2022/03/10}{Add automatic folder creation}
+%
+% \begin{macro}{\@@_mktmpdir}
+% If we are writing files into a folder, we need to make sure that the folder exists, and if we not we will either create it ourselves or say a warning that the folder can be created manually.
+% I want to avoid explicitly depending on |-shell-esc|, so as a consequence this function is on the jankier side.  
+% The main issue is that \LaTeX{} doesn't support doing anything with folders. As such we cannot check if a folder exists, or create a new folder without |-shell-esc| permissions. 
+% 
+% The basic idea is to check if a test file: \file{outdir/_fortex-jobname/jobname-0.tmp} exists in our output folder.
+% If the folder doesn't exist the \cs{file_if_exist:nF}, will not cause any errors, but will just say the file doesn't exist. 
+% If we don't find the file and we don't have |-shell-esc| permissions, we warn the user, and try to write a new test file. 
+% If the folder doesn't exist trying to write to the file will cause a critical error.
+%
+% If we do have |-shell-esc| permissions, we create a folder and continue on our way. 
+% 
+%    \begin{macrocode}
+\cs_set:Npn \@@_mktmpdir: {
+  \file_if_exist:nF { \g_@@_outputdir_tl
+                      \c_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
+  }{
+    \sys_if_shell_unrestricted:TF {
+      \sys_shell_now:x { mkdir~\g_@@_outputdir_tl \c_@@_tmpfolder_tl }
+    }{
+%    \end{macrocode}
+% We throw a warning if we cannot open our test file explaining how to resolve the issue.
+%
+%    \begin{macrocode}
+      \msg_new:nnn { fortex } { make_folder } {
+        Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it ~ 
+        ~ manually ~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
+      }
+      \msg_warning:nnx { fortex } { make_folder } { \c_@@_tmpfolder_tl }
+    }
+%    \end{macrocode}
+% Create file for next time, or if we do not have |-shell-esc| and the tmp folder does not exist, stop compilation.
+%
+%    \begin{macrocode}
+    \iow_new:N   \l_@@_testfile_iow
+    \iow_open:Nn \l_@@_testfile_iow { 
+                 \c_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
+    }
+    \iow_close:N \l_@@_testfile_iow
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
+% Finally we register this with with a hook to be called at the end of |\begin{document}|
+% This has to be called at the \emph{end} due to needing enough time for the log file to be created. 
+% 
+%    \begin{macrocode}
+\hook_gput_code:nnn { begindocument/end } { fortex } {
+    \@@_outputdir:
+    \@@_mktmpdir:
+}
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_inctmpname:}
+% \begin{variable}{\g_@@_tmp_filename_tl}
+% Build the series of tmp filenames by incrementing the number on the end of the filename on every call.
+% The general output is of the form \file{_fortex-jobname/jobname-1.tmp}.
+% Note that there is no |-output-dir| on the front of the path.  
+%
+%    \begin{macrocode}
+\int_new:N \g_@@_inctmpname_namecount_int
+\tl_new:N \g_@@_tmp_filename_tl
+\cs_set:Npn \@@_inctmpname: {
+  \int_gincr:N \g_@@_inctmpname_namecount_int
+  \tl_gset:Nn \g_@@_tmp_filename_tl {
+    \c_@@_tmpfolder_tl /
+    \c_sys_jobname_str -
+    \int_to_arabic:n { \g_@@_inctmpname_namecount_int } .tmp
+  }
+}
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \begin{variable}{\c_@@_out_filename_tl}
+% Build the filename we are going to save the concatenated code segments to. This is \file{jobname.ext}.
+%
+%    \begin{macrocode}
+\tl_const:Nn \c_@@_out_filename_tl
+           { \c_sys_jobname_str.\g_@@_ext_tl }
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsubsection{Writing the code to the output file}
+% \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
+%
+% The first thing that we want to to is clear the contents of the file.
+% As all other writes to the main output file are going to be contatinations, we need to empty it first. 
+% 
+%    \begin{macrocode}
+\iow_new:N \c_@@_outfile_iow
+\hook_gput_code:nnn { begindocument/end } { fortex } {
+  \iow_open:Nn \c_@@_outfile_iow { \c_@@_out_filename_tl }
+  \iow_close:N \c_@@_outfile_iow
+}
+%    \end{macrocode}
+%
+% \changes{0.0.5$\alpha$}{2022/03/29}{Rename writeoutput to concat\_files}
+% \begin{macro}{\@@_concat_files:}
+%
+% Append the contents of the tmp file to the output file.
+% Ideally we would open \cs{c_@@_outfile_iow} in append mode, however \LaTeX{} does not support append mode. 
+% 
+% As such this function exists to emulate the effects of opening a file in append mode, by copying the previous content of the file, then writing it back with the new content.
+%
+% This is the function that is actually responsible for writing the output file.
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_concat_files: {
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+  \file_get:nnN { \g_@@_outputdir_tl \c_@@_out_filename_tl }
+                { \@@_setcatcode: } \l_tmpa_tl
+%    \end{macrocode}
+%    \begin{macrocode}
+  \file_get:nnN { \g_@@_outputdir_tl \g_@@_tmp_filename_tl }
+                { \@@_setcatcode: } \l_tmpb_tl
+%    \end{macrocode}
+% Print the tmp file to terminal for debugging
+%
+%    \begin{macrocode}
+  \bool_if:nT { \g_@@_verbose_bool }{
+    \iow_term:x { \exp_not:V { \l_tmpb_tl } }
+  }
+%    \end{macrocode}
+% Write what previously was in the file as well as our new stuff.
+%
+%    \begin{macrocode}
+  \iow_open:Nn \c_@@_outfile_iow { \c_@@_out_filename_tl }
+  \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpa_tl }
+  \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpb_tl }
+  \iow_close:N \c_@@_outfile_iow
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
+% \changes{0.0.7$\alpha$}{2022/06/09}{Fix listings escape}
+% \begin{macro}{\@@_printcode:nnn}
+% \begin{arguments}
+% \item{ keyvals to pass to \pkg{minted}/\pkg{listings} (must be expanded with \cs{exp_args:No} when this function is called)}
+% \item{ programming language we want to highlight}
+% \item{ tmp filename we are going to use (absolute path)}
+% \end{arguments}
+%
+% Load the saved tmp file and do all the highlighting/formatting and then place into the pdf.
+% Note that we need to pass the full path when using |-output-dir|.  
+%
+% \begin{itemize}[label={Bugs:}]
+% \item{This function is weird, and I have no idea why |:onn| or |:xnn| signatures don't work?
+%       but calling \cs{exp_args:No} \cs{@@_printcode:nnn} does work?}
+% \end{itemize}
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_printcode:nnn #1#2#3 {
+  \@@_codesafedelim:N \l_tmpa_str
+  \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
+    \tl_set:Nn \minted@cachedir {\g_@@_outputdir_tl \c_@@_tmpfolder_tl}
+    \inputminted [escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
+  }{
+%    \end{macrocode}
+% \pkg{listings} doesn't support no highlighting by setting the key |language=text|, so we need to explicitly \emph{not} pass in a language key. 
+%
+%    \begin{macrocode}
+%     \tl_set:Nx \l_tmpa_tl { escapechar={\l_tmpa_str} }
+%     \exp_args:No \lstset { \l_tmpa_tl } 
+    \lstset{escapechar = {¤}}
+    \str_if_eq:NNTF { #2 } { text } {
+      \lstinputlisting [ #1 ] { #3 }
+    }{
+      \lstinputlisting [ language=#2, #1 ] { #3 }
+    }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+
 % \begin{environment}{code}
 % The actual environment that gets called.
 % There are a few things about this function that are not optimal, but I have tried and cannot think of any more elegant way to do them.
@@ -1450,7 +1460,6 @@
 %    \begin{macrocode}
 \NewDocumentEnvironment { code } {} {
   \VerbatimEnvironment
-  \@@_firstcall:
   \@@_inctmpname:
 %    \end{macrocode}
 % One interesting thing to note, is that \tn{VerbatimOut} does not require the name catcode settings as when we are doing the append operations in \cs{@@_concat_files:}.
@@ -1472,10 +1481,8 @@
 %    \begin{macrocode}
   \tl_if_exist:NT { \fortex@outputdir } {
     \@@_concat_files:
-    \benchmark_tic:
     \@@_mkref_file:nN { \g_@@_outputdir_tl\g_@@_tmp_filename_tl }
                               \l_tmpa_tl
-    \benchmark_toc:
     \exp_args:No \@@_printcode:nnn { \g_@@_formatopt_clist }
                                            \g_@@_lang_tl
                                          { \g_@@_outputdir_tl\l_tmpa_tl } 
