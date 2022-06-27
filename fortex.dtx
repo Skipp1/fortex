@@ -200,7 +200,7 @@
 %    \begin{macrocode}
 % \RequirePackage[enable-debug]{ expl3 }
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-06-24} {0.0.7$\alpha$}
+\ProvidesExplPackage {fortex} {2022-06-24} {0.0.8$\alpha$}
 {like noweb without external tooling}
 %    \end{macrocode}
 %
@@ -403,19 +403,48 @@
   \RequirePackage { listings }
 }
 %    \end{macrocode}
-%
+% \changes{0.0.8$\alpha$}{2022/06/26}{Allow overriding package options with \textbackslash{}setfortex}
 % \begin{macro}{\setfortex}
 %
 % Keep fortex options separate from global \pkg{minted}/\pkg{listings} options.
 % (this just gets passed though. But is separate to allow separate calls (e.g. inline code examples) to \pkg{minted}/\pkg{listings} to behave differently to the \env{code} environment ).
 % 
-% At the moment we are using a token list, and I would like to change this sometime so other parts of the code are better handled.
-% (My suspicion is that I can avoid the required \cs{exp_args:No} in the call to \cs{@@_printcode:} by using a better type.)
+% This function also has the ability to override the \pkg{fortex} specific package options (like file extension and printing backend).
+%
+% The idea is to provide a unified interface similar to \pkg{minted}/\pkg{listings}.
+%    \begin{macrocode}
+\tl_new:N \g_@@_print_keystore_tl
+\NewDocumentCommand \setfortex { m } {
+%    \end{macrocode}
+% 
+% One of the problems that I encountered whilst trying to separate out the \pkg{fortex} keys from the \pkg{minted}/\pkg{listings} keys is that removing keys is hard. 
+%
+% Something like the keyval interface doesn't allow setting arbitrary keys on the fly (\pkg{minted}/\pkg{listings} have a lot of keys and I am not putting them in manually).
+% But the prop interface doesn't allow key-only booleans (e.g. `breaklines' from \pkg{minted}).
+% 
+% Because of this I had to use \cs{keyval_parse:NNn} to put the key-only bools into a sequence and they key-val pairs into a prop. 
+% This is not ideal as I would like to pass around the proper datatype as later on the consolation into a generic tokenlist gets annoying.  
 %
 %    \begin{macrocode}
-\clist_new:N \g_@@_formatopt_clist
-\NewDocumentCommand \setfortex { m } {
-  \clist_gset:Nn \g_@@_formatopt_clist { #1 }
+  \keyval_parse:NNn { \seq_put_left:Nn \l_tmpa_seq }
+                    { \prop_put:Nnn \l_tmpa_prop } 
+                    { #1 }
+  \seq_remove_all:Nn \l_tmpa_seq  { verbose }
+  \prop_remove:Nn    \l_tmpa_prop { lang }
+  \prop_remove:Nn    \l_tmpa_prop { ext }
+  \prop_remove:Nn    \l_tmpa_prop { print }
+%    \end{macrocode}
+% Note the trailing comma after the \cs{seq_use:Nn}
+%
+%    \begin{macrocode}
+  \tl_gset:Nx \g_@@_print_keystore_tl 
+             { \seq_use:Nn \l_tmpa_seq {,} , }
+  \tl_gput_right:Nx \g_@@_print_keystore_tl 
+                   { \prop_to_keyval:N \l_tmpa_prop }
+%    \end{macrocode}
+% Because now we are back in \pkg{fortex}-land, we can just use the regular keyval interface (none of this silly tokenlist stuff)
+%    \begin{macrocode}
+  \keys_set_known:nn { fortex } { #1 }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1419,7 +1448,7 @@
   \@@_codesafedelim:N \l_tmpa_str
   \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
     \tl_set:Nn \minted@cachedir {\g_@@_outputdir_tl \c_@@_tmpfolder_tl}
-    \inputminted [escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
+    \inputminted [ escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
   }{
 %    \end{macrocode}
 % \pkg{listings} doesn't support no highlighting by setting the key |language=text|, so we need to explicitly \emph{not} pass in a language key. 
@@ -1483,9 +1512,9 @@
     \@@_concat_files:
     \@@_mkref_file:nN { \g_@@_outputdir_tl\g_@@_tmp_filename_tl }
                               \l_tmpa_tl
-    \exp_args:No \@@_printcode:nnn { \g_@@_formatopt_clist }
-                                           \g_@@_lang_tl
-                                         { \g_@@_outputdir_tl\l_tmpa_tl } 
+    \exp_args:No \@@_printcode:nnn { \g_@@_print_keystore_tl }
+                        \g_@@_lang_tl
+                      { \g_@@_outputdir_tl\l_tmpa_tl } 
   }
 }
 %    \end{macrocode}

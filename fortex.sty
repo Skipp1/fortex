@@ -19,7 +19,7 @@
 %% version 2005/12/01 or later.
 %% 
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-06-24} {0.0.7$\alpha$}
+\ProvidesExplPackage {fortex} {2022-06-24} {0.0.8$\alpha$}
 {like noweb without external tooling}
 \RequirePackage { l3keys2e }
 \RequirePackage { fancyvrb }
@@ -81,9 +81,20 @@
 }{
   \RequirePackage { listings }
 }
-\clist_new:N \g__fortex_formatopt_clist
+\tl_new:N \g__fortex_print_keystore_tl
 \NewDocumentCommand \setfortex { m } {
-  \clist_gset:Nn \g__fortex_formatopt_clist { #1 }
+  \keyval_parse:NNn { \seq_put_left:Nn \l_tmpa_seq }
+                    { \prop_put:Nnn \l_tmpa_prop }
+                    { #1 }
+  \seq_remove_all:Nn \l_tmpa_seq { verbose }
+  \prop_remove:Nn \l_tmpa_prop { lang }
+  \prop_remove:Nn \l_tmpa_prop { ext }
+  \prop_remove:Nn \l_tmpa_prop { print }
+  \tl_gset:Nx \g__fortex_print_keystore_tl
+             { \seq_use:Nn \l_tmpa_seq {,} , }
+  \tl_gput_right:Nx \g__fortex_print_keystore_tl
+                   { \prop_to_keyval:N \l_tmpa_prop }
+  \keys_set_known:nn { fortex } { #1 }
 }
 \tl_if_empty:NT \g__fortex_ext_tl {
   \msg_new:nnn { fortex } { language } {
@@ -387,7 +398,7 @@
   \__fortex_codesafedelim:N \l_tmpa_str
   \str_if_eq:NNTF { \g__fortex_printend_tl } { mint } {
     \tl_set:Nn \minted@cachedir {\g__fortex_outputdir_tl \c__fortex_tmpfolder_tl}
-    \inputminted [escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
+    \inputminted [ escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
   }{
     \lstset{escapechar = {^^c2^^a4}}
     \str_if_eq:NNTF { #2 } { text } {
@@ -409,9 +420,9 @@
     \__fortex_concat_files:
     \__fortex_mkref_file:nN { \g__fortex_outputdir_tl\g__fortex_tmp_filename_tl }
                               \l_tmpa_tl
-    \exp_args:No \__fortex_printcode:nnn { \g__fortex_formatopt_clist }
-                                           \g__fortex_lang_tl
-                                         { \g__fortex_outputdir_tl\l_tmpa_tl }
+    \exp_args:No \__fortex_printcode:nnn { \g__fortex_print_keystore_tl }
+                        \g__fortex_lang_tl
+                      { \g__fortex_outputdir_tl\l_tmpa_tl }
   }
 }
 \endinput
