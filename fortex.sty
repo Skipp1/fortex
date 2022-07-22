@@ -86,10 +86,10 @@
   \keyval_parse:NNn { \seq_put_left:Nn \l_tmpa_seq }
                     { \prop_put:Nnn \l_tmpa_prop }
                     { #1 }
-  \seq_remove_all:Nn \l_tmpa_seq { verbose }
-  \prop_remove:Nn \l_tmpa_prop { lang }
-  \prop_remove:Nn \l_tmpa_prop { ext }
-  \prop_remove:Nn \l_tmpa_prop { print }
+  \seq_remove_all:Nn \l_tmpa_seq  { verbose }
+  \prop_remove:Nn    \l_tmpa_prop { lang }
+  \prop_remove:Nn    \l_tmpa_prop { ext }
+  \prop_remove:Nn    \l_tmpa_prop { print }
   \tl_gset:Nx \g__fortex_print_keystore_tl
              { \seq_use:Nn \l_tmpa_seq {,} , }
   \tl_gput_right:Nx \g__fortex_print_keystore_tl
@@ -374,22 +374,56 @@
     \int_to_arabic:n { \g__fortex_inctmpname_namecount_int } .tmp
   }
 }
-\tl_const:Nn \c__fortex_out_filename_tl
+\tl_const:Nn \c__fortex_default_out_filename_tl
            { \c_sys_jobname_str.\g__fortex_ext_tl }
-\iow_new:N \c__fortex_outfile_iow
+\tl_new:N   \g__fortex_out_filename_tl
+\tl_gset:No \g__fortex_out_filename_tl \c__fortex_default_out_filename_tl
+\seq_new:N \g__fortex_lang_stack_seq
+\seq_new:N \g__fortex_outfile_stack_seq
+\seq_new:N \g__fortex_outfile_history_seq
+\NewDocumentEnvironment { subfile } { m m } {
+  \seq_gpush:Nn \g__fortex_outfile_history_seq { #2 }
+  \seq_gpush:No \g__fortex_outfile_stack_seq \g__fortex_out_filename_tl
+  \seq_gpush:No \g__fortex_lang_stack_seq \g__fortex_lang_tl
+  \tl_gset:Nn \g__fortex_out_filename_tl { #2 }
+  \tl_gset:Nn \g__fortex_lang_tl { #1 }
+}{
+  \seq_gpop:NN \g__fortex_outfile_stack_seq \l_tmpa_tl
+  \tl_gset:No \g__fortex_out_filename_tl \l_tmpa_tl
+  \seq_gpop:NN  \g__fortex_lang_stack_seq \l_tmpa_tl
+  \tl_gset:No \g__fortex_lang_tl \l_tmpa_tl
+}
+\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
+  \iow_now:cx { @auxout } {
+     \exp_not:n { \gdef\fortex@subfiles }
+     { \exp_not:f { \seq_use:Nn \g__fortex_outfile_history_seq {,} } }
+  }
+}
 \hook_gput_code:nnn { begindocument/end } { fortex } {
-  \iow_open:Nn \c__fortex_outfile_iow { \c__fortex_out_filename_tl }
+  \tl_if_exist:NT { \fortex@subfiles } {
+    \seq_set_from_clist:Nn \l_tmpa_seq \fortex@subfiles
+     \seq_map_inline:Nn { \l_tmpa_seq } {
+      \__fortex_clearfile:n { #1 }
+    }
+  }
+}
+\iow_new:N \c__fortex_outfile_iow
+\cs_set:Npn \__fortex_clearfile:n #1 {
+  \iow_open:Nn \c__fortex_outfile_iow { #1 }
   \iow_close:N \c__fortex_outfile_iow
 }
-\cs_set:Npn \__fortex_concat_files: {
-  \file_get:nnN { \g__fortex_outputdir_tl \c__fortex_out_filename_tl }
+\hook_gput_code:nnn { begindocument/end } { fortex } {
+  \__fortex_clearfile:n { \c__fortex_default_out_filename_tl }
+}
+\cs_set:Npn \__fortex_concat_files:nn #1#2 {
+  \file_get:nnN { \g__fortex_outputdir_tl #2 }
                 { \__fortex_setcatcode: } \l_tmpa_tl
-  \file_get:nnN { \g__fortex_outputdir_tl \g__fortex_tmp_filename_tl }
+  \file_get:nnN { \g__fortex_outputdir_tl #1 }
                 { \__fortex_setcatcode: } \l_tmpb_tl
   \bool_if:nT { \g__fortex_verbose_bool }{
     \iow_term:x { \exp_not:V { \l_tmpb_tl } }
   }
-  \iow_open:Nn \c__fortex_outfile_iow { \c__fortex_out_filename_tl }
+  \iow_open:Nn \c__fortex_outfile_iow { #2 }
   \iow_now:Nx  \c__fortex_outfile_iow { \exp_not:V \l_tmpa_tl }
   \iow_now:Nx  \c__fortex_outfile_iow { \exp_not:V \l_tmpb_tl }
   \iow_close:N \c__fortex_outfile_iow
@@ -417,7 +451,7 @@
 }{
   \endVerbatimOut
   \tl_if_exist:NT { \fortex@outputdir } {
-    \__fortex_concat_files:
+    \__fortex_concat_files:nn \g__fortex_tmp_filename_tl \g__fortex_out_filename_tl
     \__fortex_mkref_file:nN { \g__fortex_outputdir_tl\g__fortex_tmp_filename_tl }
                               \l_tmpa_tl
     \exp_args:No \__fortex_printcode:nnn { \g__fortex_print_keystore_tl }

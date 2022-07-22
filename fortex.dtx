@@ -102,6 +102,17 @@
 % However they seem to be using a very different implementation to what I have done here. 
 %
 % \end{environment}
+% 
+% \begin{environment}{subfile}
+% \begin{syntax}
+% |\begin{subfile}|
+% \qquad \meta{code environments to be redirected}
+% |\end{subfile}|
+% \end{syntax} \vspace{1ex}
+%
+%
+% \end{environment}
+%
 %
 % \begin{function}{\vindex}
 % \begin{syntax}
@@ -403,7 +414,7 @@
   \RequirePackage { listings }
 }
 %    \end{macrocode}
-% \changes{0.0.8$\alpha$}{2022/06/26}{Allow overriding package options with \textbackslash{}setfortex}
+% \changes{0.0.8$\alpha$}{2022/06/26}{Allow overriding package options with \cs{setfortex}}
 % \begin{macro}{\setfortex}
 %
 % Keep fortex options separate from global \pkg{minted}/\pkg{listings} options.
@@ -1363,31 +1374,129 @@
 % \end{variable}
 % \end{macro}
 %
-% \begin{variable}{\c_@@_out_filename_tl}
+% \begin{variable}{\c_@@_default_out_filename_tl}
 % Build the filename we are going to save the concatenated code segments to. This is \file{jobname.ext}.
 %
 %    \begin{macrocode}
-\tl_const:Nn \c_@@_out_filename_tl
+\tl_const:Nn \c_@@_default_out_filename_tl
            { \c_sys_jobname_str.\g_@@_ext_tl }
+\tl_new:N   \g_@@_out_filename_tl
+\tl_gset:No \g_@@_out_filename_tl \c_@@_default_out_filename_tl
 %    \end{macrocode}
 % \end{variable}
 %
+% \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
+% \begin{environment}{subfile}
+% \begin{arguments}
+% \item {Language to Highlight}
+% \item {File to save contents to}
+% \end{arguments}
+%
+% The aim of this environment is to provide a means of including header files within the same document (or any other small subfile) without the need to split them off to a separate tex file. 
+%
+% As multiple subfiles are allowed to be nested, it makes sense that we should do a stack based implementation with \cs{g_@@_outfile_stack_seq} and \cs{g_@@_lang_stack_seq}.
+% This function overwrites the global variable \cs{g_@@_out_filename_tl}, between its |\begin| and |\end| calls. 
+%
+% One problem that I encountered is that you cannot empty a file on |\begin{subfile}| as you may want to have multiple subfile sections all pointing to the same output file. 
+% The work around I have devised for this is to save every subfile filename into a sequence and then appending it to the end of the |.aux| file at the end of the document. 
+%
+% This way we can clear the files that we know we are going to use when we next start up \LaTeX{}. 
+% It is also not a huge problem that the first run will not clear the file, as chances are there is nothing in the file to begin with (potentially not even existing). 
+% If there is some junk in the file that previously existed, oh well a recompile should fix it and this is such a small edge case that I probably wont even bother handling it. (Maybe in the future)
+%
+%    \begin{macrocode}
+\seq_new:N \g_@@_lang_stack_seq
+\seq_new:N \g_@@_outfile_stack_seq
+\seq_new:N \g_@@_outfile_history_seq
+%    \end{macrocode}
+%    \begin{macrocode}
+\NewDocumentEnvironment { subfile } { m m } {
+  \seq_gpush:Nn \g_@@_outfile_history_seq { #2 }
+%    \end{macrocode}
+% Let us first save the old state of the output file and highlighting and replace it with our newly defined options. 
+%
+%    \begin{macrocode}
+  \seq_gpush:No \g_@@_outfile_stack_seq \g_@@_out_filename_tl
+  \seq_gpush:No \g_@@_lang_stack_seq \g_@@_lang_tl
+  \tl_gset:Nn \g_@@_out_filename_tl { #2 }
+  \tl_gset:Nn \g_@@_lang_tl { #1 }
+}{
+%    \end{macrocode}
+% We need to pop our variable into a temp variable as opposed to back into the input stream. 
+% Not ideal, but whatever easy enough to do. 
+% If I find a way of popping back into the stream that's what I will switch to.
+%
+%    \begin{macrocode}
+  \seq_gpop:NN \g_@@_outfile_stack_seq \l_tmpa_tl
+  \tl_gset:No \g_@@_out_filename_tl \l_tmpa_tl
+%    \end{macrocode}
+%    \begin{macrocode}
+  \seq_gpop:NN  \g_@@_lang_stack_seq \l_tmpa_tl
+  \tl_gset:No \g_@@_lang_tl \l_tmpa_tl
+}
+%    \end{macrocode}
+% We need to specify |enddocument/afterlastpage| to make sure everything has finished being typeset, but the file handle for |.aux| is still open. 
+%
+% At the moment I am using \cs{exp_not:f} to keep the \cs{seq_use:Nn} from expanding too far, as we cannot use \pkg{expl3} inside the |.aux| file.  
+% Note that we need to put an extra set of |{}| around the \cs{seq_use:Nn} incase there are no subfiles to write to.
+%
+%    \begin{macrocode}
+\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
+  \iow_now:cx { @auxout } {
+     \exp_not:n { \gdef\fortex@subfiles } 
+     { \exp_not:f { \seq_use:Nn \g_@@_outfile_history_seq {,} } }
+  }
+}
+%    \end{macrocode}
+% And here is where we read \tn{fortex@subfile} back into \LaTeX{}.
+% We need to read this in \emph{after} the |.aux| file has been loaded, but before any \env{subfile} environment would have occurred.  
+% 
+%    \begin{macrocode}
+\hook_gput_code:nnn { begindocument/end } { fortex } {
+  \tl_if_exist:NT { \fortex@subfiles } {
+    \seq_set_from_clist:Nn \l_tmpa_seq \fortex@subfiles
+     \seq_map_inline:Nn { \l_tmpa_seq } {
+      \@@_clearfile:n { #1 }
+    }
+  }
+}
+%    \end{macrocode}
+% \end{environment}
+%
 % \subsubsection{Writing the code to the output file}
 % \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
-%
+% \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
+% \begin{macro}{\@@_clearfile:n}
+% \begin{arguments}
+% \item{ Filename to empty the contents from}
+% \end{arguments}
 % The first thing that we want to to is clear the contents of the file.
 % As all other writes to the main output file are going to be contatinations, we need to empty it first. 
 % 
+% We abstract \cs{@@_clearfile:n} out into its own function so that it cal also be called in the \env{subfile} environment.
+%
+% Note that at the moment \cs{@@_clearfile:n} adds a spare newline to the file, This is annoying as we cannot use |#! /usr/bin/env| to create scripts. 
+% At the moment I don't really know how to fix this but whatever. 
+%
 %    \begin{macrocode}
 \iow_new:N \c_@@_outfile_iow
-\hook_gput_code:nnn { begindocument/end } { fortex } {
-  \iow_open:Nn \c_@@_outfile_iow { \c_@@_out_filename_tl }
+\cs_set:Npn \@@_clearfile:n #1 { 
+  \iow_open:Nn \c_@@_outfile_iow { #1 }
   \iow_close:N \c_@@_outfile_iow
 }
+\hook_gput_code:nnn { begindocument/end } { fortex } {
+  \@@_clearfile:n { \c_@@_default_out_filename_tl }
+}
 %    \end{macrocode}
+% \end{macro}
 %
 % \changes{0.0.5$\alpha$}{2022/03/29}{Rename writeoutput to concat\_files}
-% \begin{macro}{\@@_concat_files:}
+% \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
+% \begin{macro}{\@@_concat_files:nn}
+% \begin{arguments}
+% \item{ Filename to read from }
+% \item{ Filename to be concatenated into }
+% \end{arguments}
 %
 % Append the contents of the tmp file to the output file.
 % Ideally we would open \cs{c_@@_outfile_iow} in append mode, however \LaTeX{} does not support append mode. 
@@ -1397,15 +1506,15 @@
 % This is the function that is actually responsible for writing the output file.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_concat_files: {
+\cs_set:Npn \@@_concat_files:nn #1#2 {
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-  \file_get:nnN { \g_@@_outputdir_tl \c_@@_out_filename_tl }
+  \file_get:nnN { \g_@@_outputdir_tl #2 }
                 { \@@_setcatcode: } \l_tmpa_tl
 %    \end{macrocode}
 %    \begin{macrocode}
-  \file_get:nnN { \g_@@_outputdir_tl \g_@@_tmp_filename_tl }
+  \file_get:nnN { \g_@@_outputdir_tl #1 }
                 { \@@_setcatcode: } \l_tmpb_tl
 %    \end{macrocode}
 % Print the tmp file to terminal for debugging
@@ -1418,7 +1527,7 @@
 % Write what previously was in the file as well as our new stuff.
 %
 %    \begin{macrocode}
-  \iow_open:Nn \c_@@_outfile_iow { \c_@@_out_filename_tl }
+  \iow_open:Nn \c_@@_outfile_iow { #2 }
   \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpa_tl }
   \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpb_tl }
   \iow_close:N \c_@@_outfile_iow
@@ -1509,9 +1618,13 @@
 %
 %    \begin{macrocode}
   \tl_if_exist:NT { \fortex@outputdir } {
-    \@@_concat_files:
+    \@@_concat_files:nn \g_@@_tmp_filename_tl \g_@@_out_filename_tl
+%    \end{macrocode}
+%    \begin{macrocode}
     \@@_mkref_file:nN { \g_@@_outputdir_tl\g_@@_tmp_filename_tl }
                               \l_tmpa_tl
+%    \end{macrocode}
+%    \begin{macrocode}
     \exp_args:No \@@_printcode:nnn { \g_@@_print_keystore_tl }
                         \g_@@_lang_tl
                       { \g_@@_outputdir_tl\l_tmpa_tl } 
