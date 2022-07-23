@@ -148,7 +148,6 @@
 % \item{Finish of |.dtx| by adding Usage instructions}
 % \item{Get line numbering working}
 % \item{Short verbatim (preferably default "|" with highlighting, and |"| without) should be configurable}  
-% \item{Allow multiple files in the same document (e.g. |.c| and |.h| files)---still need to figure out an interface (this will probably require changing the outputted filename in the \env{code} environment)}
 % \item{Changelog interface (just a wrapper for glossaries)?}
 % \end{enumerate}
 %
@@ -172,23 +171,6 @@
 %   {\string|}{\code|}%
 % }
 % \end{verbatim}
-%
-%
-% \paragraph{Interface ideas for multiple files:}
-% Looking at how \pkg{noweb} implements its multiple files 
-%
-% \begin{verbatim}
-% << file.c >> = 
-% ...
-% @
-% << file.h >> = 
-% ...
-% @
-% \end{verbatim}
-% 
-% So I am thinking that the \LaTeX{} equivalent would be a |\begin{outfile}{file.c}| kind of interface.
-% However, I am not in love with this and I would want to avoid this being mandatory. 
-% I am yet to check other literate programming styles for how they implement this.
 %
 % \end{documentation}
 %
@@ -360,6 +342,8 @@
 % The next collections of functions is to do with the code printing and how it is displayed in the \file{.pdf} itself.
 % Most of the functions are about switching between \pkg{minted} and \pkg{listings}. 
 %
+% \subsubsection{\pkg{fortex} printing backend}
+%
 % \changes{0.0.3$\alpha$}{2022/03/08}{Add \pkg{listings}/\pkg{minted} option}
 % \changes{0.0.6$\alpha$}{2022/04/02}{Be more structured}
 % \begin{variable}{\g_@@_printend_tl}
@@ -414,6 +398,8 @@
   \RequirePackage { listings }
 }
 %    \end{macrocode}
+%
+% \subsubsection{Set \pkg{fortex} options}
 % \changes{0.0.8$\alpha$}{2022/06/26}{Allow overriding package options with \cs{setfortex}}
 % \begin{macro}{\setfortex}
 %
@@ -436,7 +422,12 @@
 % Because of this I had to use \cs{keyval_parse:NNn} to put the key-only bools into a sequence and they key-val pairs into a prop. 
 % This is not ideal as I would like to pass around the proper datatype as later on the consolation into a generic tokenlist gets annoying.  
 %
+% Note: we need to empty the contents of \cs{l_tmpa_seq} and \cs{l_tmpa_prop}.
+% As unlike the rest of the times that we use these scratch variables, we are performing regular concatenation, and we may end up with the previous contents if we are not careful. 
+%
 %    \begin{macrocode}
+  \seq_clear:N \l_tmpa_seq
+  \prop_clear:N \l_tmpa_prop
   \keyval_parse:NNn { \seq_put_left:Nn \l_tmpa_seq }
                     { \prop_put:Nnn \l_tmpa_prop } 
                     { #1 }
@@ -835,7 +826,6 @@
 %    \end{macrocode}
 % \end{variable} 
 %
-%
 % \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls.}
 % \begin{macro}{\vindexfmtdef, \vindexfmtcall, \vindexfmt}
 % Here we are defining a small collection of formatting options for the index. 
@@ -851,6 +841,8 @@
 \tl_set:Nn \vindexfmt { textrm }
 %    \end{macrocode}
 % \end{macro}
+%
+% \subsubsection{Safe delimiter}
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
 % \begin{macro}{\@@_safedelim:N}
@@ -878,6 +870,8 @@
 }
 %    \end{macrocode}
 % \end{macro}
+%
+% \subsubsection{Vindex}
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
 %
@@ -976,6 +970,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsubsection{Formatted hyperref for code}
+%
 % \changes{0.0.7$\alpha$}{2022/06/05}{Add calls of a function to the index.}
 % \begin{macro}{\fortexhyperinsert}
 % Because we have a few things that we want to do at the location of the regex insertion, we create our own macro to handle them.
@@ -1012,6 +1008,8 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsubsection{Create file with refs}
+%
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
 % \begin{macro}{\@@_mkref_file:Nn}
 %
@@ -1078,6 +1076,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsubsection{Codeblock}
+%
 % \changes{0.0.6$\alpha$}{2022/03/30}{Add macro-like environments}
 % \changes{0.0.7$\alpha$}{2022/06/04}{Finish automatic hyperref}
 % 
@@ -1092,8 +1092,14 @@
 \seq_new:N \g_@@_codeblock_regex_toaux_seq
 %    \end{macrocode}
 % \end{variable}
-% \changes{0.0.7$\alpha$}{2022/06/24}{update hyperref regex}
+%
 % \begin{macro}{codeblock*, codeblock}
+%
+% \begin{arguments}
+% \item{ Optional flags: |noref| or |noindex| }
+% \item{ Name of codeblock to be highlighted}
+% \end{arguments}
+%
 %    \begin{macrocode}
 \NewDocumentEnvironment { codeblock } { O{} m } {
   \group_begin:
@@ -1244,6 +1250,8 @@
 %
 % \subsection{File saving}
 %
+% \subsubsection{Set catcode}
+%
 % \changes{0.0.6$\alpha$}{2022/04/1}{Figure out a bunch more catcodes that need setting when reading files }
 % \begin{macro}{\@@_setcatcode:}
 % Set catcodes required to not mangle the file when reading.
@@ -1296,6 +1304,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsubsection{Create temp working directory}
 % \changes{0.0.3$\alpha$}{2022/03/10}{Add automatic folder creation}
 %
 % \begin{macro}{\@@_mktmpdir}
@@ -1385,12 +1394,9 @@
 %    \end{macrocode}
 % \end{variable}
 %
+% \subsubsection{Subfile}
+%
 % \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
-% \begin{environment}{subfile}
-% \begin{arguments}
-% \item {Language to Highlight}
-% \item {File to save contents to}
-% \end{arguments}
 %
 % The aim of this environment is to provide a means of including header files within the same document (or any other small subfile) without the need to split them off to a separate tex file. 
 %
@@ -1404,11 +1410,20 @@
 % It is also not a huge problem that the first run will not clear the file, as chances are there is nothing in the file to begin with (potentially not even existing). 
 % If there is some junk in the file that previously existed, oh well a recompile should fix it and this is such a small edge case that I probably wont even bother handling it. (Maybe in the future)
 %
+% \begin{variable}{\g_@@_lang_stack_seq, \g_@@_outfile_stack_seq, \g_@@_outfile_history_seq}
 %    \begin{macrocode}
 \seq_new:N \g_@@_lang_stack_seq
 \seq_new:N \g_@@_outfile_stack_seq
 \seq_new:N \g_@@_outfile_history_seq
 %    \end{macrocode}
+% \end{variable}
+%
+% \begin{environment}{subfile}
+% \begin{arguments}
+% \item {Language to Highlight}
+% \item {File to save contents to}
+% \end{arguments}
+%
 %    \begin{macrocode}
 \NewDocumentEnvironment { subfile } { m m } {
   \seq_gpush:Nn \g_@@_outfile_history_seq { #2 }
@@ -1420,7 +1435,7 @@
   \seq_gpush:No \g_@@_lang_stack_seq \g_@@_lang_tl
   \tl_gset:Nn \g_@@_out_filename_tl { #2 }
   \tl_gset:Nn \g_@@_lang_tl { #1 }
-}{
+} {
 %    \end{macrocode}
 % We need to pop our variable into a temp variable as opposed to back into the input stream. 
 % Not ideal, but whatever easy enough to do. 
@@ -1490,6 +1505,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsubsection{Concatenate files} 
+%
 % \changes{0.0.5$\alpha$}{2022/03/29}{Rename writeoutput to concat\_files}
 % \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
 % \begin{macro}{\@@_concat_files:nn}
@@ -1535,6 +1552,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsubsection{Print code in \texttt{.pdf}}
+%
 % \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
 % \changes{0.0.7$\alpha$}{2022/06/09}{Fix listings escape}
 % \begin{macro}{\@@_printcode:nnn}
@@ -1575,7 +1594,9 @@
 }
 %    \end{macrocode}
 % \end{macro}
-
+% 
+% \subsubsection{Main code environment} 
+%
 % \begin{environment}{code}
 % The actual environment that gets called.
 % There are a few things about this function that are not optimal, but I have tried and cannot think of any more elegant way to do them.
@@ -1604,7 +1625,7 @@
 % And I don't know why?
 %    \begin{macrocode}
   \VerbatimOut [ codes = { \char_set_catcode_other:N \^^I } ]
-                               { \g_@@_tmp_filename_tl }
+               { \g_@@_tmp_filename_tl }
 %    \end{macrocode}
 % If we are using |-output-dir|, we need to pass full name to \pkg{minted}/\pkg{listings}
 %    \begin{macrocode}

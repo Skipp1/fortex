@@ -83,6 +83,8 @@
 }
 \tl_new:N \g__fortex_print_keystore_tl
 \NewDocumentCommand \setfortex { m } {
+  \seq_clear:N \l_tmpa_seq
+  \prop_clear:N \l_tmpa_prop
   \keyval_parse:NNn { \seq_put_left:Nn \l_tmpa_seq }
                     { \prop_put:Nnn \l_tmpa_prop }
                     { #1 }
@@ -387,7 +389,7 @@
   \seq_gpush:No \g__fortex_lang_stack_seq \g__fortex_lang_tl
   \tl_gset:Nn \g__fortex_out_filename_tl { #2 }
   \tl_gset:Nn \g__fortex_lang_tl { #1 }
-}{
+} {
   \seq_gpop:NN \g__fortex_outfile_stack_seq \l_tmpa_tl
   \tl_gset:No \g__fortex_out_filename_tl \l_tmpa_tl
   \seq_gpop:NN  \g__fortex_lang_stack_seq \l_tmpa_tl
@@ -442,12 +444,11 @@
     }
   }
 }
-
 \NewDocumentEnvironment { code } {} {
   \VerbatimEnvironment
   \__fortex_inctmpname:
   \VerbatimOut [ codes = { \char_set_catcode_other:N \^^I } ]
-                               { \g__fortex_tmp_filename_tl }
+               { \g__fortex_tmp_filename_tl }
 }{
   \endVerbatimOut
   \tl_if_exist:NT { \fortex@outputdir } {
