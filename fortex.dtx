@@ -1081,11 +1081,6 @@
 % \changes{0.0.6$\alpha$}{2022/03/30}{Add macro-like environments}
 % \changes{0.0.7$\alpha$}{2022/06/04}{Finish automatic hyperref}
 % 
-% This function exists to automatically add hyperlinks from the usage of a function to its definition somewhere else in the code. 
-% At the moment this is not complete and I am still yet to add the * interfaces. 
-%
-% I plan for the * interfaces is to only track within the parent code block. This is mainly used for private functions that you don't want polluting.
-%
 % \begin{variable}{\g_@@_codenest_seq, \c_@@_codeblock_types_seq}
 %    \begin{macrocode}
 \seq_new:N \g_@@_codenest_seq
@@ -1093,32 +1088,20 @@
 %    \end{macrocode}
 % \end{variable}
 %
-% \begin{macro}{codeblock*, codeblock}
+% \changes{0.0.8$\alpha$}{2022/07/23}{Move \env{codeblock} implementation into aux macro}
+% \changes{0.0.8$\alpha$}{2022/08/11}{Update regex to allow matching the first string in the file}
 %
+% \begin{macro}{\@@_codeblock_aux:nn}
 % \begin{arguments}
-% \item{ Optional flags: |noref| or |noindex| }
-% \item{ Name of codeblock to be highlighted}
+% \item{Sequence of optional argv from \env{codeblock} or \env{codevar}}
+% \item{Name we are going to highlight}
 % \end{arguments}
 %
-%    \begin{macrocode}
-\NewDocumentEnvironment { codeblock } { O{} m } {
-  \group_begin:
-%    \end{macrocode}
-% So one of the first things that we want to do is to is load our optional args clist into a sequence where we have functions to check if an arg is in later on.
-% At the moment the only two options defined are |noindex| and |noref|.
-%
-% |noindex| is used to prevent the function from being registered with the index, and |noref| is used to prevent the automatic insertion of hyperlinks. 
-%    \begin{macrocode}
-  \seq_set_from_clist:Nn \l_@@_argv_seq { #1 }
-%    \end{macrocode}
-% Here \cs{l_@@_codename_str} is the name of the function/class/variable that we are going to track. 
-% At the moment this is not fully sanitised and there may be problems if active catcodes come in, but for now it will do. 
-% 
-% Because we want to keep track of the nesting of the code -- two classes can have the same function name -- we add this to a stack, that we then read out of when we go to use the indexing. 
+% This auxiliary macro contains the regex logic and implementation for both \env{codeblock} and \env{codevar}. 
+% This macro mainly is dealing with the creation for the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_mkref_file}.
 %
 %    \begin{macrocode}
-  \str_set:Nn \l_@@_codename_str { #2 }
-  \seq_gput_right:Nx \g_@@_codenest_seq \l_@@_codename_str
+\cs_set:Npn \@@_codeblock_aux:nn #1#2 {
 %    \end{macrocode}
 % We need to make a non-command version of the \tn{verb} command to make sure we can safely pass around and replace into the code.
 % This is probs not the best way to do it. However if we use \tn{detokenize}, there will be a space after the \tn{verb}.
@@ -1127,7 +1110,7 @@
 % We also use the previously defined \cs{@@_codesafedelim:N} function, to get the |¤| char for the different \TeX{} engines. 
 %
 %    \begin{macrocode}
-  \seq_if_in:NnF \l_@@_argv_seq { noref } {
+  \seq_if_in:NnF { #1 } { noref } {
     \tl_set:No \l_@@_verbstr_str { \c_backslash_str verb }
     \@@_codesafedelim:N \l_@@_printdelim_str
 %    \end{macrocode}
@@ -1143,8 +1126,10 @@
 % We then have a list of chars that we are going to say should never precede an identifier, but are accidentally matched by |\w|.
 % At the moment this is only ``|:|''. \emph{This is important} because we could accidentally overwrite a previously inserted hyperref link as identifiers are formatted as code:name. If another search were to pass through I have seen it nest replacements. \newline 
 % Finally we place this all in a capturing group to allow us to reinsert the char we would otherwise be replacing \\\hline
-% |#2|       & This active sequence inserts the name of the function that we want to find. \\\hline
-% |\b|      & Finally we match a word boundary. \\\hline
+% |^| & If the matched code is the first thing in a new |\begin{code}| block then |([^\w:])| is not going to match it. As such we explicitly check for this edge case. \\\hline
+% |#2| & This active sequence inserts the name of the function that we want to find. \\\hline
+% |\b| & Finally we match a wor
+%d boundary. \\\hline
 % \end{tabular}
 % \end{table}
 %
@@ -1156,19 +1141,19 @@
 % where |\1| is the previously captured group from the first row in the above table. 
 %
 %    \begin{macrocode}
-    \seq_if_in:NnTF \l_@@_argv_seq { noindex } {
+    \seq_if_in:NnTF { #1 } { noindex } {
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert* }
     }{
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert }
     }
-    \tl_set:Nn \l_tmpa_regex {([^\w:])#2\b}
+    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
     \str_set:Nx \l_tmpa_str {
                   \exp_not:n { \1                     }
                               \l_@@_printdelim_str
                   \exp_not:n { \\                     }
                               \l_tmpa_tl
                   \exp_not:n { \{                     }
-                              \l_@@_codename_str
+                              #2
                   \exp_not:n { \} \{                  }
                               \seq_use:Nn \g_@@_codenest_seq {:}
                   \exp_not:n { \}                     }
@@ -1193,8 +1178,12 @@
 % In the future I would like to have a fallback method that will work with \TeX{}Live 2015, due to that's what the stable distros seem to be supporting. 
 %
 %    \begin{macrocode}
-    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq { { \exp_not:V \l_tmpa_str }  }
-    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq { { \exp_not:V \l_tmpa_regex } }
+    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq {
+                  { \exp_not:V \l_tmpa_str } 
+    }
+    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq {
+                  { \exp_not:V \l_tmpa_regex }
+    }
 %    \end{macrocode}
 % Finally we add the bits of code that are linked to. 
 % At the moment this is a \label{identifier}, as well as adding the name to the index.
@@ -1205,11 +1194,55 @@
 %    \begin{macrocode}
     \exp_args:Nx \label { code: \seq_use:Nn \g_@@_codenest_seq {:}  }
   }
-  \seq_if_in:NnF \l_@@_argv_seq { noindex } {
-    \exp_args:Nx \@@_vindex_aux:nx { \seq_use:Nn \g_@@_codenest_seq {!} } { \vindexfmtdef }
+  \seq_if_in:NnF { #1 } { noindex } {
+    \exp_args:Nx \@@_vindex_aux:nx { \seq_use:Nn \g_@@_codenest_seq {!} }
+                                         { \vindexfmtdef }
   }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.8$\alpha$}{2022/07/23}{Move \env{codeblock} implementation into aux macro}
+%
+% \begin{macro}{codeblock}
+%
+% \begin{arguments}
+% \item{ Optional flags: |noref| or |noindex| }
+% \item{ Name of codeblock to be highlighted}
+% \end{arguments}
+%
+% This function exists to automatically add hyperlinks from the usage of a function to its definition somewhere else in the code. 
+% At the moment this is not complete and I am still yet to add the * interfaces. 
+%
+% I plan for the * interfaces is to only track within the parent code block. This is mainly used for private functions that you don't want polluting.
+%
+%    \begin{macrocode}
+\NewDocumentEnvironment { codeblock } { O{} m } {
+  \group_begin:
+%    \end{macrocode}
+% So one of the first things that we want to do is to is load our optional args clist into a sequence where we have functions to check if an arg is in later on.
+% At the moment the only two options defined are |noindex| and |noref|.
+%
+% |noindex| is used to prevent the function from being registered with the index, and |noref| is used to prevent the automatic insertion of hyperlinks. 
+%    \begin{macrocode}
+  \seq_set_from_clist:Nn \l_@@_argv_seq { #1 }
+%    \end{macrocode}
+% Here \cs{l_@@_codename_str} is the name of the function/class/variable that we are going to track. 
+% At the moment this is not fully sanitised and there may be problems if active catcodes come in, but for now it will do. 
+% 
+% Because we want to keep track of the nesting of the code -- two classes can have the same function name -- we add this to a stack, that we then read out of when we go to use the indexing. 
+%
+%    \begin{macrocode}
+  \str_set:Nn \l_@@_codename_str { #2 }
+  \seq_gput_right:Nx \g_@@_codenest_seq \l_@@_codename_str
+%    \end{macrocode}
+% Finally we call the common hyperref regex generating function for both \env{codeblock} and \env{codevar}
+%
+%    \begin{macrocode}
+  \@@_codeblock_aux:nn \l_@@_argv_seq { #2 }
 } {
 %    \end{macrocode}
+%
 % This next section will insert into the |.pdf| after the codeblock:
 % \begin{center}
 % \noindent\textit{\small{End of code block |codeblock|}}\\
@@ -1232,6 +1265,56 @@
 }
 %    \end{macrocode}
 % \end{macro}
+%
+% \changes{0.0.8$\alpha$}{2022/07/23}{Create \env{codevar} environment}
+%
+% \begin{macro}{codevar}
+%
+% \begin{arguments}
+% \item{ Optional flags: |noref| or |noindex| }
+% \item{ Name of code variable to be highlighted}
+% \end{arguments}
+%
+% Note that unlike \env{codeblock}, \env{codevar} is designed to be a ``leaf''. 
+% I.E. it is not supposed to have any further nesting of \env{codevar} or \env{codeblock} inside it.
+%
+% However \env{codevar} allows specifying multiple variables in the same environment.
+% This is useful if you have a few constants at the top of a code file and you don't want to make a mess of lots of environments.
+%
+% It does take the same arguments as \env{codeblock} and functions in roughly the same way.
+% |noref| prevents the code from highlighting all of the usages of the variable, and |noindex|
+%
+%    \begin{macrocode}
+\NewDocumentEnvironment { codevar } { O{} m } {
+  \seq_set_from_clist:Nn \l_@@_argv_seq { #1 }
+  \seq_set_from_clist:Nn \l_@@_vars_seq { #2 }
+%    \end{macrocode}
+% The easiest way to deal with the multiple variables defined is to use \cs{seq_map_inline}.
+% However this presents a challenge if we try and define a new \env{codeblock} inside it. 
+% (That and it does not make a huge amount of sense how it would work in the index anyway)
+%
+%    \begin{macrocode}
+  \seq_map_inline:Nn { \l_@@_vars_seq } { 
+%    \end{macrocode}
+%    \begin{macrocode}
+    \str_set:Nn \l_@@_codename_str { ##1 }
+    \seq_gput_right:Nx \g_@@_codenest_seq \l_@@_codename_str
+%    \end{macrocode}
+%    \begin{macrocode}
+    \@@_codeblock_aux:nn \l_@@_argv_seq { ##1 }
+    \seq_gpop_right:NN \g_@@_codenest_seq \l_tmpa_tl
+  }
+%    \end{macrocode}
+% For variables we don't define a footer. 
+%
+% In the future I want to go though and make this user-configurable for both \env{codeblock} and \env{codevar}. 
+% This would probably be done by defining a user-visible macro than can be redefined. 
+%
+%    \begin{macrocode}
+} {
+}
+%    \end{macrocode}
+% \end{macro}
 % Because we are adding the functions we want to tracked as they are defined, we are unable to add a hyperref a usage before the definition. 
 % 
 % For this reason we don't bother hyperrefing on the first passthough and instead just generate the regex for the next. 
@@ -1240,7 +1323,7 @@
 % Like the previous write to |.aux| we use the old \LaTeXe{} syntax to prevent the insertion of \tn{ExplSyntaxOn} in the |.aux| file.
 % 
 %    \begin{macrocode}
-\hook_gput_code:nnn { enddocument } { fortex } {
+\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
   \iow_now:cx { @auxout } {
      \exp_not:n { \gdef\fortex@codeblockregex }
      { \seq_use:Nn \g_@@_codeblock_regex_toaux_seq { } }
@@ -1292,10 +1375,9 @@
   \char_set_catcode_other:N \{
   \char_set_catcode_other:N \}
   \char_set_catcode_other:N \\
-  \char_set_catcode_other:N \\
 %    \end{macrocode}
 % LaTeX{} uses commands like |^^|\meta{Letter} to indicate the \textsc{ascii} code of the letter.
-% For example \c_circumflex_str\c_circumflex_str{}J corresponds to $0\times0a$ - a newline in Linux-land.
+% For example |^^J| corresponds to $0\times0a$ - a newline in Linux-land.
 % However as we want to write this all verbatim we disable this.
 % Note: Defining this catcode should be last.
 %    \begin{macrocode}

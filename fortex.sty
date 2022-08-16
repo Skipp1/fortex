@@ -278,39 +278,47 @@
 }
 \seq_new:N \g__fortex_codenest_seq
 \seq_new:N \g__fortex_codeblock_regex_toaux_seq
-\NewDocumentEnvironment { codeblock } { O{} m } {
-  \group_begin:
-  \seq_set_from_clist:Nn \l__fortex_argv_seq { #1 }
-  \str_set:Nn \l__fortex_codename_str { #2 }
-  \seq_gput_right:Nx \g__fortex_codenest_seq \l__fortex_codename_str
-  \seq_if_in:NnF \l__fortex_argv_seq { noref } {
+\cs_set:Npn \__fortex_codeblock_aux:nn #1#2 {
+  \seq_if_in:NnF { #1 } { noref } {
     \tl_set:No \l__fortex_verbstr_str { \c_backslash_str verb }
     \__fortex_codesafedelim:N \l__fortex_printdelim_str
-    \seq_if_in:NnTF \l__fortex_argv_seq { noindex } {
+    \seq_if_in:NnTF { #1 } { noindex } {
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert* }
     }{
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert }
     }
-    \tl_set:Nn \l_tmpa_regex {([^\w:])#2\b}
+    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
     \str_set:Nx \l_tmpa_str {
                   \exp_not:n { \1                     }
                               \l__fortex_printdelim_str
                   \exp_not:n { \\                     }
                               \l_tmpa_tl
                   \exp_not:n { \{                     }
-                              \l__fortex_codename_str
+                              #2
                   \exp_not:n { \} \{                  }
                               \seq_use:Nn \g__fortex_codenest_seq {:}
                   \exp_not:n { \}                     }
                               \l__fortex_printdelim_str
     }
-    \seq_gpush:Nx \g__fortex_codeblock_regex_toaux_seq { { \exp_not:V \l_tmpa_str }  }
-    \seq_gpush:Nx \g__fortex_codeblock_regex_toaux_seq { { \exp_not:V \l_tmpa_regex } }
+    \seq_gpush:Nx \g__fortex_codeblock_regex_toaux_seq {
+                  { \exp_not:V \l_tmpa_str }
+    }
+    \seq_gpush:Nx \g__fortex_codeblock_regex_toaux_seq {
+                  { \exp_not:V \l_tmpa_regex }
+    }
     \exp_args:Nx \label { code: \seq_use:Nn \g__fortex_codenest_seq {:}  }
   }
-  \seq_if_in:NnF \l__fortex_argv_seq { noindex } {
-    \exp_args:Nx \__fortex_vindex_aux:nx { \seq_use:Nn \g__fortex_codenest_seq {!} } { \vindexfmtdef }
+  \seq_if_in:NnF { #1 } { noindex } {
+    \exp_args:Nx \__fortex_vindex_aux:nx { \seq_use:Nn \g__fortex_codenest_seq {!} }
+                                         { \vindexfmtdef }
   }
+}
+\NewDocumentEnvironment { codeblock } { O{} m } {
+  \group_begin:
+  \seq_set_from_clist:Nn \l__fortex_argv_seq { #1 }
+  \str_set:Nn \l__fortex_codename_str { #2 }
+  \seq_gput_right:Nx \g__fortex_codenest_seq \l__fortex_codename_str
+  \__fortex_codeblock_aux:nn \l__fortex_argv_seq { #2 }
 } {
   \noindent\textit{
     \small
@@ -323,7 +331,18 @@
   }
   \group_end:
 }
-\hook_gput_code:nnn { enddocument } { fortex } {
+\NewDocumentEnvironment { codevar } { O{} m } {
+  \seq_set_from_clist:Nn \l__fortex_argv_seq { #1 }
+  \seq_set_from_clist:Nn \l__fortex_vars_seq { #2 }
+  \seq_map_inline:Nn { \l__fortex_vars_seq } {
+    \str_set:Nn \l__fortex_codename_str { ##1 }
+    \seq_gput_right:Nx \g__fortex_codenest_seq \l__fortex_codename_str
+    \__fortex_codeblock_aux:nn \l__fortex_argv_seq { ##1 }
+    \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
+  }
+} {
+}
+\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
   \iow_now:cx { @auxout } {
      \exp_not:n { \gdef\fortex@codeblockregex }
      { \seq_use:Nn \g__fortex_codeblock_regex_toaux_seq { } }
@@ -338,7 +357,6 @@
   \char_set_catcode_other:N \#
   \char_set_catcode_other:N \{
   \char_set_catcode_other:N \}
-  \char_set_catcode_other:N \\
   \char_set_catcode_other:N \\
   \char_set_catcode_other:N ^
 }
