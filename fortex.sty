@@ -158,7 +158,7 @@
 \cs_set:Nn \__fortex_outputdir_lua_auxi: {
   \tl_set:Nn \l_tmpa_tl { \lua_now:n { tex.print(arg) } }
   \exp_args:Nnf \regex_extract_once:nnN
-                {--?output-dir(ectory)?=([-\.\w+/]*)}
+                {--?output-dir(?:ectory)?=([\w\./\-]*)}
                 { \l_tmpa_tl } \l_tmpa_seq
   \seq_get_right:NN \l_tmpa_seq \l_tmpa_tl
   \quark_if_no_value:NF \l_tmpa_tl {
@@ -176,10 +176,10 @@
   } \l_tmpa_tl
   \quark_if_no_value:NF \l_tmpa_tl {
     \tl_if_empty:NF \l_tmpa_tl {
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[-\.\w+/]*\.log}
+      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.log}
                                             { \l_tmpa_tl } \l_tmpa_seq
       \seq_get:NN \l_tmpa_seq \l__fortex_reallogpath_tl
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[-\.\w+/]*\.tex}
+      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.tex}
                                             { \l_tmpa_tl } \l_tmpa_seq
       \seq_get:NN \l_tmpa_seq \l__fortex_realtexpath_tl
       \tl_clear:N \l_tmpa_tl

@@ -663,6 +663,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{0.0.8$\alpha$}{2022/08/17}{Make regex group non-capturing in \LuaTeX{} specific code}
 % \begin{macro}{\@@_outputdir_lua_auxi:}
 %
 % This is the LuaTeX{} specific function to get the |-output-dir|. 
@@ -692,14 +693,14 @@
 \cs_set:Nn \@@_outputdir_lua_auxi: {
   \tl_set:Nn \l_tmpa_tl { \lua_now:n { tex.print(arg) } }
 %    \end{macrocode}
-% Note that we use the regex ``|--?output-dir(ectory)?|'' due to \LuaTeX{} taking a few different forms of the |-output-dir| argument.
+% Note that we use the regex ``|--?output-dir(?:ectory)?|'' due to \LuaTeX{} taking a few different forms of the |-output-dir| argument.
 % (Sometimes we lead with two dashes |--| or one dash |-|, or we may use |output-dir| or |output-directory|.
 % There may be a few other variations that I am not considering or have just missed.
 % However, this should cover the majority of the cases)
 %
 %    \begin{macrocode}
   \exp_args:Nnf \regex_extract_once:nnN
-                {--?output-dir(ectory)?=([-\.\w+/]*)}
+                {--?output-dir(?:ectory)?=([\w\./\-]*)}
                 { \l_tmpa_tl } \l_tmpa_seq
 %    \end{macrocode}
 %    \begin{macrocode}
@@ -717,6 +718,7 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \changes{0.0.8$\alpha$}{2022/08/17}{Optimise regex when searching for output directory}
 % \begin{macro}{\@@_outputdir_auxi:}
 %
 % The actual function called for all other engines except \LuaTeX{} and \XeTeX{}. 
@@ -753,7 +755,7 @@
 %    \end{macrocode}
 % First thing that we do is get the full path of \file{jobname.log}
 %    \begin{macrocode}
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[-\.\w+/]*\.log}
+      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.log}
                                             { \l_tmpa_tl } \l_tmpa_seq
 %    \end{macrocode}
 %    \begin{macrocode}
@@ -762,7 +764,7 @@
 % First thing that we do is get the full path of \file{jobname.tex}
 %
 %    \begin{macrocode}
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[-\.\w+/]*\.tex} 
+      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.tex} 
                                             { \l_tmpa_tl } \l_tmpa_seq
 %    \end{macrocode}
 %    \begin{macrocode}
