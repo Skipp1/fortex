@@ -124,38 +124,16 @@
   }
 }
 
-\file_get:nnN { \c_sys_jobname_str .log } {} \l_tmpa_tl
 \tl_new:N \g__fortex_outputdir_tl
-
 \cs_set:Nn \__fortex_outputdir: {
-  \tl_if_exist:NTF { \fortex@outputdir } {
-    \tl_gset:Nx \g__fortex_outputdir_tl { \fortex@outputdir }
-    \file_if_exist:nF {\g__fortex_outputdir_tl
-                       \c__fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp
-    }{
-      \__fortex_outputdir_aux:
-    }
-  }{
-    \__fortex_outputdir_aux:
-  }
-  \iow_now:cx { @auxout } {
-     \exp_not:n { \gdef\fortex@outputdir }
-   { \exp_not:V { \g__fortex_outputdir_tl } }
-  }
+  \str_case_e:nnF { \c_sys_engine_str } {
+    { luatex } { \__fortex_outputdir_lua_aux: }
+  } { \__fortex_outputdir_aux: }
   \bool_if:NT \g__fortex_verbose_bool {
     \iow_term:x { -output-dir~path:~ \exp_not:V { \g__fortex_outputdir_tl } }
   }
 }
-\cs_set:Nn \__fortex_outputdir_aux: {
-  \str_case_e:nn { \c_sys_engine_str } {
-    { luatex } { \__fortex_outputdir_lua_auxi: }
-    { ptex   } { \__fortex_outputdir_auxi: }
-    { pdftex } { \__fortex_outputdir_auxi: }
-    { uptex  } { \__fortex_outputdir_auxi: }
-    { xetex  } { \tl_gset:Nn \g__fortex_outputdir_tl {} }
-  }
-}
-\cs_set:Nn \__fortex_outputdir_lua_auxi: {
+\cs_set:Nn \__fortex_outputdir_lua_aux: {
   \tl_set:Nn \l_tmpa_tl { \lua_now:n { tex.print(arg) } }
   \exp_args:Nnf \regex_extract_once:nnN
                 {--?output-dir(?:ectory)?=([\w\./\-]*)}
@@ -167,39 +145,14 @@
     }
   }
 }
-\cs_set:Nn \__fortex_outputdir_auxi: {
-  \tl_new:N \l__fortex_reallogpath_tl
-  \tl_new:N \l__fortex_realtexpath_tl
-  \file_get:nnN { \c_sys_jobname_str .log } {
-    \endlinechar=`\^^J
-    \char_set_catcode_other:N \^^J
-  } \l_tmpa_tl
-  \quark_if_no_value:NF \l_tmpa_tl {
-    \tl_if_empty:NF \l_tmpa_tl {
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.log}
-                                            { \l_tmpa_tl } \l_tmpa_seq
-      \seq_get:NN \l_tmpa_seq \l__fortex_reallogpath_tl
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.tex}
-                                            { \l_tmpa_tl } \l_tmpa_seq
-      \seq_get:NN \l_tmpa_seq \l__fortex_realtexpath_tl
-      \tl_clear:N \l_tmpa_tl
-      \quark_if_no_value:NT \l__fortex_realtexpath_tl {
-        \tl_set:Nn \l__fortex_realtexpath_tl { }
-      }
-      \quark_if_no_value:NT \l__fortex_reallogpath_tl {
-        \tl_set:Nn \l__fortex_realtexpath_tl { }
-      }
-      \file_parse_full_name:VNNN { \l__fortex_reallogpath_tl }
-                                   \l__fortex_reallogpath_tl
-                                   \l_tmpa_tl \l_tmpa_tl
-      \file_parse_full_name:VNNN { \l__fortex_realtexpath_tl }
-                                   \l__fortex_realtexpath_tl
-                                   \l_tmpa_tl \l_tmpa_tl
-      \str_if_eq:NNF { \l__fortex_reallogpath_tl }
-                     { \l__fortex_realtexpath_tl } {
-        \tl_gset:Nx  \g__fortex_outputdir_tl { \l__fortex_reallogpath_tl / }
-      }
-    }
+\cs_set:Nn \__fortex_outputdir_aux: {
+  \exp_args:Nx \sys_get_shell:nnN { kpsewhich ~  \c_sys_jobname_str .log }
+                                  {} \l__fortex_outputdir_tl
+  \file_parse_full_name:VNNN { \l__fortex_outputdir_tl }
+                               \l__fortex_outputdir_tl
+                               \l_tmpa_tl \l_tmpa_tl
+  \tl_if_empty:NF \l__fortex_outputdir_tl {
+     \tl_gset:Nx \g__fortex_outputdir_tl { \l__fortex_outputdir_tl / }
   }
 }
 \tl_const:Nn \c__fortex_tmpfolder_tl {
@@ -469,7 +422,7 @@
                { \g__fortex_tmp_filename_tl }
 }{
   \endVerbatimOut
-  \tl_if_exist:NT { \fortex@outputdir } {
+  \tl_if_exist:NT { \fortex@codeblockregex } {
     \__fortex_concat_files:nn \g__fortex_tmp_filename_tl \g__fortex_out_filename_tl
     \__fortex_mkref_file:nN { \g__fortex_outputdir_tl\g__fortex_tmp_filename_tl }
                               \l_tmpa_tl

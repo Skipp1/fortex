@@ -501,6 +501,7 @@
 % \subsection{Getting \texttt{-output-dir}}
 %
 % \changes{0.0.4$\alpha$}{2022/03/15}{Add -output-dir detection}
+% \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
 %
 % If \LaTeX{} is used with |-output-directory|, \cs{sys_shell_now:x} |{mkdir ...}| will ignore it and make its directory in the .tex directory.
 % However, \tn{VerbatimOut} will write to the file indicated by |-output-directory|.
@@ -509,162 +510,54 @@
 % I encountered this issue when using the \LaTeX{} editor \pkg{kile} as it uses the |-output-directory| argument to build in the |/tmp/kile-livepreview.abcde/| directory.
 % This was causing issues, as I was not longer able to use my favourite \LaTeX{} editor with \pkg{fortex}. 
 %
-% \paragraph{The hacky solution}
-% We try to work around this by using a little bit of regex and a quirk of log files:
-% For this example let the command be:
+% One of the limitations with \TeX{} is the inability to see what command line arguments were used.
+% As such getting the output directory is a pain. 
 %
-% \begin{verbatim}
-% latex -output-dir=outdir jobdir/jobname.tex
-% \end{verbatim}
+% As far as I am aware, there are $2.5$ ways to determine if |-output-directory| was used. 
+% \begin{enumerate}
+%  \item{When accessing the log file, the |-output-dir| path is written to the same log file. This can be extracted using regex.}
+%  \item{kpsewhich will search the |-output-dir| path }
+%  \item[2.5]{Command lines args are accessible via Lua extensions (\LuaTeX{} specific) }
+% \end{enumerate}
 %
-% If there is a \file{jobname.log} file already in the \file{jobdir/} folder then \file{jobname.log} will list the lines:
+% initially option 1 was chosen due to not knowing an better, however it was found that the regex engine in \pkg{expl3} is not the fastest in the world. 
+% Moreover because of token limitations in the \XeTeX engine, it would crash if the log file was too big. 
 %
-% \begin{verbatim}
-% (/path/to/jobdir/jobname.log)
-% \openout1 = `jobname.log'.
-% \end{verbatim}
+% Option 2 however is much more sensible, more portable and more faster. 
 %
-% As it mistakes the \file{jobdir/} file for the one that is actually writing to.
-% However, if \file{jobname.log} \emph{is not} already in \file{jobdir/} it is a different story:
-%
-% \begin{verbatim}
-% (/path/to/outdir/jobname.log)
-% \openout1 = `jobname.log'.
-% \end{verbatim}
-%
-% Moreover, \file{jobname.log} will always have the string
-%
-% \begin{verbatim}
-% /path/to/jobdir/jobname.tex
-% \end{verbatim}
-%
-% From this logging behaviour, we can tell if \LaTeX{} was run using |-output-dir|, and if so what the value of it is.
-%
-% \paragraph{Things to note about this hack} 
-%
-% \begin{itemize}
-%
-% \item { This trick \emph{only} works if there is not \file{jobname.log} in \file{jobdir/}.
-% With \pkg{fortex}, we can check if this is a first time run by checking the presence of a test file.
-% But if you are copying this code into your own \LaTeX{} file you will need to make sure that you have a clean \file{jobdir/}. }
-%
-% \item { This command cannot be executed on setup - very sad, as the \file{jobname.log} file is not written instantly, but it takes some time for the lines to begin appearing. 
-% As such we call this on the first call to out \env{code} environment }
-%
-% \item { This seems to be crashing on \XeTeX{} with the error:
-% \begin{verbatim}
-% ! Bad register code (32768)
-% A register must be between 0 and 32767
-% \end{verbatim}
-% }
-% TODO: FIXME
-%
-% \item { Calling the actual function \cs{@@_outputdir_auxi:} is \emph{very} slow, especially if the log file is large (e.g. loading lots of packages). 
-% So it's important that the value is cached in \file{jobname.aux} }
-%
-% \item { This logfile trick doesn't work on \LuaTeX{} due to \tn{kpse.find_file} not detecting files in \file{outdir/}.
-% However, this is not a huge issue as the lua extensions provide an interface to the arguments that \LuaTeX{} was called with. }
-% \end{itemize} 
-%
-%
-% \paragraph{The \texttt{-output-dir} implementation}
-%
-% One thing that we want to try and make sure, is that the line ``\file{jobname.log}'' appears early in the logfile to prevent excessive regexing. 
-% Note: |ior_*| and |iow_*| functions don't cause this effect.
-% Ideally we would avoid reading the entire file just to print it in the log, but at the moment this seems to work.
+% Finally, because \LuaTeX{} allows accessing the command line arguments directly it seems like a better idea to read that than relying on kpsewhich hackyness. 
 % 
-%    \begin{macrocode}
-\file_get:nnN { \c_sys_jobname_str .log } {} \l_tmpa_tl
-%    \end{macrocode}
-% \begin{variable}{\g_@@_outputdir_tl}
+% \begin{variable}{g_@@_outputdir_tl}
 % This is the return variable that will be referenced later on in \cs{@@_printcode:nnn}, \cs{@@_mktmpdir:} and the \env{code} environment.
-% 
 %    \begin{macrocode}
 \tl_new:N \g_@@_outputdir_tl
 %    \end{macrocode}
 % \end{variable}
-%
 % \begin{macro}{\@@_outputdir:}
-% \begin{variable}[internal]{\fortex@outputdir}
 %
-% As previously mentioned the actual function that checks \file{jobname.log} file is \emph{very} slow.
-% So we do the easy thing and cache to the log file. 
-%
-% Note that by doing this we need to do some cache invalidating later in case we forget to delete the file already in \file{jobdir/}. 
-% 
-% Finally we are caching to aux using \LaTeXe{} syntax in order to avoid needing to declare an \pkg{expl3} environment in the aux file.
-%
-
 %    \begin{macrocode}
 \cs_set:Nn \@@_outputdir: {
-  \tl_if_exist:NTF { \fortex@outputdir } {
-    \tl_gset:Nx \g_@@_outputdir_tl { \fortex@outputdir }
 %    \end{macrocode}
+% \LuaTeX{} allows reading from the command line arguments direly via Lua extensions. 
+% This is a better method than using kpsewhich workarounds, so we target \LuaTeX{} directly. 
 %
-% \paragraph{Cache Invalidation}
-%
-% If the code has been run before \cs{g_@@_outputdir_tl} will be cached, but also out test file \file{_fortex-jobname/jobname-0.tmp} used in \cs{@@_mktmpdir:} will be present.
-%
-% If the test file is not present, then chances are the value in the aux file is invalid. 
-% (or is the user has deleted \file{_fortex-jobname/}, but that happens rare enough that I don't feel bad invalidating the cache when that happens) 
+% As far as I am aware the other engines provide no mechanism for determine the command line arguments.
 %
 %    \begin{macrocode}
-    \file_if_exist:nF {\g_@@_outputdir_tl
-                       \c_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp 
-    }{
-      \@@_outputdir_aux:
-    }
-  }{
-    \@@_outputdir_aux:
-  }
+  \str_case_e:nnF { \c_sys_engine_str } {
+    { luatex } { \@@_outputdir_lua_aux: }
+  } { \@@_outputdir_aux: }
 %    \end{macrocode}
-% Then we cache the new value to aux.
-% Note that we are using \LaTeXe{} syntax in order to avoid writing excess \cs{ExplSyntaxOn} into the aux file.
-%
 %    \begin{macrocode}
-  \iow_now:cx { @auxout } {
-     \exp_not:n { \gdef\fortex@outputdir }
-   { \exp_not:V { \g_@@_outputdir_tl } }
-  }
   \bool_if:NT \g_@@_verbose_bool {
     \iow_term:x { -output-dir~path:~ \exp_not:V { \g_@@_outputdir_tl } }
   }
 }
 %    \end{macrocode}
-%
-% \end{variable}
-% \end{macro}
-%
-% \begin{macro}{\@@_outputdir_aux:}
-%
-% This function mainly exists to prevent writing the case statement a few times. 
-% The case statement exists due to problems with the \LaTeX{} engines that need workarounds.
-% Note that if we are on this codepath it means that we have either not found |-output-dir| in the cache, or the cache was found to be invalid.
-%
-% \begin{itemize}[label=\textit{Note}:\ ]
-%   \item {\XeTeX{} has problems with regexing large files, as of yet I cannot find a workaround.}
-%   \item {\LuaTeX{} has problems reading from |-output-dir| (no biggie, just fall back on lua extensions).} 
-%  \end{itemize}
-%
-%    \begin{macrocode}
-\cs_set:Nn \@@_outputdir_aux: {
-  \str_case_e:nn { \c_sys_engine_str } {
-%    \end{macrocode}
-% Firstly we run engine specific code to work around \XeTeX{} and \LuaTeX{} problems.
-%
-%    \begin{macrocode}
-    { luatex } { \@@_outputdir_lua_auxi: }
-    { ptex   } { \@@_outputdir_auxi: }
-    { pdftex } { \@@_outputdir_auxi: }
-    { uptex  } { \@@_outputdir_auxi: }
-    { xetex  } { \tl_gset:Nn \g_@@_outputdir_tl {} }
-  }  
-}
-%    \end{macrocode}
 % \end{macro}
 %
 % \changes{0.0.8$\alpha$}{2022/08/17}{Make regex group non-capturing in \LuaTeX{} specific code}
-% \begin{macro}{\@@_outputdir_lua_auxi:}
+% \begin{macro}{\@@_outputdir_lua_aux:}
 %
 % This is the LuaTeX{} specific function to get the |-output-dir|. 
 % This is a lot easier to get compared to the other engines as \LuaTeX{} directly exposes what arguments it was called with inside its lua extensions.
@@ -690,7 +583,7 @@
 % Note that as I said I do not know any lua, and there may very well be an easy way that I am just missing.
 %
 %    \begin{macrocode}
-\cs_set:Nn \@@_outputdir_lua_auxi: {
+\cs_set:Nn \@@_outputdir_lua_aux: {
   \tl_set:Nn \l_tmpa_tl { \lua_now:n { tex.print(arg) } }
 %    \end{macrocode}
 % Note that we use the regex ``|--?output-dir(?:ectory)?|'' due to \LuaTeX{} taking a few different forms of the |-output-dir| argument.
@@ -719,99 +612,30 @@
 %    \end{macrocode}
 % \end{macro}
 % \changes{0.0.8$\alpha$}{2022/08/17}{Optimise regex when searching for output directory}
-% \begin{macro}{\@@_outputdir_auxi:}
+% \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
 %
-% The actual function called for all other engines except \LuaTeX{} and \XeTeX{}. 
-% This function is mostly a hack to work around the limitations of the \LaTeX{} systems. 
-% 
-% I have tried searching is there is any better way to do this, and the only solution I have come up with is to not write these functions in the first place. 
-% The main issue with that is that there is no good way to handle verbatim environments and pass it to two functions.
-% As such we need to write the contents to a file then read it back out.
-% However, now you have problems with race conditions.
-% So the solution is to write the content to several files (minted already does this.) and to keep it tidy put it all in a folder. 
+% \begin{macro}{\@@_outputdir_aux:}
 %
-% In any case, this function is ugly but at the moment needs to exist.
-%    \begin{macrocode}
-\cs_set:Nn \@@_outputdir_auxi: {
-  \tl_new:N \l_@@_reallogpath_tl
-  \tl_new:N \l_@@_realtexpath_tl
-%    \end{macrocode}
-% The fist thing that we do is to read the \file{jobname.log} file. 
-% Strictly setting the \tn{endlinechar} catcodes shouldn't be necessary.
-% However, it makes debugging by printing the contents of \file{jobname.log} to the terminal.
+% Initially this macro was both long and very complex and involved regexing the log file to determine the difference between the |.aux| and the |.tex| paths. 
+% Turns out kpsewhich will inherit the |-output-directory| commend line arguments when searching for files. 
+% This can be used as an advantage as if we get the path of the log file, then we can find what directory was specified with |-output-dir|.
 %
-%    \begin{macrocode}
-  \file_get:nnN { \c_sys_jobname_str .log } {
-    \endlinechar=`\^^J
-    \char_set_catcode_other:N \^^J
-  } \l_tmpa_tl
-%    \end{macrocode}
-% If \cs{file_get:nnN} is unable to find the file, it returns \cs{q_no_value}.
-% This is problematic for later on and if not handled, it will cause hangs.
+% Again this is not ideal, but it is a much better work-around comapred to the previous regex option. 
 %
-%    \begin{macrocode}
-  \quark_if_no_value:NF \l_tmpa_tl {
-    \tl_if_empty:NF \l_tmpa_tl { 
-%    \end{macrocode}
-% First thing that we do is get the full path of \file{jobname.log}
-%    \begin{macrocode}
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.log}
-                                            { \l_tmpa_tl } \l_tmpa_seq
-%    \end{macrocode}
-%    \begin{macrocode}
-      \seq_get:NN \l_tmpa_seq \l_@@_reallogpath_tl
-%    \end{macrocode}
-% First thing that we do is get the full path of \file{jobname.tex}
+\cs_set:Nn \@@_outputdir_aux: {
+  \exp_args:Nx \sys_get_shell:nnN { kpsewhich ~  \c_sys_jobname_str .log }
+                                  {} \l_@@_outputdir_tl
+  \file_parse_full_name:VNNN { \l_@@_outputdir_tl } 
+                               \l_@@_outputdir_tl 
+                               \l_tmpa_tl \l_tmpa_tl
+% \end{macrocode}
+% The \cs{file_parse_full_name:VNNN} macro returns the output directory as ``|outputdir|'', however later in the code we expect ``|outputdir/|'' (note the slash). 
+% doing it this way allows us to always write \cs{g_@@_outputdir_tl}|file.txt|, and \cs{g_@@_outputdir} can either be empty (so it picks up in the working directory), or it picks up the path prefix. 
 %
-%    \begin{macrocode}
-      \exp_args:Nno \regex_extract_once:nnN {\.?/?[\w\./\-]*\.tex} 
-                                            { \l_tmpa_tl } \l_tmpa_seq
-%    \end{macrocode}
-%    \begin{macrocode}
-      \seq_get:NN \l_tmpa_seq \l_@@_realtexpath_tl
-%    \end{macrocode}
-% The contents of \file{jobname.log} can be very large and can cause \TeX{} to run out of memory if we are not careful. 
-% Thus even if \cs{l_tmpa_tl} is going to be used later, it is a good idea to clear it the moment that we are done.
-%
-%    \begin{macrocode}
-      \tl_clear:N \l_tmpa_tl
-%    \end{macrocode}
-% 
-% In rare situations the log file may not contain any mention of the tex or log paths. 
-% If this is the case then latex will freeze and just hang. 
-% Obviously this is not ideal, so we just clear the value of \cs{l_@@_reallogpath_tl} or \cs{l_@@_realtexpath_tl} and just hope it works out 
-% 
-%    \begin{macrocode}
-      \quark_if_no_value:NT \l_@@_realtexpath_tl {
-        \tl_set:Nn \l_@@_realtexpath_tl { }
-      }
-      \quark_if_no_value:NT \l_@@_reallogpath_tl {
-        \tl_set:Nn \l_@@_realtexpath_tl { }
-      }
-%    \end{macrocode}
-% Finally we strip the filenames (\file{jobname.tex}/ \file{jobname.log}) from the end of the paths - makes it easier to check if log is in a different directory.
-% Here the scratch variable \cs{l_tmpa_tl} is only used to match the function signature and is not used anywhere else. 
-% We only care about the leading path to the files anyway.
-%
-%    \begin{macrocode}
-      \file_parse_full_name:VNNN { \l_@@_reallogpath_tl } 
-                                   \l_@@_reallogpath_tl 
-                                   \l_tmpa_tl \l_tmpa_tl
-%    \end{macrocode}
-%    \begin{macrocode}
-      \file_parse_full_name:VNNN { \l_@@_realtexpath_tl }
-                                   \l_@@_realtexpath_tl
-                                   \l_tmpa_tl \l_tmpa_tl
-%    \end{macrocode}
-% Finally return the location of |-output-dir=outdir| if we have one, otherwise return nothing.
-% Ideally this would be a little more structured and not rely on \cs{g_@@_outputdir_tl} globals as much.
-%
-%    \begin{macrocode}
-      \str_if_eq:NNF { \l_@@_reallogpath_tl } 
-                     { \l_@@_realtexpath_tl } {
-        \tl_gset:Nx  \g_@@_outputdir_tl { \l_@@_reallogpath_tl / }
-      }
-    }
+% Note however that \cs{l_@@_outputdir_tl} may be empty, and we don't want to accidentally write to the root directory
+% \begin{macrocode}
+  \tl_if_empty:NF \l_@@_outputdir_tl {
+     \tl_gset:Nx \g_@@_outputdir_tl { \l_@@_outputdir_tl / }
   }
 }
 %    \end{macrocode}
@@ -1722,7 +1546,7 @@
 % Hence the cache will not be invalidated.
 %
 %    \begin{macrocode}
-  \tl_if_exist:NT { \fortex@outputdir } {
+  \tl_if_exist:NT { \fortex@codeblockregex } {
     \@@_concat_files:nn \g_@@_tmp_filename_tl \g_@@_out_filename_tl
 %    \end{macrocode}
 %    \begin{macrocode}
