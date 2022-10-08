@@ -75,7 +75,7 @@
 % \end{syntax} \vspace{1ex}
 %
 % This is the main environment that does all of the work. 
-% anything that is written inside this environment will be outputted to the file |jobname.ext|
+% Anything that is written inside this environment will be outputted to the file |jobname.ext|
 % 
 % In addition the code included will be syntax highlighted and included in the generated |pdf| file. 
 % As mentioned this is an environment to help the idea of literate coding. 
@@ -221,7 +221,7 @@
 \keys_define:nn { fortex } {
 %    \end{macrocode}
 %
-% \begin{variable}{\g_@@_verbose_bool}
+% \begin{variable}{\g_@@_verbose_bool, verbose}
 % This flag is mainly used for debugging.
 % It prints the contents of the \env{code} environment and |-output-dir| to the terminal in order to help see what is going on.
 % 
@@ -235,7 +235,7 @@
 % \end{variable}
 % 
 % \changes{0.0.3$\alpha$}{2022/03/8}{Add \pkg{listings}/\pkg{minted} option}
-% \begin{variable}{\g_@@_printend_tl}
+% \begin{variable}{\g_@@_printend_tl, print}
 % This flag governs what package will be used for typesetting the resulting pdf. 
 % At the moment the options are \pkg{minted} and \pkg{listings}. 
 % 
@@ -268,7 +268,7 @@
 %    \end{macrocode}
 % \end{variable}
 %
-% \begin{variable}{\g_@@_ext_tl}
+% \begin{variable}{\g_@@_ext_tl, ext}
 %
 % By default we do a mediocre job of detecting the extension for the language.
 % Moreover, in some cases (e.g. |.c| and |.h|) there is no way to detect the extension from the language (both are ``C'').
@@ -276,7 +276,7 @@
 %
 % \begin{itemize}[label={}]
 % \item{Default if language with known extension: \{\}}
-% \item{Default if language with unknown extension: .txt}
+% \item{Default if language with unknown extension: .txt (not a typo)}
 % \end{itemize}
 %
 %    \begin{macrocode}
@@ -286,12 +286,40 @@
 %    \end{macrocode}
 % \end{variable}
 %
-% \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
-% \begin{variable}{\g_@@_intext_bool}
+% \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of \pkg{hyperref} into \pkg{minted}/\pkg{listings}}
+% \begin{variable}{\g_@@_intext_bool, intext}
+% 
+% When printing the code to the |.pdf| file, we by default use \pkg{hyperref} to create links to where each codeblock and variable is defined. 
+% This is a somewhat slow process, and for some people ma be annoying, so we just give a global option to disable. 
+%
+% Options also exist in the specific codeblock and variable environments to control this behavior. 
+% 
 %    \begin{macrocode}
-  ext .bool_gset:N  = \g_@@_intext_bool,
-  ext .initial:n = { true },
-  ext .default:n = { false },
+  intext .bool_gset:N  = \g_@@_intext_bool,
+  intext .initial:n = { true },
+  intext .default:n = { false },
+%    \end{macrocode}
+% \end{variable}
+%
+% \changes{0.0.9$\alpha$}{2022/09/27}{Fix delimiters for all engines}
+% \begin{variable}{\g_@@_code_delim_str, delim}
+% 
+% By default the delimiters used for the specific engines should all be control characters or private use Unicode. 
+% 
+% However, it is possible that the choice may conflict with someones code. 
+% As such we provide a way to override if needed.
+%
+%    \begin{macrocode}
+  delim .str_gset:N  = \g_@@_code_delim_str,
+  delim .initial:n = {},
+  delim .default:n = {},
+%    \end{macrocode}
+%
+%
+%    \begin{macrocode}
+  outdir .tl_gset:N  = \g_@@_outputdir_tl,
+  outdir .initial:n = {},
+  outdir .default:n = {},
 }
 %    \end{macrocode}
 % \end{variable}
@@ -322,17 +350,20 @@
 %
 %    \begin{macrocode}
 \bool_if:nT { \g_@@_verbose_bool } {
-  \msg_new:nnn { fortex } { itab } {
+  \msg_new:nnn { fortex } { 8bit_tabs } {
     #1 ~ has ~ problems ~ printing ~ tabs ~ to ~ files. ~
     ~ (tabs ~ may ~ turn ~ into ~ \c_circumflex_str \c_circumflex_str I) ~
     ~ Executing ~ with ~ -8bit ~ may ~ fix ~ this.
   }
-  \str_case_e:nnT { \c_sys_engine_str } {
-    { ptex  } {}
-    { uptex } {}
-    { xetex } {}
-  } {
-    \msg_warning:nnx { fortex } { itab } { \c_sys_engine_str }
+  \msg_new:nnn { fortex } { 8bit_delim } {
+    #1 ~ has ~ problems ~ printing ~ delimiters ~ to ~ files. ~
+    ~ #1 ~ MUST ~ be ~ executed ~ with ~ -8bit ~ for ~ fortex ~ 
+    ~ to ~ work ~ at ~ all.
+  }
+  \str_case_e:nn { \c_sys_engine_str } {
+    { ptex  } { \msg_warning:nnn { fortex } { 8bit_delim } { pTeX  } }
+    { uptex } { \msg_warning:nnn { fortex } { 8bit_delim } { upTeX } }
+    { xetex } { \msg_warning:nnn { fortex } { 8bit_tabs  } { XeTeX } }
   }
 }
 %    \end{macrocode}
@@ -413,6 +444,14 @@
 \tl_new:N \g_@@_print_keystore_tl
 \NewDocumentCommand \setfortex { m } {
 %    \end{macrocode}
+% The first thing that we do is we use the keyval interface of \pkg{fortex} to set the keys that we already know.
+%
+% Sadly we cannot do this for \pkg{minted} or \pkg{listings} due to them using the older \LaTeXe interface and I havent figured out a method to bridge the \pkg{expl3} code. 
+% As such, we need to remove the fortex specfic keys, before handing them off to \pkg{minted}/\pkg{listings}
+%
+%    \begin{macrocode}
+  \keys_set_known:nn { fortex } { #1 }
+%    \end{macrocode}
 % 
 % One of the problems that I encountered whilst trying to separate out the \pkg{fortex} keys from the \pkg{minted}/\pkg{listings} keys is that removing keys is hard. 
 %
@@ -426,8 +465,6 @@
 % As unlike the rest of the times that we use these scratch variables, we are performing regular concatenation, and we may end up with the previous contents if we are not careful. 
 %
 %    \begin{macrocode}
-  \seq_clear:N \l_tmpa_seq
-  \prop_clear:N \l_tmpa_prop
   \keyval_parse:NNn { \seq_put_left:Nn \l_tmpa_seq }
                     { \prop_put:Nnn \l_tmpa_prop } 
                     { #1 }
@@ -435,6 +472,9 @@
   \prop_remove:Nn    \l_tmpa_prop { lang }
   \prop_remove:Nn    \l_tmpa_prop { ext }
   \prop_remove:Nn    \l_tmpa_prop { print }
+  \seq_remove_all:Nn \l_tmpa_seq  { intext }
+  \prop_remove:Nn    \l_tmpa_prop { delim }
+  \prop_remove:Nn    \l_tmpa_prop { outdir }
 %    \end{macrocode}
 % Note the trailing comma after the \cs{seq_use:Nn}
 %
@@ -443,10 +483,6 @@
              { \seq_use:Nn \l_tmpa_seq {,} , }
   \tl_gput_right:Nx \g_@@_print_keystore_tl 
                    { \prop_to_keyval:N \l_tmpa_prop }
-%    \end{macrocode}
-% Because now we are back in \pkg{fortex}-land, we can just use the regular keyval interface (none of this silly tokenlist stuff)
-%    \begin{macrocode}
-  \keys_set_known:nn { fortex } { #1 }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -516,25 +552,32 @@
 % As far as I am aware, there are $2.5$ ways to determine if |-output-directory| was used. 
 % \begin{enumerate}
 %  \item{When accessing the log file, the |-output-dir| path is written to the same log file. This can be extracted using regex.}
-%  \item{kpsewhich will search the |-output-dir| path }
+%  \item{kpsewhich will search the |-output-dir| path (assuming |TEXINPUTS| is set correctly) }
 %  \item[2.5]{Command lines args are accessible via Lua extensions (\LuaTeX{} specific) }
 % \end{enumerate}
 %
-% initially option 1 was chosen due to not knowing an better, however it was found that the regex engine in \pkg{expl3} is not the fastest in the world. 
+% Initially option 1 was chosen due to not knowing an better, however it was found that the regex engine in \pkg{expl3} is not the fastest in the world. 
 % Moreover because of token limitations in the \XeTeX engine, it would crash if the log file was too big. 
 %
-% Option 2 however is much more sensible, more portable and more faster. 
+% Option 2 however is much more sensible, more portable and more faster.
+% However it suffers from the problem of needing |TEXINPUTS| to be set accordingly.
+% This is automatically the case for latexmk and the kile editor, however, I dont know about other usecases. 
+% As at the moment I am the only one using this package (and I use kile and latexmk, this is fine.)
 %
-% Finally, because \LuaTeX{} allows accessing the command line arguments directly it seems like a better idea to read that than relying on kpsewhich hackyness. 
-% 
-% \begin{variable}{g_@@_outputdir_tl}
-% This is the return variable that will be referenced later on in \cs{@@_printcode:nnn}, \cs{@@_mktmpdir:} and the \env{code} environment.
-%    \begin{macrocode}
-\tl_new:N \g_@@_outputdir_tl
-%    \end{macrocode}
-% \end{variable}
+% For anyone else, |TEXINPUTS| is an environment variable, and so \LaTeX{} can be executed like:
+% \begin{center}
+% \begin{tabular}{rl}
+% |$ | & |export TEXINPUTS=outdir:|\\
+% |$ | & |pdflatex file.tex|
+% \end{tabular}
+% \end{center}
+%
+%
+% Finally, because \LuaTeX{} allows accessing the command line arguments directly.
+% Whilst this does not give a speed advantage, it does avoid the reliance on correct environment variables.
+%
+% \begin{variable}{\g_@@_outputdir_tl}
 % \begin{macro}{\@@_outputdir:}
-%
 %    \begin{macrocode}
 \cs_set:Nn \@@_outputdir: {
 %    \end{macrocode}
@@ -622,24 +665,37 @@
 %
 % Again this is not ideal, but it is a much better work-around comapred to the previous regex option. 
 %
+% Note that if we cannot find a low file, we assume that \LaTeX{} was executed \emph{without} |-output-dir|
+%    \begin{macrocode}
 \cs_set:Nn \@@_outputdir_aux: {
-  \exp_args:Nx \sys_get_shell:nnN { kpsewhich ~  \c_sys_jobname_str .log }
+  \exp_args:Nx \sys_get_shell:nnN { kpsewhich ~ \c_sys_jobname_str .log }
                                   {} \l_@@_outputdir_tl
-  \file_parse_full_name:VNNN { \l_@@_outputdir_tl } 
-                               \l_@@_outputdir_tl 
-                               \l_tmpa_tl \l_tmpa_tl
-% \end{macrocode}
-% The \cs{file_parse_full_name:VNNN} macro returns the output directory as ``|outputdir|'', however later in the code we expect ``|outputdir/|'' (note the slash). 
-% doing it this way allows us to always write \cs{g_@@_outputdir_tl}|file.txt|, and \cs{g_@@_outputdir} can either be empty (so it picks up in the working directory), or it picks up the path prefix. 
+%    \end{macrocode}
+% Annoyingly \cs{file_parse_full_name:VNNN} will freeze execution if the ``file name'' is not actually a file name. 
+% This (as far as I can tell) only happens when |kpsewhich| is unable to find the log file, and will return \tn{par}. 
 %
-% Note however that \cs{l_@@_outputdir_tl} may be empty, and we don't want to accidentally write to the root directory
+% As such we do a quick chack to make sure it has not returned an ``empty'' string (aka, only a \tn{par}).
+% 
+%
+%    \begin{macrocode}
+  \str_if_eq:VnF \l_@@_outputdir_tl \par { 
+    \file_parse_full_name:VNNN { \l_@@_outputdir_tl } 
+                                 \l_@@_outputdir_tl 
+                                 \l_tmpa_tl \l_tmpa_tl
+%    \end{macrocode}
+% The \cs{file_parse_full_name:VNNN} macro returns the output directory as ``|outputdir|'', however later in the code we expect ``|outputdir/|'' (note the slash). 
+% Doing it this way allows us to always write ``\cs{g_@@_outputdir_tl} |file.txt|'', and \cs{g_@@_outputdir} can either be empty (so it picks up in the working directory), or it picks up the path prefix. 
+%
+% Note however that if \cs{l_@@_outputdir_tl} is empty, we don't want to accidentally write to the root directory
 % \begin{macrocode}
-  \tl_if_empty:NF \l_@@_outputdir_tl {
-     \tl_gset:Nx \g_@@_outputdir_tl { \l_@@_outputdir_tl / }
+    \tl_if_empty:NF \l_@@_outputdir_tl {
+       \tl_gset:Nx \g_@@_outputdir_tl { \l_@@_outputdir_tl / }
+    }
   }
 }
 %    \end{macrocode}
 % \end{macro}
+% \end{variable}
 %
 % \begin{variable}{\c_@@_tmpfolder_tl}
 % We build the folder that we save all of the tmp files into. 
@@ -662,40 +718,104 @@
 % These macros are left here incase someone wants to redefine them for their own style. 
 %
 %    \begin{macrocode}
-\tl_set:Nn \vindexfmtdef { textit }
+\tl_set:Nn \vindexfmtdef  { textit }
 \tl_set:Nn \vindexfmtcall { textrm }
-\tl_set:Nn \vindexfmt { textrm }
+\tl_set:Nn \vindexfmt     { textrm }
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsubsection{Safe delimiter}
+% \subsubsection{ Delimiters }
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
-% \begin{macro}{\@@_safedelim:N}
+% \changes{0.0.9$\alpha$}{2022/09/27}{Fix delimiters for all engines}
 %
-% Here the letter |¤| has been chosen to be the delimiter for the \pkg{minted}/\pkg{listings} environments
+% One of the considerations for escaping code is what delimiters should be used. 
+% Due to limitations with minted, the delimited needs to be one char long. 
 %
-% Each \LaTeX{} engine treats unicode a little bit differently. 
-% In \pdfTeX{} one needs to define the full utf-8 hex code, but in \LuaTeX{} and \XeTeX{} one only needs the Unicode number. 
+% This is quire constraining as code is a weird form of text where many different characters are used regularly. 
+% In order to not break anything, choosing a delimiter that makes sense, and wont conflict with any language (code or written).
+%
+% The obvious chose for this is to use the control chars in the very low Unicode.
+% However, \emph{all} \LaTeX{} engines are unable to print this without the |-8bit| flag.
+% The next choice then is the control chars at U+0080. 
+% However, again \upTeX{} and \XeTeX{} are unable to print these without |-8bit|. 
+% But \LuaTeX{}, and \pdfTeX{} can.
+%
+% Finally as a last resort we use U+E000, The first char in the private Unicode block. 
+%
+% With any luck these control and private characters will never conflict with anything. 
+% (And if they do, there is an override mechanism). 
+%
+% One important thing of note is \pTeX{}.
+% \pTeX{} is unable to print anything (non-CJK) with a Unicode point higher than U+007f (aka 7bit ASCII) to the command line (even with |-8bit|?). 
+% This is obviously problematic for the 3 previously defined delimiter ranges.
+% As such it was decided that \pTeX{} will \emph{have} to be executed with the |-8bit|. 
 % 
-% This results in a difference when calling between the two.
-% Normally this would not be a big deal but because we are using these are the delimiters for Verbatim Environments we \emph{require} only a single character. 
+% On the other hand \upTeX{} has a different problem. 
+% \upTeX{} (and \pTeX{}), restrict catcode 13 (active) to chars $\leq 255$. 
+% However, coupling the limitation of $< 20$ being unprintable because too low, and $ >127$ being invalid UTF-8, this seriously restricts the allowed range of delimiters.
+% As I don't really feel like having the letter `\emph{A}' be a code delimiter, \upTeX{} will also \emph{have} to be executed with |-8-bit|, to allow printing the the low-control ASCII.
 %
-% If we use |^^a4| in all engines \pdfTeX{} creates an error about not being utf-8. 
-% If we use |^^c2^^a4| in all engines \LuaTeX{}/\XeTeX{} makes 2 characters and the delimiting doesn't work.
+%
+% As we have to use low Unicode for \pTeX{}/\upTeX{}, we need to have these characters in the \file{fortex.sty} file.
+% However, \XeTeX{} and \LuaTeX{} have |^^1e| defined with catcode 15 (invalid) by default. 
+% As such we need to temporarily redefine the catcode of |^^1e| to 12 (other), for \LuaTeX{} and \XeTeX{}, and permanently for \pTeX{}/\upTeX{}.
+% 
+%    \begin{macrocode}
+\str_case_e:nnT { \c_sys_engine_str } {
+  { ptex   } {}
+  { uptex  } {}
+  { xetex  } {}
+  { luatex } {}
+} {
+  \exp_args:Nx \char_set_catcode:nn { \int_from_hex:n {1e} } {12} 
+}
+%    \end{macrocode}
+%
+% \begin{variable}{\g_@@_code_delim_str}
+% Here we now define what specific delimiter should be used for each engine. 
+%
+% \begin{center}
+% \begin{tabular}{ccc} \hline
+% \LuaTeX{} & U+009C & String Terminator \\
+% \pdfTeX{} & U+009C & String Terminator \\
+% \pTeX{}   & U+001E & Record Separator  \\
+% \upTeX{}  & U+001E & Record Separator  \\
+% \XeTeX{}  & U+E000 & Private Use       \\\hline
+% \end{tabular}
+% \end{center}
+%
+% It should be noted however that \pdfTeX{} needs the full UTF-8 code of |^^c2^^9c|, but \LuaTeX{} being Unicode aware only needs |^^9c|.
+% Note that \tn{Uchar} needs to be used over \tn{char} because any delimiter needs to be fully expandable. Where $57344$ is the decimal equivalent of the hex E000
+%
+% Finally, we do a check to see if the delimiter has been previously defined in the package arguments in case a different delimiter needs to be used for whatever reason.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_codesafedelim:N #1 {
+\str_if_empty:NT \g_@@_code_delim_str { 
   \str_case_e:nn { \c_sys_engine_str } {
-    { pdftex } { \str_set:Nn #1 { ^^c2^^a4 } }
-    { luatex } { \str_set:Nn #1 {     ^^a4 } }
-    { ptex   } { \str_set:Nn #1 { ^^c2^^a4 } }
-    { uptex  } { \str_set:Nn #1 { ^^c2^^a4 } }
-    { xetex  } { \str_set:Nn #1 {     ^^a4 } }
+    { luatex } { \str_set:Nn \g_@@_code_delim_str {     ^^9c    } }
+    { pdftex } { \str_set:Nn \g_@@_code_delim_str { ^^c2^^9c    } }
+    { ptex   } { \str_set:Nn \g_@@_code_delim_str {     ^^1e    } } 
+    { uptex  } { \str_set:Nn \g_@@_code_delim_str {     ^^1e    } }
+    { xetex  } { \str_set:Nx \g_@@_code_delim_str { \Uchar57344 } }
   }
 }
 %    \end{macrocode}
-% \end{macro}
+% \end{variable}
+%
+% As previously mentioned, \LuaTeX{} and \XeTeX{} both have |^^1e| have catcode 15 (invalid) by default. 
+% We should put it back to the way it was previously to prevent any unforeseen effects. 
+% 
+% Note that \pTeX{}/\upTeX{} still has |^^1e| with catcode 12 (other) instead of 13 (active). This is by design as we need to read this sequence back later on.
+%
+%    \begin{macrocode}
+\str_case_e:nnT { \c_sys_engine_str } {
+  { xetex  } { }
+  { luatex } { }
+} {
+  \char_set_catcode_invalid:N \^^1e
+}
+%    \end{macrocode}
 %
 % \subsubsection{Vindex}
 %
@@ -710,14 +830,14 @@
 % The aim of this macro is to be a wrapper to \tn{index} that places the arguments in a \tn{verb} environment so functions/etc can contain things like |_| and be set in monospace. 
 % (The trick is to keep |!| out of the \tn{verb})
 %
-% The use of \tn{index} in this function is expected to be overwritten by \pkg{makeidx}/\pkg{xindy}/etc
+% The use of \tn{index} in this function is expected to be defined by \pkg{makeidx}/\pkg{xindy}/etc.
 %
 %
 %    \begin{macrocode}
 \NewDocumentCommand \vindex { v } {
   \str_set:Nn \l_tmpa_str  { #1 }
   \exp_args:No \label { code: \l_tmpa_str }
-  \exp_args:No \@@_vindex_aux:nx \l_tmpa_str { \vindexfmt }
+  \@@_vindex_aux:ox \l_tmpa_str { \vindexfmt }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -733,50 +853,50 @@
 % I do plan on refactoring into something more readable.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_vindex_aux:nx #1#2 {
-  \str_set:Nn \l_@@_idxvar_str { #1 }
-  \tl_set:Nx \l_@@_idxfmt_tl { #2 }
+\cs_set:Npn \@@_vindex_aux:nn #1#2 {
+  \str_set:Nn \l_@@_idxvar_str  { #1 }
+  \tl_set:No  \l_@@_verbstr_str { \c_backslash_str verb }
 %    \end{macrocode}
-%    \begin{macrocode}
-  \tl_set:No \l_@@_verbstr_str { \c_backslash_str verb }
-%    \end{macrocode}
-% The delimiters used in \tn{verb} is |¤|. 
-% This is |^^a4| in \LuaTeX{}, \XeTeX{},  and |^^c2^^a4| in \pdfTeX{}.
-% (The c2 is needed because we need to explicitly write out the utf-8 hex)
+% One of the annoying things specifically about the \pdfTeX{} engine is that \tn{input} assumes a latin1 encoding. 
+% This means that when \tn{printindex} is used, the |.ind| file has to only have latin1 letters.
 %
-% |¤| was picked because I don't know of any programming language that uses these in identifiers (or really anything). 
-% However |¤| also works in \pdfTeX{} without needing to set catcodes. 
-% Avoiding catcodes is important as these go into a \file{.idx} file and we have no local control over catcodes there.
-% 
-% (There is probably one language out there that uses |¤|, but this is the best delimiter that works that I can think of that works with the various index packages and doesn't require setting catcodes).
+% As we previously has to use UTF-8 to get \LaTeX talking to python, we need to change the |^^c2^^9c| into just |^^9c| when writing delimiters to the index file.  
+%
+% Honestly I have no idea why this should be the case as \pdfTeX{} normally handles UTF-8 just fine, but whatever. 
 %
 %    \begin{macrocode}
-   \str_set:Nn \l_@@_verbdelim_str { ^^a4 } 
+  \str_if_eq:VnTF \g_@@_code_delim_str { ^^c2^^9c } {
+    \str_set:Nn \l_@@_verb_delim_str   { ^^9c }
+  }{
+    \str_set:NV \l_@@_verb_delim_str { \g_@@_code_delim_str }
+  }
 %    \end{macrocode}
 % The regex here replaces ``|my!str|'' with ``|my¤!\verb¤str|''.
+% Where we are taking |¤| to be the engine-specific escape character.
 %
 %    \begin{macrocode}
   \exp_args:Nnno \tl_replace_all:Nnn \l_@@_idxvar_str {!} {
-    \l_@@_verbdelim_str!\l_@@_verbstr_str\l_@@_verbdelim_str
+    \l_@@_verb_delim_str!\l_@@_verbstr_str\l_@@_verb_delim_str
   }
 %    \end{macrocode}
-% This is just a convoluted way of saying ``|\verb¤|\cs{l_@@_idxvar_str}|¤|"|"\cs{indexfmt}'', but using catcode letter/other. 
+% This is just a convoluted way of saying ``|\verb¤|\cs{l_@@_idxvar_str}"¤|"\cs{indexfmt}'', but using catcode letter/other. 
 %
 %    \begin{macrocode}
   \tl_set:Nx \l_@@_idxvar_str { 
-      \exp_not:V { \l_@@_verbstr_str   }
-      \exp_not:V { \l_@@_verbdelim_str }
+      \exp_not:V { \l_@@_verbstr_str    }
+      \exp_not:V { \l_@@_verb_delim_str }
       \l_@@_idxvar_str
-      \exp_not:V { \l_@@_verbdelim_str }
-      | \l_@@_idxfmt_tl
+      \exp_not:V { \l_@@_verb_delim_str }
+      | #2
   }
   \iow_term:x { \exp_not:o \l_@@_idxvar_str}
 %    \end{macrocode}
-% As mentioned, but with reiterating, \tn{index} is designed to be overwitten by whatever indexing package is being used. There is no need for a hard requirement on a specific package. 
+% As mentioned, but with reiterating, \tn{index} is designed to be overwritten by whatever indexing package is being used. There is no need for a hard requirement on a specific package. 
 %
 %    \begin{macrocode}
   \exp_args:No \index { \l_@@_idxvar_str }
 }
+\cs_generate_variant:Nn \@@_vindex_aux:nn {nx, xx, ox}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -817,7 +937,7 @@
 % This may become an issue in the future, but for the languages that I work with it isn't. 
 %
 % The final interesting thing about this function is that it has to be callable with the default selection of letter catcodes. 
-% This means no |@| or |_:| characters. This is due to the contents being \tn{insert} by minted in the middle of the document, characters like |@_:| are still defined as catcode other. 
+% This means no |@| or |_|,|:| characters. This is due to the contents being \tn{insert} by minted in the middle of the document, characters like |@|,|_|,|:| are still defined as catcode other. 
 %
 % Its not ideal, but it is the easiest way to deal with it
 %
@@ -826,7 +946,7 @@
   \tl_set:Nn \l_tmpa_tl { #3 }
   \str_replace_all:Nnn \l_tmpa_tl {:} {!}
   \bool_if:NF { #1 } {
-    \exp_args:Nx \@@_vindex_aux:nx { \l_tmpa_tl } { \vindexfmtcall }
+    \@@_vindex_aux:xx { \l_tmpa_tl } { \vindexfmtcall }
   }
   \hyperref [ code: #3 ] {
             \fortexhypercodelinkfmt{ \detokenize { #2 } } 
@@ -837,11 +957,11 @@
 % \subsubsection{Create file with refs}
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
-% \begin{macro}{\@@_mkref_file:Nn}
+% \begin{macro}{\@@_mkref_file:nN}
 %
 % The easiest way to insert the hyper references, is to read in the file we are going to highlight, and then use some regex to modify it. 
 % \cs{@@_mkref_file:nN} is dealing with the file creation and caching of the results side. 
-% The actual call to the regex function, is in \cs{@@_mkref_file_aux} and is the slowest bit..
+% The actual call to the regex function, is in \cs{@@_mkref_file_aux:nn} and is the slowest bit..
 % Whats not contained in this function is the regex itself. That is contained in \env{codeblock}.
 %
 %    \begin{macrocode}
@@ -860,11 +980,11 @@
                                              \file_mdfive_hash:n { #1 } .tmp 
     }
     \file_if_exist:nF { \g_@@_outputdir_tl \l_@@_ref_cache_filename_tl } {
-      \exp_args:Nxx \@@_mkref_file_aux:nn { #1 } { \l_@@_ref_cache_filename_tl }
+      \@@_mkref_file_aux:xx { #1 } { \l_@@_ref_cache_filename_tl }
     }
 %    \end{macrocode}
-% finally return the output file that we calculated \emph{without} the leading directory
-% this needs to be done after \cs{@@_mkref_file_aux:nn}, due to clobbering
+% Finally return the output file that we calculated \emph{without} the leading directory.
+% This needs to be done after \cs{@@_mkref_file_aux:nn}, due to clobbering
 %
 %    \begin{macrocode}
     \tl_set:Nx { #2 } { \l_@@_ref_cache_filename_tl }
@@ -873,7 +993,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \changes{0.0.7$\alpha$}{2022/06/24}{fix crash when no codeblock is used}
-% \begin{macro}{\@@_mkref_file_aux:nnn}
+% \begin{macro}{\@@_mkref_file_aux:nn}
 % This Macro does the hard work of doing the actual regexing and substituting. Before writing the contents back out to a file. 
 % 
 %    \begin{macrocode}
@@ -899,6 +1019,7 @@
   \iow_now:Nx  \c_@@_reffile_iow { \exp_not:V { \l_@@_filecontents_tl } } 
   \iow_close:N \c_@@_reffile_iow  
 }
+\cs_generate_variant:Nn \@@_mkref_file_aux:nn { xx }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -924,7 +1045,7 @@
 % \end{arguments}
 %
 % This auxiliary macro contains the regex logic and implementation for both \env{codeblock} and \env{codevar}. 
-% This macro mainly is dealing with the creation for the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_mkref_file}.
+% This macro mainly is dealing with the creation for the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_mkref_file:nN}.
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_codeblock_aux:nn #1#2 {
@@ -933,12 +1054,9 @@
 % This is probs not the best way to do it. However if we use \tn{detokenize}, there will be a space after the \tn{verb}.
 % This will then lead to the delimiters being incorrectly defined.  
 %
-% We also use the previously defined \cs{@@_codesafedelim:N} function, to get the |¤| char for the different \TeX{} engines. 
-%
 %    \begin{macrocode}
   \seq_if_in:NnF { #1 } { noref } {
     \tl_set:No \l_@@_verbstr_str { \c_backslash_str verb }
-    \@@_codesafedelim:N \l_@@_printdelim_str
 %    \end{macrocode}
 % Here we create the matching regex, and the thing that is going to replace it.
 % 
@@ -954,8 +1072,7 @@
 % Finally we place this all in a capturing group to allow us to reinsert the char we would otherwise be replacing \\\hline
 % |^| & If the matched code is the first thing in a new |\begin{code}| block then |([^\w:])| is not going to match it. As such we explicitly check for this edge case. \\\hline
 % |#2| & This active sequence inserts the name of the function that we want to find. \\\hline
-% |\b| & Finally we match a wor
-%d boundary. \\\hline
+% |\b| & Finally we match a word boundary. \\\hline
 % \end{tabular}
 % \end{table}
 %
@@ -964,7 +1081,7 @@
 % \1¤\hyperref[code:identifier]{\psudoverb{name}}¤
 % \end{verbatim}
 %
-% where |\1| is the previously captured group from the first row in the above table. 
+% Where |\1| is the previously captured group from the first row in the above table, and |¤| is the engine specific delimiter.
 %
 %    \begin{macrocode}
     \seq_if_in:NnTF { #1 } { noindex } {
@@ -975,15 +1092,15 @@
     \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
     \str_set:Nx \l_tmpa_str {
                   \exp_not:n { \1                     }
-                              \l_@@_printdelim_str
+                               \g_@@_code_delim_str
                   \exp_not:n { \\                     }
                               \l_tmpa_tl
                   \exp_not:n { \{                     }
                               #2
                   \exp_not:n { \} \{                  }
-                              \seq_use:Nn \g_@@_codenest_seq {:}
+                               \seq_use:Nn \g_@@_codenest_seq {:}
                   \exp_not:n { \}                     }
-                              \l_@@_printdelim_str
+                               \g_@@_code_delim_str
     }
 %    \end{macrocode}
 % One thing I should not is that yes: I do actually know about pre-compiling regex using \cs{regex_set:Nn}.
@@ -1021,7 +1138,7 @@
     \exp_args:Nx \label { code: \seq_use:Nn \g_@@_codenest_seq {:}  }
   }
   \seq_if_in:NnF { #1 } { noindex } {
-    \exp_args:Nx \@@_vindex_aux:nx { \seq_use:Nn \g_@@_codenest_seq {!} }
+    \@@_vindex_aux:xx { \seq_use:Nn \g_@@_codenest_seq {!} }
                                          { \vindexfmtdef }
   }
 }
@@ -1074,7 +1191,7 @@
 % \noindent\textit{\small{End of code block |codeblock|}}\\
 % \end{center}
 %
-% after we are finished defining a code block. This is designed to be similar to \LaTeX{}'s \pkg{doc} package.
+% After we are finished defining a code block. This is designed to be similar to \LaTeX{}'s \pkg{doc} package.
 % 
 % This also has the added effect of moving up one level in the nesting.
 %    \begin{macrocode}
@@ -1215,7 +1332,7 @@
 % \subsubsection{Create temp working directory}
 % \changes{0.0.3$\alpha$}{2022/03/10}{Add automatic folder creation}
 %
-% \begin{macro}{\@@_mktmpdir}
+% \begin{macro}{\@@_mktmpdir:}
 % If we are writing files into a folder, we need to make sure that the folder exists, and if we not we will either create it ourselves or say a warning that the folder can be created manually.
 % I want to avoid explicitly depending on |-shell-esc|, so as a consequence this function is on the jankier side.  
 % The main issue is that \LaTeX{} doesn't support doing anything with folders. As such we cannot check if a folder exists, or create a new folder without |-shell-esc| permissions. 
@@ -1261,11 +1378,14 @@
 %
 % \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
 % Finally we register this with with a hook to be called at the end of |\begin{document}|
-% This has to be called at the \emph{end} due to needing enough time for the log file to be created. 
-% 
+%
+% Note: as \cs{g_@@_outputdir_tl} is overridable, we just check if it has been set.
+%
 %    \begin{macrocode}
 \hook_gput_code:nnn { begindocument/end } { fortex } {
-    \@@_outputdir:
+    \tl_if_empty:NT \g_@@_outputdir_tl { 
+      \@@_outputdir:
+    }
     \@@_mktmpdir:
 }
 %    \end{macrocode}
@@ -1430,6 +1550,7 @@
 %
 % This is the function that is actually responsible for writing the output file.
 %
+% Note that because this is a programming language with lots of special chars (tabs/\%/\&/etc) we need to set a bunch of catcodes so that \LaTeX{} does not mangle the file as it comes in.
 %    \begin{macrocode}
 \cs_set:Npn \@@_concat_files:nn #1#2 {
 %    \end{macrocode}
@@ -1449,7 +1570,7 @@
     \iow_term:x { \exp_not:V { \l_tmpb_tl } }
   }
 %    \end{macrocode}
-% Write what previously was in the file as well as our new stuff.
+% Finally we concatenate the two files by writing out the contents previously in it, as well as the new stuff. 
 %
 %    \begin{macrocode}
   \iow_open:Nn \c_@@_outfile_iow { #2 }
@@ -1474,25 +1595,22 @@
 % Load the saved tmp file and do all the highlighting/formatting and then place into the pdf.
 % Note that we need to pass the full path when using |-output-dir|.  
 %
-% \begin{itemize}[label={Bugs:}]
-% \item{This function is weird, and I have no idea why |:onn| or |:xnn| signatures don't work?
-%       but calling \cs{exp_args:No} \cs{@@_printcode:nnn} does work?}
-% \end{itemize}
-%
 %    \begin{macrocode}
 \cs_set:Npn \@@_printcode:nnn #1#2#3 {
-  \@@_codesafedelim:N \l_tmpa_str
   \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
     \tl_set:Nn \minted@cachedir {\g_@@_outputdir_tl \c_@@_tmpfolder_tl}
-    \inputminted [ escapeinside={\l_tmpa_str \l_tmpa_str}, #1 ] { #2 } { #3 }
+    \inputminted [
+      escapeinside={\g_@@_code_delim_str \g_@@_code_delim_str}, 
+      #1,
+    ] { #2 } { #3 }
   }{
 %    \end{macrocode}
 % \pkg{listings} doesn't support no highlighting by setting the key |language=text|, so we need to explicitly \emph{not} pass in a language key. 
 %
 %    \begin{macrocode}
-%     \tl_set:Nx \l_tmpa_tl { escapechar={\l_tmpa_str} }
-%     \exp_args:No \lstset { \l_tmpa_tl } 
-    \lstset{escapechar = {¤}}
+    \exp_args:Nx \lstset {
+      \exp_not:n { escapechar = } \{ \g_@@_code_delim_str \}
+    }
     \str_if_eq:NNTF { #2 } { text } {
       \lstinputlisting [ #1 ] { #3 }
     }{
@@ -1500,6 +1618,7 @@
     }
   }
 }
+\cs_generate_variant:Nn \@@_printcode:nnn { onn }
 %    \end{macrocode}
 % \end{macro}
 % 
@@ -1529,8 +1648,8 @@
   \VerbatimEnvironment
   \@@_inctmpname:
 %    \end{macrocode}
-% One interesting thing to note, is that \tn{VerbatimOut} does not require the name catcode settings as when we are doing the append operations in \cs{@@_concat_files:}.
-% And I don't know why?
+% One interesting thing to note, is that \tn{VerbatimOut} seems to be sensitive to ASCII $<20$ (space), as a tab is commonly used in sourcecode (but afaik nothing else), we make sure to correct the catcode of it. 
+%
 %    \begin{macrocode}
   \VerbatimOut [ codes = { \char_set_catcode_other:N \^^I } ]
                { \g_@@_tmp_filename_tl }
@@ -1541,7 +1660,7 @@
   \endVerbatimOut
 %    \end{macrocode}
 % Don't build on the first passthough.
-% searching for links is \emph{excruciatingly} slow, so avoid doing it unnecessarily.
+% Searching for links to hyperref is \emph{excruciatingly} slow, so we should avoid doing it unnecessarily.
 % If we \emph{do} build on the first pass then this also makes our caching strategy invalid as the actual code will not have changed. 
 % Hence the cache will not be invalidated.
 %
@@ -1554,7 +1673,7 @@
                               \l_tmpa_tl
 %    \end{macrocode}
 %    \begin{macrocode}
-    \exp_args:No \@@_printcode:nnn { \g_@@_print_keystore_tl }
+    \@@_printcode:onn { \g_@@_print_keystore_tl }
                         \g_@@_lang_tl
                       { \g_@@_outputdir_tl\l_tmpa_tl } 
   }
