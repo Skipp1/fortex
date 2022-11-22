@@ -166,6 +166,7 @@
     }
   }
 }
+
 \tl_const:Nn \c__fortex_tmpfolder_tl {
   \c_underscore_str fortex- \c_sys_jobname_str
 }
@@ -232,7 +233,7 @@
     \__fortex_vindex_aux:xx { \l_tmpa_tl } { \vindexfmtcall }
   }
   \hyperref [ code: #3 ] {
-            \fortexhypercodelinkfmt{ \detokenize { #2 } }
+    \fortexhypercodelinkfmt{ \detokenize { #2 } }
   }
 }
 \cs_set:Npn \__fortex_mkref_file:nN #1#2 {
@@ -308,7 +309,7 @@
     \seq_if_in:NnF \l__fortex_argv_seq { noref } {
       \hyperref [ code: \seq_use:Nn \g__fortex_codenest_seq {:} ]
     }
-                { \texttt{\detokenize{ #2 }}}.\\
+    { \texttt { \detokenize{ #2 } } } . \\
     \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
   }
   \group_end:
@@ -328,6 +329,53 @@
   \iow_now:cx { @auxout } {
      \exp_not:n { \gdef\fortex@codeblockregex }
      { \seq_use:Nn \g__fortex_codeblock_regex_toaux_seq { } }
+  }
+}
+\str_if_eq:NNTF { \g__fortex_printend_tl } { mint } {
+  \NewDocumentCommand { \MakeShortFortex } { O{} m m } {
+    \int_new:c   { g__fortex_default_#3_catcode_int }
+    \int_gset:cn { g__fortex_default_#3_catcode_int } {
+      \char_value_catcode:n { `#3 }
+    }
+    \token_if_active:NT #3 {
+      \cs_gset_eq:cN { __fortex_default_ \token_to_str:N #3 _cs: } #3
+    }
+    \newmintinline [ __fortex_shortmint_cs ] { #2 } { #1 }
+    \cs_set:Npn \__fortex_shortmint: { \__fortex_shortmint_i: }
+    \char_set_catcode_active:N #3
+    \char_set_active_eq:NN #3 \__fortex_shortmint:
+    \exp_args:Nnno \tl_set_rescan:Nnn \l_tmpa_a {
+      \char_set_catcode_parameter:N e
+      \char_set_catcode_active:N   #3
+    } { e1#3 }
+    \exp_last_unbraced:NNV \cs_set:Npn \__fortex_shortmint_i: \l_tmpa_a {
+      \mode_if_math:TF {
+        \use_i:nn
+      } {
+        \use_ii:nn
+      }
+      { \token_to_str:N #3 }
+      { { \__fortex_shortmint_cs#3##1#3 } }
+    }
+  }
+  \NewDocumentCommand { \UnMakeShortFortex } { v } {
+    \exp_args:Nnx \char_set_catcode:nn { `#1 } {
+      \int_use:c { g__fortex_default_#1_catcode_int }
+    }
+    \exp_args:Nc \int_compare:nNnT { g__fortex_default_#1_catcode_int } = { 13 } {
+      \char_set_active_eq:NN #1 { __fortex_default_#1_cs: }
+    }
+  }
+} {
+  \NewDocumentCommand { \MakeShortFortex } { O{} m v} {
+    \str_if_eq:NNTF { #2 } { text } {
+      \lstMakeShortInline [ #1 ] { #3 }
+    }{
+      \lstMakeShortInline [ language=#2, #1 ] { #3 }
+    }
+  }
+  \NewDocumentCommand { \UnMakeShortFortex } { v } {
+    \lstDeleteShortInline { #1 }
   }
 }
 \cs_set:Nn \__fortex_setcatcode: {
@@ -463,8 +511,8 @@
     \__fortex_mkref_file:nN { \g__fortex_outputdir_tl\g__fortex_tmp_filename_tl }
                               \l_tmpa_tl
     \__fortex_printcode:onn { \g__fortex_print_keystore_tl }
-                        \g__fortex_lang_tl
-                      { \g__fortex_outputdir_tl\l_tmpa_tl }
+                              \g__fortex_lang_tl
+                            { \g__fortex_outputdir_tl\l_tmpa_tl }
   }
 }
 \endinput

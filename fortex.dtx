@@ -23,8 +23,17 @@
 \usepackage[UKenglish]{babel}
 \usepackage[verbose]{fortex}
 \usepackage{microtype}
+\usepackage{listings}
 \usepackage{bookmark}
 \EnableCrossrefs
+\lstset {
+  gobble=3,
+  language=tex,
+  basicstyle=\small\ttfamily,
+  numbers=left,
+  firstnumber=1,
+  numberfirstline=true
+}
 \begin{document}
   \DocInput{\jobname.dtx}
 \end{document}
@@ -60,7 +69,8 @@
 % These whilst simple to learn, the notebook has problems with opening in plain text editors and have issues with ``run each cell in tern'' and have no easy language agnosticism. 
 % The notebook interface is also annoying and neither Jupyter or Mathmatica provide a good editing experience.
 %
-% \pkg{fortex} aims to bridge the gap between the two by providing the plain text editing experience and two-way compile from \pkg{WEB}/\pkg{noweb} and combine with the easy to use notebook. The end result I anticipate will be similar to \LaTeX{}'s \pkg{doc} package, but without the commenting syntax or the \LaTeX{} specificness.
+% \pkg{fortex} aims to bridge the gap between the two by providing the plain text editing experience and two-way compile from \pkg{WEB}/\pkg{noweb} and combine with the easy to use notebook.
+% The end result I anticipate will be similar to \LaTeX{}'s \pkg{doc} package, but without the commenting syntax or the \LaTeX{} specificness.
 %
 %
 % \section{Usage}
@@ -113,6 +123,22 @@
 %
 % \end{environment}
 %
+% \begin{function}{\MakeShortFortex}
+% \begin{syntax}
+% \cs{MakeShortFortex} \oarg{\pkg{minted}/\pkg{listings} options} \Arg{language} \Arg{character}
+% \end{syntax}
+%  
+% \end{function}
+%
+%
+% \begin{function}{\UnMakeShortFortex}
+% \begin{syntax}
+% \cs{UnMakeShortFortex} \Arg{character}
+% \end{syntax}
+%  
+% \end{function}
+%
+%
 %
 % \begin{function}{\vindex}
 % \begin{syntax}
@@ -152,28 +178,7 @@
 % \end{enumerate}
 %
 % \paragraph{What I will be working on next:}
-%
-% I found this, on stack exchange and could be useful in making a version of shortverb that does highlighting.
-%
-% \url{https://tex.stackexchange.com/questions/524645}
-%
-% \begin{verbatim}
-% \documentclass{article}
-% \usepackage{minted}
-% \newmintinline[code]{latex}{}
-% \catcode`\|=\active
-% \protected\def|{%
-%   \ifmmode
-%     \expandafter\@firstoftwo
-%   \else
-%     \expandafter\@secondoftwo
-%   \fi
-%   {\string|}{\code|}%
-% }
-% \end{verbatim}
-%
 % \end{documentation}
-%
 % \begin{implementation}
 % \section{\pkg{fortex} Implementation}
 %
@@ -537,6 +542,7 @@
 % \subsection{Getting \texttt{-output-dir}}
 %
 % \changes{0.0.4$\alpha$}{2022/03/15}{Add -output-dir detection}
+% \changes{0.0.8$\alpha$}{2022/08/17}{Make regex group non-capturing in \LuaTeX{} specific code}
 % \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
 %
 % If \LaTeX{} is used with |-output-directory|, \cs{sys_shell_now:x} |{mkdir ...}| will ignore it and make its directory in the .tex directory.
@@ -599,7 +605,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \changes{0.0.8$\alpha$}{2022/08/17}{Make regex group non-capturing in \LuaTeX{} specific code}
 % \begin{macro}{\@@_outputdir_lua_aux:}
 %
 % This is the LuaTeX{} specific function to get the |-output-dir|. 
@@ -654,8 +659,6 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \changes{0.0.8$\alpha$}{2022/08/17}{Optimise regex when searching for output directory}
-% \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
 %
 % \begin{macro}{\@@_outputdir_aux:}
 %
@@ -696,6 +699,9 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{variable}
+% \changes{0.0.8$\alpha$}{2022/08/17}{Optimise regex when searching for output directory}
+% \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
+
 %
 % \begin{variable}{\c_@@_tmpfolder_tl}
 % We build the folder that we save all of the tmp files into. 
@@ -949,7 +955,7 @@
     \@@_vindex_aux:xx { \l_tmpa_tl } { \vindexfmtcall }
   }
   \hyperref [ code: #3 ] {
-            \fortexhypercodelinkfmt{ \detokenize { #2 } } 
+    \fortexhypercodelinkfmt{ \detokenize { #2 } } 
   }
 }
 %    \end{macrocode}
@@ -1201,7 +1207,7 @@
     \seq_if_in:NnF \l_@@_argv_seq { noref } {
       \hyperref [ code: \seq_use:Nn \g_@@_codenest_seq {:} ]
     }
-                { \texttt{\detokenize{ #2 }}}.\\
+    { \texttt { \detokenize{ #2 } } } . \\
     \seq_gpop_right:NN \g_@@_codenest_seq \l_tmpa_tl
   }
   \group_end:
@@ -1274,6 +1280,203 @@
 }
 %    \end{macrocode}
 %
+% \subsection{Short Code Snippits}
+% \changes{0.0.9$\alpha$}{2022/09/01}{Add \texttt{\char`\\MakeShortFortex} for short code snippits}
+% 
+% One of the things I find my self wanting every now and then is a quick way to have highlighted code snippits without the need to specify a while command setup. 
+% Moreover, It seems that I am not the only one asking for this and a few different versions of this features have been created over the years. 
+% There is the \pkg{shortvrb} package that does this with regular verbatim text, as well as \cs{lstMakeShortInline} in the \pkg{listings} package for highlighted text. 
+%
+% In \pkg{fortex} land, we support \pkg{minted} and \pkg{listings} as highlighting backends. 
+% As previously mentioned, \pkg{listings} provides a way to have highlighted snippits, but unfortunately \pkg{minted} does not. 
+% 
+% As such this section of code has a implementation of the short verb for \pkg{minted}, as well as providing a unified interface between the two packages. 
+% \subsubsection{ Minted } 
+%
+%    \begin{macrocode}
+\str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
+%    \end{macrocode}
+% \begin{macro}{\MakeShortFortex}
+% \begin{arguments}
+% \item{ keyvals to pass to \pkg{minted}/\pkg{listings} }
+% \item{ programming language we want to highlight}
+% \item{ character we want to define as the delimiter }
+% \end{arguments}
+%
+% One thing that I wanted to deal with is the restoration of the catcode/definitions of the character used in the shortvrb.
+% In order to do this we need to save the previously defined catcode into an integer, and if that catcode is active (13), then we should save the previous definition of the character. 
+%
+% This is done by creating a variable name on the fly using the |:c| variants.
+% It really pains me to do things this way coming from a structured C/Fortran background.
+% However, I was unable to think of a way to do this that: 1. allowed multiple characters to be defined, and all restore correctly. 
+% 2. Be simple to implement and understand. 
+% I tried initially using some keyval structures, but they ended up being excessively noisy, and just make the whole section of code just hard to follow. 
+% 
+% One consideration however is that \cs{int_gset:cn} \emph{requires} the integer to pre-exist. 
+% ( In contrast to \cs{int_gset:Nn} and \cs{cs_gset_eq:cN} ). I dont know if this is a bug with \pkg{expl3}, but whatever, easy enough to work around.
+%
+%    \begin{macrocode}
+  \NewDocumentCommand { \MakeShortFortex } { O{} m m } {
+    \int_new:c   { g_@@_default_#3_catcode_int }
+    \int_gset:cn { g_@@_default_#3_catcode_int } { 
+      \char_value_catcode:n { `#3 }
+    }
+    \token_if_active:NT #3 { 
+      \cs_gset_eq:cN { __@@_default_ \token_to_str:N #3 _cs: } #3 
+    }
+%    \end{macrocode}
+%    \begin{macrocode}
+    \newmintinline [ __@@_shortmint_cs ] { #2 } { #1 }
+%    \end{macrocode}
+% Here is the meat-and-potatoes of the whole shortvrb operation. 
+% The underlying idea has been taken from \url{https://tex.stackexchange.com/questions/524645} and the minted source code itself. 
+%
+% There were a few different things I tried before settling on this implementation.
+% Firstly, I tried using a trick I had seen for implementing a regular non-highlighted shortvrb, that involved redefining the active char like the pseudocode:
+%
+% \begin{center}
+% \begin{minipage}{0.4\linewidth}
+% \begin{lstlisting}
+% \def|{
+%   \begingroup
+%   \def|{
+%     \endgroup
+%     \verb@egroup
+%   }
+%   \verb|
+% }
+% \end{lstlisting}
+% \end{minipage}
+% \end{center}
+%
+% However This approach was not working when \tn{verb} was replaced with \tn{mintinline}. 
+% This is because \pkg{minted} does not use a regular verbatim for the delimiters. 
+% Instead, \pkg{minted} creates the fancy delimiters for the verbatim environment using:
+%
+% \begin{center}
+% \begin{minipage}{0.4\linewidth}
+% \begin{lstlisting}[firstnumber=994]
+% \def\minted@inline@ii##1#1{%
+%   \minted@inline@iii{##1}}%
+% \end{lstlisting}
+% \footnotesize{Minted Sourcecode, v2.6}
+% \end{minipage}
+% \end{center}
+%
+% One of the key points of defining a function like this is that the catcodes of the delimiters \emph{must} match. it is not enough to start with a catcode 12, and end with 13. 
+%
+% This is the main reason why many of the earlier versions that I tried didn't work. 
+%    \begin{macrocode}
+    \cs_set:Npn \__@@_shortmint: { \__@@_shortmint_i: }
+    \char_set_catcode_active:N #3
+    \char_set_active_eq:NN #3 \__@@_shortmint:
+%    \end{macrocode}
+% Here is the final solution that I ended up settling on.
+% There are a few things of note here, but starting with \cs{__@@_shortmint_i:}. 
+% The first thing of note is that it contains a `computed' argument spec. 
+% This should expand to: |##1|$_6$|#3|$_{13}$. 
+%
+% The reason that this argument spec was used is twofold. 
+% Firstly, it was found that passing an active character as a \emph{beginning} delimiter directly to minted would often redefine the catcode subsequently with \tn{dospecials}. 
+% As such the catcode for the \emph{ending} delimiter would be different and \TeX would just keep on reading untill an error. 
+%
+% Secondly, this specific form of argument spec was chosen because it is similar enough to the original minted version that it \emph{should} not cause any issues. 
+%
+% The form of the argument itself needs to be computed for the reason that even if the variable |#3| expands to was redefined to be active previously, |#3| itself is not active. 
+% Instead what was done previously was define \emph{all future} occurrences of the variable |#3| \emph{expands to} as active. 
+%
+% But as the specific delimiter is controlled by the user, we cannot hardcode "|" (for example) as the delimiter. 
+% I did try using the \tn{lowercase} trick to see if I could generate an active variant of |#3| within the argument spec, however I was having issues getting that working and instead I came up with this solution. 
+%
+% Here we are using the letter |e| to act as the parameter catcode letter. 
+% This was chosen because I am doubtful that anyone will try and use the letter |e| as a delimiter. 
+% Moreover, if |e| \emph{is} used as a delimiter, it has its catcode changed from letter to active. 
+% As such, almost everything else will stop working anyway (|\end{environment}| will no longer work). 
+% 
+% I did initially want to use |#| as the parameter, however it was causing conflicts with |#1| from \cs{MakeShortFortex} and I was getting keyvals in the argument spec. 
+%
+%    \begin{macrocode}
+    \exp_args:Nnno \tl_set_rescan:Nnn \l_tmpa_a {
+      \char_set_catcode_parameter:N e 
+      \char_set_catcode_active:N   #3
+    } { e1#3 }
+%    \end{macrocode}
+%    \begin{macrocode}
+    \exp_last_unbraced:NNV \cs_set:Npn \__@@_shortmint_i: \l_tmpa_a {
+      \mode_if_math:TF {
+        \use_i:nn 
+      } {
+        \use_ii:nn 
+      }
+      { \token_to_str:N #3 }
+      { { \__@@_shortmint_cs#3##1#3 } }
+    }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\UnMakeShortFortex}
+% \begin{arguments}
+% \item{ character we want to remove as the delimiter }
+% \end{arguments}
+%
+% To remove the shortvrb behaviour of a character, all we do is restore the previous catcode (and control sequence if active).
+%
+%    \begin{macrocode}
+  \NewDocumentCommand { \UnMakeShortFortex } { v } {
+    \exp_args:Nnx \char_set_catcode:nn { `#1 } {
+      \int_use:c { g_@@_default_#1_catcode_int }
+    }
+    \exp_args:Nc \int_compare:nNnT { g_@@_default_#1_catcode_int } = { 13 } {
+      \char_set_active_eq:NN #1 { __@@_default_#1_cs: }
+    }
+  }
+} {
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Listings}
+%
+% In contrast to the minted implementation, \pkg{listings} already provides a way to create short inline code. 
+% As such, we just wrap their implementation, so that \pkg{listings} and \pkg{minted} can be swapped with each other freely.
+%
+%
+% \begin{macro}{\MakeShortFortex}
+% \begin{arguments}
+% \item{ keyvals to pass to \pkg{minted}/\pkg{listings} }
+% \item{ programming language we want to highlight}
+% \item{ character we want to define as the delimiter }
+% \end{arguments}
+%	
+% The only thing we are doing different here is because have a mandatory language argument, we need to filter if that language is |text|. 
+% This is because whilst \pkg{minted} uses |text| to indicate that there should be no highlighting, \pkg{listings} does not. 
+%
+% In fact; if you pass |language=text| as an argument to \pkg{listings}, it will complain and spit back an error. 
+% As such we need to filter out this one case.
+%
+%    \begin{macrocode}
+  \NewDocumentCommand { \MakeShortFortex } { O{} m v} {
+    \str_if_eq:NNTF { #2 } { text } {
+      \lstMakeShortInline [ #1 ] { #3 }
+    }{
+      \lstMakeShortInline [ language=#2, #1 ] { #3 }
+    }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\UnMakeShortFortex}
+% \begin{arguments}
+% \item{ character we want to remove as the delimiter }
+% \end{arguments}
+% 
+% Using \pkg{listings} to remove the shortvrb is even easier.
+%
+%    \begin{macrocode}
+  \NewDocumentCommand { \UnMakeShortFortex } { v } {
+    \lstDeleteShortInline { #1 }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \subsection{File saving}
 %
 % \subsubsection{Set catcode}
@@ -1335,7 +1538,8 @@
 % \begin{macro}{\@@_mktmpdir:}
 % If we are writing files into a folder, we need to make sure that the folder exists, and if we not we will either create it ourselves or say a warning that the folder can be created manually.
 % I want to avoid explicitly depending on |-shell-esc|, so as a consequence this function is on the jankier side.  
-% The main issue is that \LaTeX{} doesn't support doing anything with folders. As such we cannot check if a folder exists, or create a new folder without |-shell-esc| permissions. 
+% The main issue is that \LaTeX{} doesn't support doing anything with folders.
+% As such we cannot check if a folder exists, or create a new folder without |-shell-esc| permissions. 
 % 
 % The basic idea is to check if a test file: \file{outdir/_fortex-jobname/jobname-0.tmp} exists in our output folder.
 % If the folder doesn't exist the \cs{file_if_exist:nF}, will not cause any errors, but will just say the file doesn't exist. 
@@ -1674,8 +1878,8 @@
 %    \end{macrocode}
 %    \begin{macrocode}
     \@@_printcode:onn { \g_@@_print_keystore_tl }
-                        \g_@@_lang_tl
-                      { \g_@@_outputdir_tl\l_tmpa_tl } 
+                              \g_@@_lang_tl
+                            { \g_@@_outputdir_tl\l_tmpa_tl } 
   }
 }
 %    \end{macrocode}
