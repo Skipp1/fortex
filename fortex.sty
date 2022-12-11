@@ -19,8 +19,8 @@
 %% version 2005/12/01 or later.
 %% 
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-06-24} {0.0.8$\alpha$}
-{like noweb without external tooling}
+\ProvidesExplPackage {fortex} {2022-12-11} {0.0.10$\alpha$}
+                     {like noweb without external tooling}
 \RequirePackage { l3keys2e }
 \RequirePackage { fancyvrb }
 \keys_define:nn { fortex } {
@@ -379,16 +379,11 @@
   }
 }
 \cs_set:Nn \__fortex_setcatcode: {
-  \endlinechar=`\^^J
+  \cs_set_eq:NN \do \char_set_catcode_other:N
+  \dospecials
   \char_set_catcode_other:N \^^J
   \char_set_catcode_other:N \^^I
-  \char_set_catcode_other:N \
-  \char_set_catcode_other:N \%
-  \char_set_catcode_other:N \#
-  \char_set_catcode_other:N \{
-  \char_set_catcode_other:N \}
-  \char_set_catcode_other:N \\
-  \char_set_catcode_other:N ^
+  \endlinechar=`\^^J
 }
 \cs_set:Npn \__fortex_mktmpdir: {
   \file_if_exist:nF { \g__fortex_outputdir_tl

@@ -19,26 +19,45 @@
 %
 %
 %<*driver>
-\documentclass[cm-default]{l3doc}
-\usepackage[UKenglish]{babel}
+\documentclass[cm-default, a4paper]{l3doc}
 \usepackage[verbose]{fortex}
+\usepackage{expl3}
+\usepackage[UKenglish]{babel}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{microtype}
+\usepackage{tikz}
 \usepackage{listings}
 \usepackage{bookmark}
+\usepackage[pass, a4paper]{geometry}
 \EnableCrossrefs
 \lstset {
   gobble=3,
-  language=tex,
+  language=[LaTeX]TeX,
   basicstyle=\small\ttfamily,
   numbers=left,
   firstnumber=1,
-  numberfirstline=true
+  numberfirstline=true, 
+  tabsize=2,
+  showstringspaces=false,
 }
+
 \begin{document}
   \DocInput{\jobname.dtx}
 \end{document}
 %</driver>
 % \fi
+% \NewDocumentEnvironment{examplefile}{v}{
+%   \noindent
+%   \begin{tikzpicture}[overlay]
+%     \draw[rounded corners=1mm] (-1, -1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, -1.5);
+%     \node[draw=black, fill=white, rounded corners=1mm] at (13.525/2, 0) {\texttt{#1}};
+%   \end{tikzpicture} 
+% } {
+%   \noindent
+%   \begin{tikzpicture}[overlay]
+%     \draw[rounded corners=1mm] (-1, 1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, 1.5);
+%   \end{tikzpicture} 
+% }
 %
 % ^^A Misc changes
 % \changes{0.0.7$\alpha$}{2022/06/09}{Shuffle functions around to make more logical sense}
@@ -46,7 +65,7 @@
 % \changes{0.0.3$\alpha$}{2022/03/10}{Move to git}
 % \changes{0.0.2$\alpha$}{2022/03/02}{Translate to \pkg{expl3}}
 % \changes{0.0.1$\alpha$}{2022/02/27}{Initial prototype in \LaTeXe{}}
-%
+% 
 %
 % \title{The \pkg{fortex} package}
 % \GetFileInfo{fortex.sty}
@@ -56,12 +75,15 @@
 %        }
 % \date{\fileversion{} Released \filedate{}}
 %
-% \maketitle
-%
 % \begin{documentation}
+% \newgeometry{width=418.25368pt}
+% \maketitle
+% 
+% \changes{0.0.10$\alpha$}{2022/12/09}{Table of contents}
+% \tableofcontents
 %
+% \changes{0.0.10$\alpha$}{2022/12/08}{Documentation}
 % \section{Introduction}
-%
 % \pkg{fortex} is a language agnostic way of coding other languages in a literate way in \LaTeX{}.
 % Previous Literate programming tools each have their own strengths and weaknesses. 
 % \pkg{CWEB}/\pkg{noweb} for example while very powerful and cool, also very complex and quite difficult to learn.
@@ -72,10 +94,13 @@
 % \pkg{fortex} aims to bridge the gap between the two by providing the plain text editing experience and two-way compile from \pkg{WEB}/\pkg{noweb} and combine with the easy to use notebook.
 % The end result I anticipate will be similar to \LaTeX{}'s \pkg{doc} package, but without the commenting syntax or the \LaTeX{} specificness.
 %
-%
+% \restoregeometry
+% \clearpage
 % \section{Usage}
 %
 % \changes{0.0.7$\alpha$}{{24th June 2022}}{Start writing usage docs}
+% 
+% \subsection{Environments}
 % 
 % \begin{environment}{code}
 % \begin{syntax}
@@ -84,11 +109,114 @@
 % |\end{code}|
 % \end{syntax} \vspace{1ex}
 %
-% This is the main environment that does all of the work. 
-% Anything that is written inside this environment will be outputted to the file |jobname.ext|
+% This is the main environment that does all of the work (and is the reason that I wrote the \pkg{fortex} package).
+% Any text contained within a \env{code} environment get simultaneously output to the \LaTeX{} generated |.pdf|, as well as a separate file for all the source code. 
+%
+% \begin{examplefile}{file.tex}
+% \begin{lstlisting}
+%  \documentclass[10pt, a4paper]{article}
+%  \usepackage[lang=C]{fortex}
+%  \begin{document}
+%
+% 	Let us first import the libraries needed for 
+% 	printing to stdout.
+%
+% 	\begin{code}
+% 		#include <stdio.h>
+% 		#include <math.h>
+% 	\end{code}
+% 	
+% 	Did you know that $\pi\simeq3.14$? 
+% 	We can calculate this in C using the formula
+% 	\begin{equation}
+% 	 \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+% 	\end{equation}
+%
+% 	This is summation can be approximated for 20 terms
+%		\begin{code}
+% 		double calculate_pi(void) {
+% 			double retval = 0;
+%				for (int i=0; i < 20; i++) {
+% 				retval += pow(-1, i) / (2 * (double)i + 1);
+% 			}
+% 			return 4 * retval;
+% 		}
+% 	\end{code}
 % 
-% In addition the code included will be syntax highlighted and included in the generated |pdf| file. 
-% As mentioned this is an environment to help the idea of literate coding. 
+% 	finally we print the results.
+% 	\begin{code}
+% 		int main(void) { 
+% 			printf("%g\n", calculate_pi());
+% 			return 0;
+% 		}
+% 	\end{code}
+%  \end{document}
+% \end{lstlisting}
+% \end{examplefile}
+%
+% \begin{examplefile}{file.pdf}
+% \vspace{1em}
+%
+% \noindent Let us first import the libraries needed for maths printing to stdout.
+%
+% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  #include <stdio.h>
+%  #include <math.h>
+% \end{lstlisting}
+% 	
+% \noindent Did you know that $\pi\simeq3.14$? 
+% \noindent We can calculate this in C using the formula
+% 	\begin{equation}
+% 	 \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+% 	\end{equation}
+%
+% \noindent This is summation can be approximated for 20 terms
+% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  double calculate_pi(void) {
+%  	double retval = 0;
+% 		for (int i=0; i < 20; i++) {
+%  		retval += pow(-1, i) / (2 * (double)i + 1);
+%  	}
+%  	return 4 * retval;
+%  }
+% \end{lstlisting}
+% 
+% \noindent finally we print the results.
+% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  int main(void) { 
+%  	printf("%g\n", calculate_pi());
+%  	return 0;
+%  }
+% \end{lstlisting}
+% \end{examplefile}
+% 
+% But importantly, the |.pdf| file is not the only file generated.
+% When |file.tex| file is compiled, it will also generate |file.c| containing the C source code.
+%
+% \begin{examplefile}{file.c}
+% \begin{lstlisting}[language=C]
+%  #include <stdio.h>
+%  #include <math.h>
+%
+%  double calculate_pi(void) {
+%  	double retval = 0;
+% 		for (int i=0; i < 20; i++) {
+%  		retval += pow(-1, i) / (2 * (double)i + 1);
+%  	}
+%  	return 4 * retval;
+%  }
+%
+%  int main(void) { 
+%  	printf("%g\n", calculate_pi());
+%  	return 0;
+%  }
+% \end{lstlisting}
+% \end{examplefile}
+%
+% In this way the source code is able to be fully commented and explained with the assistance of figures, diagrams and equations.
 %
 % \end{environment}
 %
@@ -109,36 +237,186 @@
 % The flag \meta{noref} prevents the tracking of the usages and the insertion of hyperlinks.
 %
 % This is not a new idea in \LaTeX{} and it is done in the \pkg{pgf/tikz} and \pkg{pgfplots} manuals.
-% However they seem to be using a very different implementation to what I have done here. 
+% However they seem to be using a very different implementation to what I have done here (and probably one that makes far more sense, however I have yet to look at their implementation)
 %
+% \end{environment}
+%
+% \begin{environment}{codevar}
+% \begin{syntax}
+% |\begin{codevar}[|\meta{noindex}, \meta{noref}|]|\Arg{comma separated variable names}
+% \qquad \meta{variable definitions}
+% |\end{codeblock}|
+% \end{syntax} \vspace{1ex}
 % \end{environment}
 % 
 % \begin{environment}{subfile}
 % \begin{syntax}
-% |\begin{subfile}|
+% |\begin{subfile}|\Arg{language}\Arg{oputput file}
 % \qquad \meta{code environments to be redirected}
 % |\end{subfile}|
 % \end{syntax} \vspace{1ex}
+% A subfile is a way of writing to a non-default file. 
+% The envisioned use case is C header files, but the \env{subfile} environment, is flexible enough that it can be used in a variety of ways. 
+% Subfiles have a few nice properties about them, such as they can be nested without issue. 
+% But they also allow continuation of editing after the end of the \env{subfile} environment. 
 %
+% The behaviour is demonstrated in the following example. 
+%
+% \begin{examplefile}{mainfile.tex}
+% \begin{lstlisting}
+%  \documentclass[10pt, a4paper]{article}
+%  \usepackage[lang=C]{fortex}
+%  \begin{document}
+% 	
+% 	This is some C code that will go to \texttt{mainfile.c}
+% 	
+% 	\begin{code}
+% 		#include <stdio.h>
+% 		int main(void) { 
+% 			printf("Hello From mainfile.c\n");
+% 			return 0;
+% 		}
+% 	\end{code}
+% 	
+% 	But we can also put code into a subfile 
+% 	(of a different language even)
+% 	
+% 	\begin{subfile}{fortran}{subfile1.f90}
+% 		\begin{code}
+% 			program subfile
+% 				print *, "Hello from subfile1.f90"
+% 			end program
+% 		\end{code}
+% 		
+% 		How about nesting some subfile environments? 
+% 		
+% 		\begin{subfile}{python}{subfile2.py}
+% 			\begin{code}
+% 				print("Hello from subfile2.py")
+% 			\end{code}
+% 		\end{subfile}
+%			
+% 	\end{subfile}
+% 	
+% 	Let us pick up where we left off.
+% 	
+% 	\begin{subfile}{python}{subfile2.py}
+% 		\begin{code}
+% 			print("Well, Hello yet again")
+% 		\end{code}
+% 	\end{subfile}
+%
+%  \end{document}
+%
+% \end{lstlisting}
+% \end{examplefile}
+%
+% When compiled this |.tex| file will display in the output pdf.
+%
+% \begin{examplefile}{mainfile.pdf}
+% \vspace{1em}
+%
+% \noindent This is some C code that will go to \texttt{mainfile.c}
+%
+% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  #include <stdio.h>
+%  int main(void) { 
+%  	printf("Hello From mainfile.c\n");
+%  	return 0;
+%  }
+% \end{lstlisting}
+% 
+% \noindent But we can also put code into a subfile (of a different language even)
+% 
+%
+% \begin{lstlisting}[language=fortran, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  program subfile
+%  	print *, "Hello from subfile1.f90"
+%  end program
+% \end{lstlisting}
+%
+% \noindent How about nesting some subfile environments? 
+%
+% \begin{lstlisting}[language=python, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  print("Hello from subfile2.py")
+% \end{lstlisting}
+% 
+% \noindent Let us pick up where we left off.
+% 
+% \begin{lstlisting}[language=python, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  print("Well, Hello yet again")
+% \end{lstlisting}
+% \end{examplefile}
+%
+% Importantly, the output source code files will contain:
+%
+% \begin{examplefile}{mainfile.c}
+% \begin{lstlisting}[language=C]
+%  #include <stdio.h>
+%  int main(void) { 
+%  	printf("Hello From mainfile.c\n");
+%  	return 0;
+%  }
+% \end{lstlisting}
+% \end{examplefile}
+%
+% \begin{examplefile}{subfile1.f90}
+% \begin{lstlisting}[language=fortran]
+%  program subfile
+%  	print *, "Hello from subfile1.f90"
+%  end program
+% \end{lstlisting}
+% \end{examplefile}
+%
+% \begin{examplefile}{subfile2.py}
+% \begin{lstlisting} [language=python]
+%  print("Hello from subfile2.py")
+%  print("Well, Hello yet again")
+% \end{lstlisting}
+% \end{examplefile}
+%
+% As should be fairly obvious from this example, the \env{subfile} environment allows one |.tex| file to write out to multiple source files. 
+% It should be noted that many build tools (Make, CMake, etc) do struggle to understand the $\text{|.tex|}\to\text{many}\to\text{exe}$ compilation model.
+% However, if you can get your build tool working, it is quite a powerful tool.
 %
 % \end{environment}
+% 
+% \subsection{Package Options}
+% \DescribeMacro{verbose}
+% Make the package output extra debugging info to stdout. 
+% This includes the code being output to the file, the automatically detected output directory, and the code with hyperref inserts. 
+%
+%
+% \subsection{Supplemental functions}
 %
 % \begin{function}{\MakeShortFortex}
 % \begin{syntax}
-% \cs{MakeShortFortex} \oarg{\pkg{minted}/\pkg{listings} options} \Arg{language} \Arg{character}
+% \cs{MakeShortFortex}\oarg{\pkg{minted}/\pkg{listings} options}\Arg{language}\Arg{character}
 % \end{syntax}
-%  
+% Defines \meta{character} to behave as a delimiter for inline code highlighting. 
+% This is equivalent to the \pkg{listings} command \tn{lstMakeShortInline}, but will work with the \pkg{minted} backend too.
+% \end{function}
+%
+% \begin{function}{\MakeShortFortex}
+% \begin{syntax}
+% \cs{MakeShortFortex}\oarg{\pkg{minted}/\pkg{listings} options}\Arg{language}\Arg{character}
+% \end{syntax}
+% Defines \meta{character} to behave as a delimiter for inline code highlighting. 
+% This is equivalent to the \pkg{listings} command \tn{lstMakeShortInline}, but will work with the \pkg{minted} backend too.
 % \end{function}
 %
 %
 % \begin{function}{\UnMakeShortFortex}
 % \begin{syntax}
-% \cs{UnMakeShortFortex} \Arg{character}
+% \cs{UnMakeShortFortex}\Arg{character}
 % \end{syntax}
-%  
+% Undefines \meta{character} as a delimiter and restores previous behaviour, undoing the effects of \tn{MakeShortFortex}.
+% This is equivalent to the \pkg{listings} command \tn{lstDeleteShortInline}, but will work with the \pkg{minted} backend too.
 % \end{function}
-%
-%
 %
 % \begin{function}{\vindex}
 % \begin{syntax}
@@ -173,12 +451,14 @@
 % \begin{enumerate}
 % \item{Finish of |.dtx| by adding Usage instructions}
 % \item{Get line numbering working}
-% \item{Short verbatim (preferably default "|" with highlighting, and |"| without) should be configurable}  
+% ^^A \item{Short verbatim (preferably default "|" with highlighting, and |"| without) should be configurable}  
 % \item{Changelog interface (just a wrapper for glossaries)?}
+% \item{Editing}
 % \end{enumerate}
 %
 % \paragraph{What I will be working on next:}
 % \end{documentation}
+% \clearpage
 % \begin{implementation}
 % \section{\pkg{fortex} Implementation}
 %
@@ -196,10 +476,9 @@
 % As of version 0.0.6$\alpha$, anything before \TeX{}Live 2022 is broken.
 % I do plan to backport to \TeX{}Live 2015 as that is what the stable distros seem to be using but for now this is all there is.
 %    \begin{macrocode}
-% \RequirePackage[enable-debug]{ expl3 }
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-06-24} {0.0.8$\alpha$}
-{like noweb without external tooling}
+\ProvidesExplPackage {fortex} {2022-12-11} {0.0.10$\alpha$}
+                     {like noweb without external tooling}
 %    \end{macrocode}
 %
 %    \begin{macrocode}
@@ -225,8 +504,9 @@
 % \debug_on:n {all}
 \keys_define:nn { fortex } {
 %    \end{macrocode}
-%
-% \begin{variable}{\g_@@_verbose_bool, verbose}
+% 
+% \begin{macro}{verbose}
+% \begin{variable}{\g_@@_verbose_bool}
 % This flag is mainly used for debugging.
 % It prints the contents of the \env{code} environment and |-output-dir| to the terminal in order to help see what is going on.
 % 
@@ -238,9 +518,11 @@
   verbose .initial:n  = { false },
 %    \end{macrocode}
 % \end{variable}
+% \end{macro}
 % 
 % \changes{0.0.3$\alpha$}{2022/03/8}{Add \pkg{listings}/\pkg{minted} option}
-% \begin{variable}{\g_@@_printend_tl, print}
+% \begin{macro}{print}
+% \begin{variable}{\g_@@_printend_tl}
 % This flag governs what package will be used for typesetting the resulting pdf. 
 % At the moment the options are \pkg{minted} and \pkg{listings}. 
 % 
@@ -254,7 +536,9 @@
   print .initial:n = { listings },
 %    \end{macrocode}
 % \end{variable}
-%
+% \end{macro}
+% 
+% \begin{macro}{lang}
 % \begin{variable}{\g_@@_lang_tl}
 % This is the setting that determines what language we are going to be setting.
 % This is used for 2 things:
@@ -272,8 +556,10 @@
   lang .initial:n = { text },
 %    \end{macrocode}
 % \end{variable}
+% \end{macro}
 %
-% \begin{variable}{\g_@@_ext_tl, ext}
+% \begin{macro}{ext}
+% \begin{variable}{\g_@@_ext_tl}
 %
 % By default we do a mediocre job of detecting the extension for the language.
 % Moreover, in some cases (e.g. |.c| and |.h|) there is no way to detect the extension from the language (both are ``C'').
@@ -290,9 +576,11 @@
   ext .default:n = {},
 %    \end{macrocode}
 % \end{variable}
+% \end{macro}
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of \pkg{hyperref} into \pkg{minted}/\pkg{listings}}
-% \begin{variable}{\g_@@_intext_bool, intext}
+% \begin{macro}{intext}
+% \begin{variable}{\g_@@_intext_bool}
 % 
 % When printing the code to the |.pdf| file, we by default use \pkg{hyperref} to create links to where each codeblock and variable is defined. 
 % This is a somewhat slow process, and for some people ma be annoying, so we just give a global option to disable. 
@@ -305,9 +593,11 @@
   intext .default:n = { false },
 %    \end{macrocode}
 % \end{variable}
+% \end{macro}
 %
 % \changes{0.0.9$\alpha$}{2022/09/27}{Fix delimiters for all engines}
-% \begin{variable}{\g_@@_code_delim_str, delim}
+% \begin{macro}{delim}
+% \begin{variable}{\g_@@_code_delim_str}
 % 
 % By default the delimiters used for the specific engines should all be control characters or private use Unicode. 
 % 
@@ -319,8 +609,11 @@
   delim .initial:n = {},
   delim .default:n = {},
 %    \end{macrocode}
+% \end{variable}
+% \end{macro}
 %
-%
+% \begin{macro}{outdir}
+% \begin{variable}{\g_@@_outputdir_tl}
 %    \begin{macrocode}
   outdir .tl_gset:N  = \g_@@_outputdir_tl,
   outdir .initial:n = {},
@@ -328,6 +621,8 @@
 }
 %    \end{macrocode}
 % \end{variable}
+% \end{macro}
+%
 %    \begin{macrocode}
 \ProcessKeysOptions { fortex }
 %    \end{macrocode}
@@ -549,7 +844,7 @@
 % However, \tn{VerbatimOut} will write to the file indicated by |-output-directory|.
 % This causes problems if \tn{VerbatimOut} tries to write into our newly made directory.
 %
-% I encountered this issue when using the \LaTeX{} editor \pkg{kile} as it uses the |-output-directory| argument to build in the |/tmp/kile-livepreview.abcde/| directory.
+% I encountered this issue when using the \LaTeX{} editor \pkg{kile} as it uses |-output-directory| to build in the |/tmp/kile-livepreview.abcde/| directory.
 % This was causing issues, as I was not longer able to use my favourite \LaTeX{} editor with \pkg{fortex}. 
 %
 % One of the limitations with \TeX{} is the inability to see what command line arguments were used.
@@ -1291,7 +1586,7 @@
 % As previously mentioned, \pkg{listings} provides a way to have highlighted snippits, but unfortunately \pkg{minted} does not. 
 % 
 % As such this section of code has a implementation of the short verb for \pkg{minted}, as well as providing a unified interface between the two packages. 
-% \subsubsection{ Minted } 
+% \subsubsection{Minted} 
 %
 %    \begin{macrocode}
 \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
@@ -1308,12 +1603,16 @@
 %
 % This is done by creating a variable name on the fly using the |:c| variants.
 % It really pains me to do things this way coming from a structured C/Fortran background.
-% However, I was unable to think of a way to do this that: 1. allowed multiple characters to be defined, and all restore correctly. 
-% 2. Be simple to implement and understand. 
+% However, I was unable to think of a way to do this that: 
+% \begin{enumerate}
+%  \item allowed multiple characters to be defined, and all restore correctly. 
+%  \item Be simple to implement and understand.
+% \end{enumerate}
 % I tried initially using some keyval structures, but they ended up being excessively noisy, and just make the whole section of code just hard to follow. 
 % 
 % One consideration however is that \cs{int_gset:cn} \emph{requires} the integer to pre-exist. 
-% ( In contrast to \cs{int_gset:Nn} and \cs{cs_gset_eq:cN} ). I dont know if this is a bug with \pkg{expl3}, but whatever, easy enough to work around.
+% ( In contrast to \cs{int_gset:Nn} and \cs{cs_gset_eq:cN} ).
+% I don't know if this is a bug with \pkg{expl3}, but whatever, easy enough to work around.
 %
 %    \begin{macrocode}
   \NewDocumentCommand { \MakeShortFortex } { O{} m m } {
@@ -1321,12 +1620,12 @@
     \int_gset:cn { g_@@_default_#3_catcode_int } { 
       \char_value_catcode:n { `#3 }
     }
-    \token_if_active:NT #3 { 
-      \cs_gset_eq:cN { __@@_default_ \token_to_str:N #3 _cs: } #3 
+    \token_if_active:NT #3 {
+      \cs_gset_eq:cN { @@_default_ \token_to_str:N #3 _cs: } #3 
     }
 %    \end{macrocode}
 %    \begin{macrocode}
-    \newmintinline [ __@@_shortmint_cs ] { #2 } { #1 }
+    \newmintinline [ @@_shortmint_cs ] { #2 } { #1 }
 %    \end{macrocode}
 % Here is the meat-and-potatoes of the whole shortvrb operation. 
 % The underlying idea has been taken from \url{https://tex.stackexchange.com/questions/524645} and the minted source code itself. 
@@ -1354,7 +1653,7 @@
 % Instead, \pkg{minted} creates the fancy delimiters for the verbatim environment using:
 %
 % \begin{center}
-% \begin{minipage}{0.4\linewidth}
+% \begin{minipage}{0.5\linewidth}
 % \begin{lstlisting}[firstnumber=994]
 % \def\minted@inline@ii##1#1{%
 %   \minted@inline@iii{##1}}%
@@ -1367,12 +1666,12 @@
 %
 % This is the main reason why many of the earlier versions that I tried didn't work. 
 %    \begin{macrocode}
-    \cs_set:Npn \__@@_shortmint: { \__@@_shortmint_i: }
+    \cs_set:Npn \@@_shortmint: { \@@_shortmint_i: }
     \char_set_catcode_active:N #3
-    \char_set_active_eq:NN #3 \__@@_shortmint:
+    \char_set_active_eq:NN #3 \@@_shortmint:
 %    \end{macrocode}
 % Here is the final solution that I ended up settling on.
-% There are a few things of note here, but starting with \cs{__@@_shortmint_i:}. 
+% There are a few things of note here, but starting with \cs{@@_shortmint_i:}. 
 % The first thing of note is that it contains a `computed' argument spec. 
 % This should expand to: |##1|$_6$|#3|$_{13}$. 
 %
@@ -1402,14 +1701,14 @@
     } { e1#3 }
 %    \end{macrocode}
 %    \begin{macrocode}
-    \exp_last_unbraced:NNV \cs_set:Npn \__@@_shortmint_i: \l_tmpa_a {
+    \exp_last_unbraced:NNV \cs_set:Npn \@@_shortmint_i: \l_tmpa_a {
       \mode_if_math:TF {
         \use_i:nn 
       } {
         \use_ii:nn 
       }
       { \token_to_str:N #3 }
-      { { \__@@_shortmint_cs#3##1#3 } }
+      { { \@@_shortmint_cs#3##1#3 } }
     }
   }
 %    \end{macrocode}
@@ -1427,7 +1726,7 @@
       \int_use:c { g_@@_default_#1_catcode_int }
     }
     \exp_args:Nc \int_compare:nNnT { g_@@_default_#1_catcode_int } = { 13 } {
-      \char_set_active_eq:NN #1 { __@@_default_#1_cs: }
+      \char_set_active_eq:NN #1 { @@_default_#1_cs: }
     }
   }
 } {
@@ -1481,7 +1780,8 @@
 %
 % \subsubsection{Set catcode}
 %
-% \changes{0.0.6$\alpha$}{2022/04/1}{Figure out a bunch more catcodes that need setting when reading files }
+% \changes{0.0.6$\alpha$}{2022/04/01}{Figure out a bunch more catcodes that need setting when reading files }
+% \changes{0.0.9$\alpha$}{2022/12/11}{Stop reinventing the wheel, and just use dospecials}
 % \begin{macro}{\@@_setcatcode:}
 % Set catcodes required to not mangle the file when reading.
 % 
@@ -1497,37 +1797,26 @@
 %    \begin{macrocode}
 \cs_set:Nn \@@_setcatcode: {
 %    \end{macrocode}
-% Fallback to 2$\varepsilon$ interface or \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isnt marked as do not use (|:D|)
+% The first thing that we do is set all of the ``normal'' specials to catcode other. 
 %
 %    \begin{macrocode}
-  \endlinechar=`\^^J               
+  \cs_set_eq:NN \do \char_set_catcode_other:N 
+  \dospecials
 %    \end{macrocode}
+% There are a few other characters that need special attention as they are not specified in \tn{dospecials}. 
 % Try and protect some whitespace (Currently we have a few stray newlines but whatever)
 %
 %    \begin{macrocode}
   \char_set_catcode_other:N \^^J
   \char_set_catcode_other:N \^^I
-  \char_set_catcode_other:N \ 
 %    \end{macrocode}
-% Prevent lines beginning with \% from being removed as comments
+% Finally we need to specify the newline to be used in the sourcecode file. 
+% At the moment I am developing on Linux, with no access to Windows/MacOS, so lets just use $0\times0a$ as the newline.
+% 
+% We need to fallback to 2$\varepsilon$ interface for \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isn't marked as do not use (|:D|)
 %
 %    \begin{macrocode}
-  \char_set_catcode_other:N \%
-%    \end{macrocode}
-% Prevent \LaTeX{} Command chars from being evaluated/expanded 
-%
-%    \begin{macrocode}
-  \char_set_catcode_other:N \#
-  \char_set_catcode_other:N \{
-  \char_set_catcode_other:N \}
-  \char_set_catcode_other:N \\
-%    \end{macrocode}
-% LaTeX{} uses commands like |^^|\meta{Letter} to indicate the \textsc{ascii} code of the letter.
-% For example |^^J| corresponds to $0\times0a$ - a newline in Linux-land.
-% However as we want to write this all verbatim we disable this.
-% Note: Defining this catcode should be last.
-%    \begin{macrocode}
-  \char_set_catcode_other:N ^
+  \endlinechar=`\^^J
 }
 %    \end{macrocode}
 % \end{macro}
