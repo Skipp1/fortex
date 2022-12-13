@@ -18,33 +18,46 @@
 %% and version 1.3 or later is part of all distributions of LaTeX
 %% version 2005/12/01 or later.
 %% 
+
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-12-11} {0.0.10$\alpha$}
+\ProvidesExplPackage {fortex} {2022-12-13} {0.0.10$\alpha$}
                      {like noweb without external tooling}
 \RequirePackage { l3keys2e }
 \RequirePackage { fancyvrb }
 \keys_define:nn { fortex } {
   verbose .bool_gset:N = \g__fortex_verbose_bool,
-  verbose .default:n  = { true },
-  verbose .initial:n  = { false },
-  print .tl_gset:N  = \g__fortex_printend_tl,
+  verbose .default:n   = { true },
+  verbose .initial:n   = { false },
+  print .tl_gset:N = \g__fortex_printend_tl,
   print .default:n = { listings },
   print .initial:n = { listings },
-  lang .tl_gset:N  = \g__fortex_lang_tl,
+  lang .tl_gset:N = \g__fortex_lang_tl,
   lang .default:n = { text },
   lang .initial:n = { text },
-  ext .tl_gset:N  = \g__fortex_ext_tl,
-  ext .initial:n = {},
+  ext .tl_gset:N = \g__fortex_ext_tl,
   ext .default:n = {},
-  intext .bool_gset:N  = \g__fortex_intext_bool,
-  intext .initial:n = { true },
-  intext .default:n = { false },
+  ext .initial:n = {},
+  intext .bool_gset:N = \g__fortex_intext_bool,
+  intext .default:n   = { false },
+  intext .initial:n   = { true },
   delim .str_gset:N  = \g__fortex_code_delim_str,
-  delim .initial:n = {},
-  delim .default:n = {},
-  outdir .tl_gset:N  = \g__fortex_outputdir_tl,
+  delim .default:n   = {},
+  delim .initial:n   = {},
+  outdir .tl_gset:N = \g__fortex_outputdir_tl,
   outdir .initial:n = {},
   outdir .default:n = {},
+  tmpdir .tl_gset:N = \g__fortex_tmpfolder_tl,
+  tmpdir .default:n = { _fortex-\c_sys_jobname_str },
+  tmpdir .initial:n = { _fortex-\c_sys_jobname_str },
+  vindex idxnum font .str_gset:N  = \g__fortex_vindex_fmt_str,
+  vindex idxnum font .default:n   = { textrm },
+  vindex idxnum font .initial:n   = { textrm },
+  codedef idxnum font .str_gset:N  = \g__fortex_idxfmt_codedef_str,
+  codedef idxnum font .default:n   = { textit },
+  codedef idxnum font .initial:n   = { textit },
+  codecall idxnum font .str_gset:N  = \g__fortex_idxfmt_codecall_str,
+  codecall idxnum font .default:n   = { textrm },
+  codecall idxnum font .initial:n   = { textrm },
 }
 \ProcessKeysOptions { fortex }
 \bool_if:nT { \g__fortex_verbose_bool } {
@@ -64,7 +77,6 @@
     { xetex } { \msg_warning:nnn { fortex } { 8bit_tabs  } { XeTeX } }
   }
 }
-
 \msg_new:nnn { fortex } { printend } {
   Unknown ~ keyval ~ "print=#1". ~ defaulting ~ to ~ "print=listings"
 }
@@ -133,7 +145,6 @@
     }
   }
 }
-
 \cs_set:Nn \__fortex_outputdir: {
   \str_case_e:nnF { \c_sys_engine_str } {
     { luatex } { \__fortex_outputdir_lua_aux: }
@@ -166,13 +177,6 @@
     }
   }
 }
-
-\tl_const:Nn \c__fortex_tmpfolder_tl {
-  \c_underscore_str fortex- \c_sys_jobname_str
-}
-\tl_set:Nn \vindexfmtdef  { textit }
-\tl_set:Nn \vindexfmtcall { textrm }
-\tl_set:Nn \vindexfmt     { textrm }
 \str_case_e:nnT { \c_sys_engine_str } {
   { ptex   } {}
   { uptex  } {}
@@ -197,9 +201,8 @@
   \char_set_catcode_invalid:N \^^1e
 }
 \NewDocumentCommand \vindex { v } {
-  \str_set:Nn \l_tmpa_str  { #1 }
-  \exp_args:No \label { code: \l_tmpa_str }
-  \__fortex_vindex_aux:ox \l_tmpa_str { \vindexfmt }
+  \label { code: #1 }
+  \__fortex_vindex_aux:nx { #1 } { \g__fortex_vindex_fmt_str }
 }
 \cs_set:Npn \__fortex_vindex_aux:nn #1#2 {
   \str_set:Nn \l__fortex_idxvar_str  { #1 }
@@ -222,7 +225,7 @@
   \iow_term:x { \exp_not:o \l__fortex_idxvar_str}
   \exp_args:No \index { \l__fortex_idxvar_str }
 }
-\cs_generate_variant:Nn \__fortex_vindex_aux:nn {nx, xx, ox}
+\cs_generate_variant:Nn \__fortex_vindex_aux:nn {nx, xx}
 \NewDocumentCommand \fortexhypercodelinkfmt { m } {
   \texttt { #1 }
 }
@@ -230,7 +233,7 @@
   \tl_set:Nn \l_tmpa_tl { #3 }
   \str_replace_all:Nnn \l_tmpa_tl {:} {!}
   \bool_if:NF { #1 } {
-    \__fortex_vindex_aux:xx { \l_tmpa_tl } { \vindexfmtcall }
+    \__fortex_vindex_aux:xx { \l_tmpa_tl } { \g__fortex_idxfmt_codecall_str }
   }
   \hyperref [ code: #3 ] {
     \fortexhypercodelinkfmt{ \detokenize { #2 } }
@@ -238,7 +241,7 @@
 }
 \cs_set:Npn \__fortex_mkref_file:nN #1#2 {
   \tl_if_exist:NT { \fortex@codeblockregex } {
-    \tl_set:Nx \l__fortex_ref_cache_filename_tl { \c__fortex_tmpfolder_tl/
+    \tl_set:Nx \l__fortex_ref_cache_filename_tl { \g__fortex_tmpfolder_tl/
                                              \file_mdfive_hash:n { #1 } .tmp
     }
     \file_if_exist:nF { \g__fortex_outputdir_tl \l__fortex_ref_cache_filename_tl } {
@@ -265,12 +268,12 @@
 \cs_set:Npn \__fortex_codeblock_aux:nn #1#2 {
   \seq_if_in:NnF { #1 } { noref } {
     \tl_set:No \l__fortex_verbstr_str { \c_backslash_str verb }
+    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
     \seq_if_in:NnTF { #1 } { noindex } {
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert* }
     }{
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert }
     }
-    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
     \str_set:Nx \l_tmpa_str {
                   \exp_not:n { \1                     }
                                \g__fortex_code_delim_str
@@ -293,7 +296,7 @@
   }
   \seq_if_in:NnF { #1 } { noindex } {
     \__fortex_vindex_aux:xx { \seq_use:Nn \g__fortex_codenest_seq {!} }
-                                         { \vindexfmtdef }
+                                         { \g__fortex_idxfmt_codedef_str }
   }
 }
 \NewDocumentEnvironment { codeblock } { O{} m } {
@@ -303,16 +306,19 @@
   \seq_gput_right:Nx \g__fortex_codenest_seq \l__fortex_codename_str
   \__fortex_codeblock_aux:nn \l__fortex_argv_seq { #2 }
 } {
-  \noindent\textit{
-    \small
-    End~of~code~block~
-    \seq_if_in:NnF \l__fortex_argv_seq { noref } {
-      \hyperref [ code: \seq_use:Nn \g__fortex_codenest_seq {:} ]
-    }
-    { \texttt { \detokenize{ #2 } } } . \\
-    \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
+  \seq_if_in:NnTF \l__fortex_argv_seq { noref } {
+    \aftercodeblock |#2|
+  } {
+    \aftercodeblock |#2| [ \seq_use:Nn \g__fortex_codenest_seq {:} ]
   }
+  \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
   \group_end:
+}
+\NewDocumentCommand { \aftercodeblock } { v O{} } {
+  \noindent \textit { \small End~of~code~block~
+    \tl_if_empty:NF { #2 } { \hyperref [ #2 ] }
+    { \texttt { \tl_to_str:N { #1 } } } . \\
+  }
 }
 \NewDocumentEnvironment { codevar } { O{} m } {
   \seq_set_from_clist:Nn \l__fortex_argv_seq { #1 }
@@ -324,7 +330,13 @@
     \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
   }
 } {
+ \seq_if_in:NnTF \l__fortex_argv_seq { noref } {
+    \aftercodeblock |#2|
+  } {
+    \aftercodeblock |#2| [ \seq_use:Nn \g__fortex_codenest_seq {:} ]
+  }
 }
+\NewDocumentCommand { \aftercodevar } { v O{} } { \relax }
 \hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
   \iow_now:cx { @auxout } {
      \exp_not:n { \gdef\fortex@codeblockregex }
@@ -387,20 +399,20 @@
 }
 \cs_set:Npn \__fortex_mktmpdir: {
   \file_if_exist:nF { \g__fortex_outputdir_tl
-                      \c__fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp
+                      \g__fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp
   }{
     \sys_if_shell_unrestricted:TF {
-      \sys_shell_now:x { mkdir~\g__fortex_outputdir_tl \c__fortex_tmpfolder_tl }
+      \sys_shell_now:x { mkdir~\g__fortex_outputdir_tl \g__fortex_tmpfolder_tl }
     }{
       \msg_new:nnn { fortex } { make_folder } {
         Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it ~
         ~ manually ~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
       }
-      \msg_warning:nnx { fortex } { make_folder } { \c__fortex_tmpfolder_tl }
+      \msg_warning:nnx { fortex } { make_folder } { \g__fortex_tmpfolder_tl }
     }
     \iow_new:N   \l__fortex_testfile_iow
     \iow_open:Nn \l__fortex_testfile_iow {
-                 \c__fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp
+                 \g__fortex_tmpfolder_tl/\c_sys_jobname_str -0.tmp
     }
     \iow_close:N \l__fortex_testfile_iow
   }
@@ -416,7 +428,7 @@
 \cs_set:Npn \__fortex_inctmpname: {
   \int_gincr:N \g__fortex_inctmpname_namecount_int
   \tl_gset:Nn \g__fortex_tmp_filename_tl {
-    \c__fortex_tmpfolder_tl /
+    \g__fortex_tmpfolder_tl /
     \c_sys_jobname_str -
     \int_to_arabic:n { \g__fortex_inctmpname_namecount_int } .tmp
   }
@@ -477,7 +489,7 @@
 }
 \cs_set:Npn \__fortex_printcode:nnn #1#2#3 {
   \str_if_eq:NNTF { \g__fortex_printend_tl } { mint } {
-    \tl_set:Nn \minted@cachedir {\g__fortex_outputdir_tl \c__fortex_tmpfolder_tl}
+    \tl_set:Nn \minted@cachedir {\g__fortex_outputdir_tl \g__fortex_tmpfolder_tl}
     \inputminted [
       escapeinside={\g__fortex_code_delim_str \g__fortex_code_delim_str},
       #1,

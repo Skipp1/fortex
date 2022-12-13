@@ -20,7 +20,7 @@
 %
 %<*driver>
 \documentclass[cm-default, a4paper]{l3doc}
-\usepackage[verbose]{fortex}
+\usepackage[verbose, tmpdir=.]{fortex}
 \usepackage{expl3}
 \usepackage[UKenglish]{babel}
 \usepackage[dvipsnames]{xcolor}
@@ -28,7 +28,7 @@
 \usepackage{tikz}
 \usepackage{listings}
 \usepackage{bookmark}
-\usepackage[pass, a4paper]{geometry}
+\usepackage[pass]{geometry}
 \EnableCrossrefs
 \lstset {
   gobble=3,
@@ -40,25 +40,40 @@
   tabsize=2,
   showstringspaces=false,
 }
+\NewDocumentEnvironment{examplefile}{v}{
+  \noindent
+  \begin{tikzpicture}[overlay]
+    \draw[rounded corners=1mm] (-1, -1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, -1.5);
+    \node[draw=black, fill=white, rounded corners=1mm] at (13.525/2, 0) {\texttt{#1}};
+  \end{tikzpicture} 
+} {
+  \noindent
+  \begin{tikzpicture}[overlay]
+    \draw[rounded corners=1mm] (-1, 1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, 1.5);
+  \end{tikzpicture} 
+}
+
+\let\DescribeOptionOld=\DescribeOption
+\RenewDocumentCommand{\DescribeOption}{vmo}{
+  \label{doc/function//#1}
+  \DescribeOptionOld{#1} \textsf{( #2 )} \hfill
+  \IfNoValueF{#3}{Default: \texttt{#3}}
+  \newline
+}
+
+\let\environmentOld=\environment
+\RenewDocumentCommand{\environment}{v}{ 
+  \label{doc/function//#1}
+  \environmentOld{#1}
+}
 
 \begin{document}
   \DocInput{\jobname.dtx}
 \end{document}
 %</driver>
 % \fi
-% \NewDocumentEnvironment{examplefile}{v}{
-%   \noindent
-%   \begin{tikzpicture}[overlay]
-%     \draw[rounded corners=1mm] (-1, -1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, -1.5);
-%     \node[draw=black, fill=white, rounded corners=1mm] at (13.525/2, 0) {\texttt{#1}};
-%   \end{tikzpicture} 
-% } {
-%   \noindent
-%   \begin{tikzpicture}[overlay]
-%     \draw[rounded corners=1mm] (-1, 1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, 1.5);
-%   \end{tikzpicture} 
-% }
-%
+
+% 
 % ^^A Misc changes
 % \changes{0.0.7$\alpha$}{2022/06/09}{Shuffle functions around to make more logical sense}
 % \changes{0.0.5$\alpha$}{2022/03/26}{Initial conversion to .dtx}
@@ -77,10 +92,22 @@
 %
 % \begin{documentation}
 % \newgeometry{width=418.25368pt}
+% \setcounter{page}{0}
 % \maketitle
-% 
+% \vspace{2cm}
+%
+% \begin{abstract}
+% \noindent\large{\pkg{fortex} is a \LaTeX{} package that facilitates better documentation of program source code. The package allows highlighting source code along side equations, diagrams and images. In addition, \pkg{fortex} will output the source code to an external file for compilation by the language's compiler. }
+% \end{abstract}
+%
+% \vfill
+% \subsection*{License}
+% \href{http://www.latex-project.org/lppl.txt}{\LaTeX{} Project Public License (LPPL)} version 1.3.
+% \thispagestyle{empty}
+% \clearpage
 % \changes{0.0.10$\alpha$}{2022/12/09}{Table of contents}
 % \tableofcontents
+% \restoregeometry
 %
 % \changes{0.0.10$\alpha$}{2022/12/08}{Documentation}
 % \section{Introduction}
@@ -94,8 +121,6 @@
 % \pkg{fortex} aims to bridge the gap between the two by providing the plain text editing experience and two-way compile from \pkg{WEB}/\pkg{noweb} and combine with the easy to use notebook.
 % The end result I anticipate will be similar to \LaTeX{}'s \pkg{doc} package, but without the commenting syntax or the \LaTeX{} specificness.
 %
-% \restoregeometry
-% \clearpage
 % \section{Usage}
 %
 % \changes{0.0.7$\alpha$}{{24th June 2022}}{Start writing usage docs}
@@ -118,38 +143,38 @@
 %  \usepackage[lang=C]{fortex}
 %  \begin{document}
 %
-% 	Let us first import the libraries needed for 
-% 	printing to stdout.
+%   Let us first import the libraries needed for 
+%   printing to stdout.
 %
-% 	\begin{code}
-% 		#include <stdio.h>
-% 		#include <math.h>
-% 	\end{code}
-% 	
-% 	Did you know that $\pi\simeq3.14$? 
-% 	We can calculate this in C using the formula
-% 	\begin{equation}
-% 	 \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
-% 	\end{equation}
+%   \begin{code}
+%     #include <stdio.h>
+%     #include <math.h>
+%   \end{code}
+%   
+%   Did you know that $\pi\simeq3.14$? 
+%   We can calculate this in C using the formula
+%   \begin{equation}
+%    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+%   \end{equation}
 %
-% 	This is summation can be approximated for 20 terms
-%		\begin{code}
-% 		double calculate_pi(void) {
-% 			double retval = 0;
-%				for (int i=0; i < 20; i++) {
-% 				retval += pow(-1, i) / (2 * (double)i + 1);
-% 			}
-% 			return 4 * retval;
-% 		}
-% 	\end{code}
+%   This is summation can be approximated for 20 terms
+%    \begin{code}
+%     double calculate_pi(void) {
+%       double retval = 0;
+%        for (int i=0; i < 20; i++) {
+%         retval += pow(-1, i) / (2 * (double)i + 1);
+%       }
+%       return 4 * retval;
+%     }
+%   \end{code}
 % 
-% 	finally we print the results.
-% 	\begin{code}
-% 		int main(void) { 
-% 			printf("%g\n", calculate_pi());
-% 			return 0;
-% 		}
-% 	\end{code}
+%   finally we print the results.
+%   \begin{code}
+%     int main(void) { 
+%       printf("%g\n", calculate_pi());
+%       return 0;
+%     }
+%   \end{code}
 %  \end{document}
 % \end{lstlisting}
 % \end{examplefile}
@@ -164,22 +189,22 @@
 %  #include <stdio.h>
 %  #include <math.h>
 % \end{lstlisting}
-% 	
+%   
 % \noindent Did you know that $\pi\simeq3.14$? 
 % \noindent We can calculate this in C using the formula
-% 	\begin{equation}
-% 	 \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
-% 	\end{equation}
+%   \begin{equation}
+%    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+%   \end{equation}
 %
 % \noindent This is summation can be approximated for 20 terms
 % \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  double calculate_pi(void) {
-%  	double retval = 0;
-% 		for (int i=0; i < 20; i++) {
-%  		retval += pow(-1, i) / (2 * (double)i + 1);
-%  	}
-%  	return 4 * retval;
+%    double retval = 0;
+%     for (int i=0; i < 20; i++) {
+%      retval += pow(-1, i) / (2 * (double)i + 1);
+%    }
+%    return 4 * retval;
 %  }
 % \end{lstlisting}
 % 
@@ -187,8 +212,8 @@
 % \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  int main(void) { 
-%  	printf("%g\n", calculate_pi());
-%  	return 0;
+%    printf("%g\n", calculate_pi());
+%    return 0;
 %  }
 % \end{lstlisting}
 % \end{examplefile}
@@ -202,16 +227,16 @@
 %  #include <math.h>
 %
 %  double calculate_pi(void) {
-%  	double retval = 0;
-% 		for (int i=0; i < 20; i++) {
-%  		retval += pow(-1, i) / (2 * (double)i + 1);
-%  	}
-%  	return 4 * retval;
+%    double retval = 0;
+%     for (int i=0; i < 20; i++) {
+%      retval += pow(-1, i) / (2 * (double)i + 1);
+%    }
+%    return 4 * retval;
 %  }
 %
 %  int main(void) { 
-%  	printf("%g\n", calculate_pi());
-%  	return 0;
+%    printf("%g\n", calculate_pi());
+%    return 0;
 %  }
 % \end{lstlisting}
 % \end{examplefile}
@@ -267,44 +292,44 @@
 %  \documentclass[10pt, a4paper]{article}
 %  \usepackage[lang=C]{fortex}
 %  \begin{document}
-% 	
-% 	This is some C code that will go to \texttt{mainfile.c}
-% 	
-% 	\begin{code}
-% 		#include <stdio.h>
-% 		int main(void) { 
-% 			printf("Hello From mainfile.c\n");
-% 			return 0;
-% 		}
-% 	\end{code}
-% 	
-% 	But we can also put code into a subfile 
-% 	(of a different language even)
-% 	
-% 	\begin{subfile}{fortran}{subfile1.f90}
-% 		\begin{code}
-% 			program subfile
-% 				print *, "Hello from subfile1.f90"
-% 			end program
-% 		\end{code}
-% 		
-% 		How about nesting some subfile environments? 
-% 		
-% 		\begin{subfile}{python}{subfile2.py}
-% 			\begin{code}
-% 				print("Hello from subfile2.py")
-% 			\end{code}
-% 		\end{subfile}
-%			
-% 	\end{subfile}
-% 	
-% 	Let us pick up where we left off.
-% 	
-% 	\begin{subfile}{python}{subfile2.py}
-% 		\begin{code}
-% 			print("Well, Hello yet again")
-% 		\end{code}
-% 	\end{subfile}
+%   
+%   This is some C code that will go to \texttt{mainfile.c}
+%   
+%   \begin{code}
+%     #include <stdio.h>
+%     int main(void) { 
+%       printf("Hello From mainfile.c\n");
+%       return 0;
+%     }
+%   \end{code}
+%   
+%   But we can also put code into a subfile 
+%   (of a different language even)
+%   
+%   \begin{subfile}{fortran}{subfile1.f90}
+%     \begin{code}
+%       program subfile
+%         print *, "Hello from subfile1.f90"
+%       end program
+%     \end{code}
+%     
+%     How about nesting some subfile environments? 
+%     
+%     \begin{subfile}{python}{subfile2.py}
+%       \begin{code}
+%         print("Hello from subfile2.py")
+%       \end{code}
+%     \end{subfile}
+%      
+%   \end{subfile}
+%   
+%   Let us pick up where we left off.
+%   
+%   \begin{subfile}{python}{subfile2.py}
+%     \begin{code}
+%       print("Well, Hello yet again")
+%     \end{code}
+%   \end{subfile}
 %
 %  \end{document}
 %
@@ -322,8 +347,8 @@
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  #include <stdio.h>
 %  int main(void) { 
-%  	printf("Hello From mainfile.c\n");
-%  	return 0;
+%    printf("Hello From mainfile.c\n");
+%    return 0;
 %  }
 % \end{lstlisting}
 % 
@@ -333,7 +358,7 @@
 % \begin{lstlisting}[language=fortran, numbers=none, backgroundcolor=\color{Tan!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  program subfile
-%  	print *, "Hello from subfile1.f90"
+%    print *, "Hello from subfile1.f90"
 %  end program
 % \end{lstlisting}
 %
@@ -358,8 +383,8 @@
 % \begin{lstlisting}[language=C]
 %  #include <stdio.h>
 %  int main(void) { 
-%  	printf("Hello From mainfile.c\n");
-%  	return 0;
+%    printf("Hello From mainfile.c\n");
+%    return 0;
 %  }
 % \end{lstlisting}
 % \end{examplefile}
@@ -367,7 +392,7 @@
 % \begin{examplefile}{subfile1.f90}
 % \begin{lstlisting}[language=fortran]
 %  program subfile
-%  	print *, "Hello from subfile1.f90"
+%    print *, "Hello from subfile1.f90"
 %  end program
 % \end{lstlisting}
 % \end{examplefile}
@@ -386,46 +411,46 @@
 % \end{environment}
 % 
 % \subsection{Package Options}
-% \DescribeMacro{verbose}
+% \begingroup
+% \parindent=0pt\relax
+% \parskip=\baselineskip\relax
+%
+% \DescribeOption{codedef idxnum font}{string}[textit]
+% How should page numbers in the index be formatted for definitions in code
+%
+% \DescribeOption{codecall idxnum font}{string}[textrm]
+% How should page numbers in the index be formatted for function calls
+%
+% \DescribeOption{delim}{string}
+% \noindent What delimiters 
+%
+% \DescribeOption{ext}{string}[txt]
+% \noindent What File extension 
+%
+% \DescribeOption{intext}{boolean}[true]
+% \noindent in-text references?
+%
+% \DescribeOption{lang}{string}[text]
+% \noindent What source code language
+%
+% \DescribeOption{outdir}{string}
+% \noindent Output directories
+%
+% \DescribeOption{print}{string}[listings]
+% What backend package is being used to syntax highlight the source code in the generated |.pdf| file. At the moment the only two supported backends are \pkg{minted} or \pkg{listings}.
+%
+% \DescribeOption{tmpdir}{string}[\_fortex-\meta{jobname}]
+% \noindent Temp directories
+%
+% \DescribeOption{verbose}{boolean}[false]
 % Make the package output extra debugging info to stdout. 
 % This includes the code being output to the file, the automatically detected output directory, and the code with hyperref inserts. 
 %
+% \DescribeOption{vindex idxnum font}{string}[textrm]
+% How should vindex entries be formatted
 %
+% \endgroup
 % \subsection{Supplemental functions}
-%
-% \begin{function}{\MakeShortFortex}
-% \begin{syntax}
-% \cs{MakeShortFortex}\oarg{\pkg{minted}/\pkg{listings} options}\Arg{language}\Arg{character}
-% \end{syntax}
-% Defines \meta{character} to behave as a delimiter for inline code highlighting. 
-% This is equivalent to the \pkg{listings} command \tn{lstMakeShortInline}, but will work with the \pkg{minted} backend too.
-% \end{function}
-%
-% \begin{function}{\MakeShortFortex}
-% \begin{syntax}
-% \cs{MakeShortFortex}\oarg{\pkg{minted}/\pkg{listings} options}\Arg{language}\Arg{character}
-% \end{syntax}
-% Defines \meta{character} to behave as a delimiter for inline code highlighting. 
-% This is equivalent to the \pkg{listings} command \tn{lstMakeShortInline}, but will work with the \pkg{minted} backend too.
-% \end{function}
-%
-%
-% \begin{function}{\UnMakeShortFortex}
-% \begin{syntax}
-% \cs{UnMakeShortFortex}\Arg{character}
-% \end{syntax}
-% Undefines \meta{character} as a delimiter and restores previous behaviour, undoing the effects of \tn{MakeShortFortex}.
-% This is equivalent to the \pkg{listings} command \tn{lstDeleteShortInline}, but will work with the \pkg{minted} backend too.
-% \end{function}
-%
-% \begin{function}{\vindex}
-% \begin{syntax}
-% \cs{vindex}\Arg{index entry}
-% \end{syntax} 
-%
-% Short for Verbatim index. This makes sure that \tn{index} prints the argument verbatim, and things like underscores and \& do not get mangled. 
-%
-% \end{function}
 %
 % \begin{function}{\setfortex}
 % \begin{syntax}
@@ -436,11 +461,61 @@
 %
 % \end{function}
 %
-% \begin{function}{\vindexfmtdef}
+% \begin{function}{\MakeShortFortex}
+% \begin{syntax}
+% \cs{MakeShortFortex}\oarg{\pkg{minted}/\pkg{listings} options}\Arg{language}\Arg{character}
+% \end{syntax}
+% Defines \meta{character} to behave as a delimiter for inline code highlighting. 
+% This is equivalent to the \pkg{listings} command \tn{lstMakeShortInline}, but will work with the \pkg{minted} backend too.
 % \end{function}
-% \begin{function}{\vindexfmtcall}
+%
+% \begin{function}{\UnMakeShortFortex}
+% \begin{syntax}
+% \cs{UnMakeShortFortex}\Arg{character}
+% \end{syntax}
+% Undefines \meta{character} as a delimiter and restores previous behaviour, undoing the effects of \tn{MakeShortFortex}.
+% This is equivalent to the \pkg{listings} command \tn{lstDeleteShortInline}, but will work with the \pkg{minted} backend too.
 % \end{function}
-% \begin{function}{\vindexfmt}
+%
+%
+% \begin{function}{\aftercodeblock}
+% \begin{syntax}
+% \cs{aftercodeblock}\Arg{Codeblock name}\oarg{Codeblock link}
+% \end{syntax}
+% 
+% The default implementation is:
+%
+% \begin{lstlisting}[numbers=none]
+%  \NewDocumentCommand{\aftercodeblock}{vO{}}{
+%    \noindent\textit\small{
+%      End of code block
+%      \IfNoValueF{#2}{\hyperref[#2]}{\texttt{\detokenize{ #1}}}.\\
+%    }
+%  }
+% \end{lstlisting}
+%
+% \end{function}
+%
+% \begin{function}{\aftercodevar}
+% \begin{syntax}
+% \cs{aftercodeblock}\Arg{codeblock name}\oarg{codeblock link}
+% \end{syntax}
+% 
+% The default implementation is:
+%
+% \begin{lstlisting}[numbers=none]
+%  \NewDocumentCommand{\aftercodeblock}{vO{}}{\relax}
+% \end{lstlisting}
+%
+% \end{function}
+%
+% \begin{function}{\vindex}
+% \begin{syntax}
+% \cs{vindex}\Arg{index entry}
+% \end{syntax} 
+%
+% Short for Verbatim index. This makes sure that \tn{index} prints the argument verbatim, and things like underscores and \& do not get mangled. 
+%
 % \end{function}
 %
 % \begin{function}{\fortexhypercodelinkfmt}
@@ -477,7 +552,7 @@
 % I do plan to backport to \TeX{}Live 2015 as that is what the stable distros seem to be using but for now this is all there is.
 %    \begin{macrocode}
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-12-11} {0.0.10$\alpha$}
+\ProvidesExplPackage {fortex} {2022-12-13} {0.0.10$\alpha$}
                      {like noweb without external tooling}
 %    \end{macrocode}
 %
@@ -514,8 +589,8 @@
 %
 %    \begin{macrocode}
   verbose .bool_gset:N = \g_@@_verbose_bool,
-  verbose .default:n  = { true },
-  verbose .initial:n  = { false },
+  verbose .default:n   = { true },
+  verbose .initial:n   = { false },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -531,7 +606,7 @@
 % 
 % Default: \pkg{listings}
 %    \begin{macrocode}
-  print .tl_gset:N  = \g_@@_printend_tl,
+  print .tl_gset:N = \g_@@_printend_tl,
   print .default:n = { listings },
   print .initial:n = { listings },
 %    \end{macrocode}
@@ -551,7 +626,7 @@
 % Default: |text|
 %
 %    \begin{macrocode}
-  lang .tl_gset:N  = \g_@@_lang_tl,
+  lang .tl_gset:N = \g_@@_lang_tl,
   lang .default:n = { text },
   lang .initial:n = { text },
 %    \end{macrocode}
@@ -571,9 +646,9 @@
 % \end{itemize}
 %
 %    \begin{macrocode}
-  ext .tl_gset:N  = \g_@@_ext_tl,
-  ext .initial:n = {},
+  ext .tl_gset:N = \g_@@_ext_tl,
   ext .default:n = {},
+  ext .initial:n = {},
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -588,9 +663,9 @@
 % Options also exist in the specific codeblock and variable environments to control this behavior. 
 % 
 %    \begin{macrocode}
-  intext .bool_gset:N  = \g_@@_intext_bool,
-  intext .initial:n = { true },
-  intext .default:n = { false },
+  intext .bool_gset:N = \g_@@_intext_bool,
+  intext .default:n   = { false },
+  intext .initial:n   = { true },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -599,31 +674,107 @@
 % \begin{macro}{delim}
 % \begin{variable}{\g_@@_code_delim_str}
 % 
+% The delimiters used here are used to escape from the \pkg{minted}/\pkg{listings} environments, and insert hyperreffed links.
 % By default the delimiters used for the specific engines should all be control characters or private use Unicode. 
 % 
 % However, it is possible that the choice may conflict with someones code. 
 % As such we provide a way to override if needed.
 %
+% The defaults are:
+%
+% \begin{center}
+% \begin{tabular}{ccc} \hline
+% \LuaTeX{} & U+009C & String Terminator \\
+% \pdfTeX{} & U+009C & String Terminator \\
+% \pTeX{}   & U+001E & Record Separator  \\
+% \upTeX{}  & U+001E & Record Separator  \\
+% \XeTeX{}  & U+E000 & Private Use       \\\hline
+% \end{tabular}
+% \end{center}
+% 
 %    \begin{macrocode}
   delim .str_gset:N  = \g_@@_code_delim_str,
-  delim .initial:n = {},
-  delim .default:n = {},
+  delim .default:n   = {},
+  delim .initial:n   = {},
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 %
 % \begin{macro}{outdir}
 % \begin{variable}{\g_@@_outputdir_tl}
+% 
+% The directory where we are going to output the code and temporary files. 
+% This should be automatically detected, but in the case that it is not, or we want to change the defaults, it can be overwritten.
+%
+% Default: `|.|' or `|-output-directory=|'
+%
 %    \begin{macrocode}
-  outdir .tl_gset:N  = \g_@@_outputdir_tl,
+  outdir .tl_gset:N = \g_@@_outputdir_tl,
   outdir .initial:n = {},
   outdir .default:n = {},
-}
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \changes{0.0.10$\alpha$}{2022/12/12}{Allow temporary directory to be customisable}
+% \begin{macro}{tmpdir}
+% \begin{variable}{\g_@@_tmpfolder_tl}
+%
+% By default \pkg{fortex} will write all of the temporary files into a folder called |_fortex-\jobname|. 
+% However, this is not always desired.
+% This can especially be the case when \pkg{fortex} is used in a environment \emph{without} |-shell-esc|. 
+% 
+% If the temporary folder is set to `|.|', then a temporary directory will not be created, and there is no need to use |-shell-esc| to create the temporary directory.
+%
+% Generally however, this option allows an name to be specified.
+% 
+%    \begin{macrocode}
+  tmpdir .tl_gset:N = \g_@@_tmpfolder_tl,
+  tmpdir .default:n = { _fortex-\c_sys_jobname_str },
+  tmpdir .initial:n = { _fortex-\c_sys_jobname_str },
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls}
+% \changes{0.0.10$\alpha$}{2022/12/13}{Move vindex format definitions into package options}
+% \begin{macro}{vindex idxnum font}
+% \begin{variable}{\g_@@_vindex_fmt_str}
+% 
+%    \begin{macrocode}
+  vindex idxnum font .str_gset:N  = \g_@@_vindex_fmt_str,
+  vindex idxnum font .default:n   = { textrm },
+  vindex idxnum font .initial:n   = { textrm },
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \changes{0.0.10$\alpha$}{2022/12/13}{Move vindex format definitions into package options}
+% \begin{macro}{codedef idxnum font}
+% \begin{variable}{\g_@@_idxfmt_codedef_str}
+% 
+%    \begin{macrocode}
+  codedef idxnum font .str_gset:N  = \g_@@_idxfmt_codedef_str,
+  codedef idxnum font .default:n   = { textit },
+  codedef idxnum font .initial:n   = { textit },
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \changes{0.0.10$\alpha$}{2022/12/13}{Move vindex format definitions into package options}
+% \begin{macro}{codecall idxnum font}
+% \begin{variable}{\g_@@_idxfmt_codecall_str}
+% 
+%    \begin{macrocode}
+  codecall idxnum font .str_gset:N  = \g_@@_idxfmt_codecall_str,
+  codecall idxnum font .default:n   = { textrm },
+  codecall idxnum font .initial:n   = { textrm },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 %
 %    \begin{macrocode}
+}
 \ProcessKeysOptions { fortex }
 %    \end{macrocode}
 % \subsection{Engine specific warnings}
@@ -667,7 +818,6 @@
   }
 }
 %    \end{macrocode}
-
 % \subsection{Code printing}
 % 
 % The next collections of functions is to do with the code printing and how it is displayed in the \file{.pdf} itself.
@@ -833,7 +983,7 @@
 }
 %    \end{macrocode}
 % \end{variable}
-
+%
 % \subsection{Getting \texttt{-output-dir}}
 %
 % \changes{0.0.4$\alpha$}{2022/03/15}{Add -output-dir detection}
@@ -996,35 +1146,8 @@
 % \end{variable}
 % \changes{0.0.8$\alpha$}{2022/08/17}{Optimise regex when searching for output directory}
 % \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
-
 %
-% \begin{variable}{\c_@@_tmpfolder_tl}
-% We build the folder that we save all of the tmp files into. 
-% This is a constant that is of the form \file{_fortex-jobname/}.
-%
-%    \begin{macrocode}
-\tl_const:Nn \c_@@_tmpfolder_tl {
-  \c_underscore_str fortex- \c_sys_jobname_str
-}
-%    \end{macrocode}
-% \end{variable} 
-%
-% \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls.}
-% \begin{macro}{\vindexfmtdef, \vindexfmtcall, \vindexfmt}
-% Here we are defining a small collection of formatting options for the index. 
-% 
-% By default we make the pagenumber with the definition \textit{italic}, and all the calls to that definition \textrm{roman}. 
-% Similarly, any \cs{vindex} call is going to be roman.
-%
-% These macros are left here incase someone wants to redefine them for their own style. 
-%
-%    \begin{macrocode}
-\tl_set:Nn \vindexfmtdef  { textit }
-\tl_set:Nn \vindexfmtcall { textrm }
-\tl_set:Nn \vindexfmt     { textrm }
-%    \end{macrocode}
-% \end{macro}
-%
+% \subsection{hyperref}
 % \subsubsection{ Delimiters }
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
@@ -1118,10 +1241,10 @@
 }
 %    \end{macrocode}
 %
-% \subsubsection{Vindex}
+% \subsubsection{vindex}
 %
+% \changes{0.0.10$\alpha$}{2022/12/13}{Avoid needless assignments in vindex}
 % \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
-%
 % \changes{0.0.4$\alpha$}{2022/03/21}{Add \cs{vindex}}
 %
 % \begin{macro}{\vindex}
@@ -1133,12 +1256,10 @@
 %
 % The use of \tn{index} in this function is expected to be defined by \pkg{makeidx}/\pkg{xindy}/etc.
 %
-%
 %    \begin{macrocode}
 \NewDocumentCommand \vindex { v } {
-  \str_set:Nn \l_tmpa_str  { #1 }
-  \exp_args:No \label { code: \l_tmpa_str }
-  \@@_vindex_aux:ox \l_tmpa_str { \vindexfmt }
+  \label { code: #1 }
+  \@@_vindex_aux:nx { #1 } { \g_@@_vindex_fmt_str }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1197,11 +1318,10 @@
 %    \begin{macrocode}
   \exp_args:No \index { \l_@@_idxvar_str }
 }
-\cs_generate_variant:Nn \@@_vindex_aux:nn {nx, xx, ox}
+\cs_generate_variant:Nn \@@_vindex_aux:nn {nx, xx}
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsection{hyperref}
 %
 % \changes{0.0.7$\alpha$}{2022/06/09}{Allow hyperrefed code to not be monospaced}
 % \begin{macro}{\fortexhypercodelinkfmt}
@@ -1220,7 +1340,7 @@
 % \subsubsection{Formatted hyperref for code}
 %
 % \changes{0.0.7$\alpha$}{2022/06/05}{Add calls of a function to the index.}
-% \begin{macro}{\fortexhyperinsert}
+% \begin{macro}[int]{\fortexhyperinsert}
 % Because we have a few things that we want to do at the location of the regex insertion, we create our own macro to handle them.
 %
 % Here 3 things happen, the function gets registered into the index. 
@@ -1247,7 +1367,7 @@
   \tl_set:Nn \l_tmpa_tl { #3 }
   \str_replace_all:Nnn \l_tmpa_tl {:} {!}
   \bool_if:NF { #1 } {
-    \@@_vindex_aux:xx { \l_tmpa_tl } { \vindexfmtcall }
+    \@@_vindex_aux:xx { \l_tmpa_tl } { \g_@@_idxfmt_codecall_str }
   }
   \hyperref [ code: #3 ] {
     \fortexhypercodelinkfmt{ \detokenize { #2 } } 
@@ -1277,7 +1397,7 @@
 % This is the biggest time-saver of the hyperrefing process, as nobody wants to do the same work twice.
 %
 %    \begin{macrocode}
-    \tl_set:Nx \l_@@_ref_cache_filename_tl { \c_@@_tmpfolder_tl/
+    \tl_set:Nx \l_@@_ref_cache_filename_tl { \g_@@_tmpfolder_tl/
                                              \file_mdfive_hash:n { #1 } .tmp 
     }
     \file_if_exist:nF { \g_@@_outputdir_tl \l_@@_ref_cache_filename_tl } {
@@ -1306,10 +1426,11 @@
 % As mentioned elsewhere in this document I have tried a few different methods to speed this up including \cs{seq_map_indexed_inline:Nn}, but that just made things slower. 
 % This dos mean that we are locked to \TeX{}Live 2022 as a min version though. 
 % 
-% I am not going to lie, getting the correct expansion of the \cs{l_tmpa_tl} macro was an absolute pain.
+% I am not going to lie, getting the correct expansion of the \tn{fortex@codeblockregex} macro was an absolute pain.
 % This is mainly due to having to interleave the matching regex and the replacement, as well as keeping the brackets |{...}| intact.
 %
 % However it seems to be working now and I don't want to touch it. 
+%
 %    \begin{macrocode}
   \tl_if_empty:NF { \fortex@codeblockregex } {
     \exp_args:NV \regex_replace_case_all:nN {
@@ -1377,9 +1498,12 @@
 % \end{tabular}
 % \end{table}
 %
+%    \begin{macrocode}
+    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
+%    \end{macrocode}
 % The text that is getting replaced by looks complex, but simplifying is merely
 % \begin{verbatim}
-% \1¤\hyperref[code:identifier]{\psudoverb{name}}¤
+% \1¤\hyperref[code:identifier]{\fortexhyperinsert{name}}¤
 % \end{verbatim}
 %
 % Where |\1| is the previously captured group from the first row in the above table, and |¤| is the engine specific delimiter.
@@ -1390,7 +1514,6 @@
     }{
         \tl_set:Nn \l_tmpa_tl { fortexhyperinsert }
     }
-    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
     \str_set:Nx \l_tmpa_str {
                   \exp_not:n { \1                     }
                                \g_@@_code_delim_str
@@ -1440,7 +1563,7 @@
   }
   \seq_if_in:NnF { #1 } { noindex } {
     \@@_vindex_aux:xx { \seq_use:Nn \g_@@_codenest_seq {!} }
-                                         { \vindexfmtdef }
+                                         { \g_@@_idxfmt_codedef_str }
   }
 }
 %    \end{macrocode}
@@ -1486,26 +1609,43 @@
   \@@_codeblock_aux:nn \l_@@_argv_seq { #2 }
 } {
 %    \end{macrocode}
-%
-% This next section will insert into the |.pdf| after the codeblock:
-% \begin{center}
-% \noindent\textit{\small{End of code block |codeblock|}}\\
-% \end{center}
-%
-% After we are finished defining a code block. This is designed to be similar to \LaTeX{}'s \pkg{doc} package.
+% This is a bit of an ugly way to call \tn{aftercodeblock}.
+% However, \cs{seq_if_in:NnTF} is not expandable, and so makes any implementation of \tn{aftercodeblock} much more annoying if a user were to modify it.
 % 
-% This also has the added effect of moving up one level in the nesting.
 %    \begin{macrocode}
-  \noindent\textit{
-    \small
-    End~of~code~block~
-    \seq_if_in:NnF \l_@@_argv_seq { noref } {
-      \hyperref [ code: \seq_use:Nn \g_@@_codenest_seq {:} ]
-    }
-    { \texttt { \detokenize{ #2 } } } . \\
-    \seq_gpop_right:NN \g_@@_codenest_seq \l_tmpa_tl
+  \seq_if_in:NnTF \l_@@_argv_seq { noref } { 
+    \aftercodeblock |#2|
+  } {
+    \aftercodeblock |#2| [ \seq_use:Nn \g_@@_codenest_seq {:} ]
   }
+%    \end{macrocode}
+% Finally we move up one level of nesting. 
+%
+%    \begin{macrocode}
+  \seq_gpop_right:NN \g_@@_codenest_seq \l_tmpa_tl
   \group_end:
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.10$\alpha$}{2022/12/13}{Move codeblock end text to own macro}
+% \begin{macro}{\aftercodeblock}
+% \begin{arguments}
+% \item{Name of the codeblock}
+% \item{Hyperref link name of the code block}
+% \end{arguments}
+%
+% Here is the code that writes a message at the end of each code block. 
+% It is in a separate function because it may need to be changed by the user for internationalisation or if they just don't like the message. 
+%
+% The implementation should be simple enough that someone could make it without relying on \pkg{expl3} or having a deep understanding of \LaTeX{}.
+%
+%    \begin{macrocode}
+\NewDocumentCommand { \aftercodeblock } { v O{} } { 
+  \noindent \textit { \small End~of~code~block~
+    \tl_if_empty:NF { #2 } { \hyperref [ #2 ] }
+    { \texttt { \tl_to_str:N { #1 } } } . \\
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1556,7 +1696,27 @@
 %
 %    \begin{macrocode}
 } {
+	 \seq_if_in:NnTF \l_@@_argv_seq { noref } { 
+    \aftercodeblock |#2|
+  } {
+    \aftercodeblock |#2| [ \seq_use:Nn \g_@@_codenest_seq {:} ]
+  }
 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.10$\alpha$}{2022/12/13}{Allow customising codevar message}
+% \begin{macro}{\aftercodevar}
+% \begin{arguments}
+% \item{Name of the code variable}
+% \item{Hyperref link name of the code variable}
+% \end{arguments}
+%
+% This macro is fills the same purpose as \tn{aftercodeblock}, however this one is for code variables.
+% The main difference here is by default we do not bother highlighting code variables, though it is easy to change.
+%
+%    \begin{macrocode}
+\NewDocumentCommand { \aftercodevar } { v O{} } { \relax }
 %    \end{macrocode}
 % \end{macro}
 % Because we are adding the functions we want to tracked as they are defined, we are unable to add a hyperref a usage before the definition. 
@@ -1744,7 +1904,7 @@
 % \item{ programming language we want to highlight}
 % \item{ character we want to define as the delimiter }
 % \end{arguments}
-%	
+%  
 % The only thing we are doing different here is because have a mandatory language argument, we need to filter if that language is |text|. 
 % This is because whilst \pkg{minted} uses |text| to indicate that there should be no highlighting, \pkg{listings} does not. 
 %
@@ -1840,10 +2000,10 @@
 %    \begin{macrocode}
 \cs_set:Npn \@@_mktmpdir: {
   \file_if_exist:nF { \g_@@_outputdir_tl
-                      \c_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
+                      \g_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
   }{
     \sys_if_shell_unrestricted:TF {
-      \sys_shell_now:x { mkdir~\g_@@_outputdir_tl \c_@@_tmpfolder_tl }
+      \sys_shell_now:x { mkdir~\g_@@_outputdir_tl \g_@@_tmpfolder_tl }
     }{
 %    \end{macrocode}
 % We throw a warning if we cannot open our test file explaining how to resolve the issue.
@@ -1853,7 +2013,7 @@
         Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it ~ 
         ~ manually ~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
       }
-      \msg_warning:nnx { fortex } { make_folder } { \c_@@_tmpfolder_tl }
+      \msg_warning:nnx { fortex } { make_folder } { \g_@@_tmpfolder_tl }
     }
 %    \end{macrocode}
 % Create file for next time, or if we do not have |-shell-esc| and the tmp folder does not exist, stop compilation.
@@ -1861,7 +2021,7 @@
 %    \begin{macrocode}
     \iow_new:N   \l_@@_testfile_iow
     \iow_open:Nn \l_@@_testfile_iow { 
-                 \c_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
+                 \g_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
     }
     \iow_close:N \l_@@_testfile_iow
   }
@@ -1895,7 +2055,7 @@
 \cs_set:Npn \@@_inctmpname: {
   \int_gincr:N \g_@@_inctmpname_namecount_int
   \tl_gset:Nn \g_@@_tmp_filename_tl {
-    \c_@@_tmpfolder_tl /
+    \g_@@_tmpfolder_tl /
     \c_sys_jobname_str -
     \int_to_arabic:n { \g_@@_inctmpname_namecount_int } .tmp
   }
@@ -1939,7 +2099,7 @@
 %    \end{macrocode}
 % \end{variable}
 %
-% \begin{environment}{subfile}
+% \begin{macro}{subfile}
 % \begin{arguments}
 % \item {Language to Highlight}
 % \item {File to save contents to}
@@ -1997,7 +2157,7 @@
   }
 }
 %    \end{macrocode}
-% \end{environment}
+% \end{macro}
 %
 % \subsubsection{Writing the code to the output file}
 % \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
@@ -2091,7 +2251,7 @@
 %    \begin{macrocode}
 \cs_set:Npn \@@_printcode:nnn #1#2#3 {
   \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
-    \tl_set:Nn \minted@cachedir {\g_@@_outputdir_tl \c_@@_tmpfolder_tl}
+    \tl_set:Nn \minted@cachedir {\g_@@_outputdir_tl \g_@@_tmpfolder_tl}
     \inputminted [
       escapeinside={\g_@@_code_delim_str \g_@@_code_delim_str}, 
       #1,
@@ -2117,7 +2277,7 @@
 % 
 % \subsubsection{Main code environment} 
 %
-% \begin{environment}{code}
+% \begin{macro}{code}
 % The actual environment that gets called.
 % There are a few things about this function that are not optimal, but I have tried and cannot think of any more elegant way to do them.
 % 
@@ -2172,7 +2332,7 @@
   }
 }
 %    \end{macrocode}
-% \end{environment}
+% \end{macro}
 %
 % \end{implementation}
 %    \begin{macrocode}
