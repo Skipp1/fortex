@@ -67,6 +67,8 @@
   \environmentOld{#1}
 }
 
+\setlength\parfillskip{0pt plus .75\linewidth}
+
 \begin{document}
   \DocInput{\jobname.dtx}
 \end{document}
@@ -742,9 +744,9 @@
 % \begin{variable}{\g_@@_vindex_fmt_str}
 % 
 %    \begin{macrocode}
-  vindex idxnum font .str_gset:N  = \g_@@_vindex_fmt_str,
-  vindex idxnum font .default:n   = { textrm },
-  vindex idxnum font .initial:n   = { textrm },
+  vindex~idxnum~font .str_gset:N  = \g_@@_vindex_fmt_str,
+  vindex~idxnum~font .default:n   = { textrm },
+  vindex~idxnum~font .initial:n   = { textrm },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -754,9 +756,9 @@
 % \begin{variable}{\g_@@_idxfmt_codedef_str}
 % 
 %    \begin{macrocode}
-  codedef idxnum font .str_gset:N  = \g_@@_idxfmt_codedef_str,
-  codedef idxnum font .default:n   = { textit },
-  codedef idxnum font .initial:n   = { textit },
+  codedef~idxnum~font .str_gset:N  = \g_@@_idxfmt_codedef_str,
+  codedef~idxnum~font .default:n   = { textit },
+  codedef~idxnum~font .initial:n   = { textit },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -766,9 +768,9 @@
 % \begin{variable}{\g_@@_idxfmt_codecall_str}
 % 
 %    \begin{macrocode}
-  codecall idxnum font .str_gset:N  = \g_@@_idxfmt_codecall_str,
-  codecall idxnum font .default:n   = { textrm },
-  codecall idxnum font .initial:n   = { textrm },
+  codecall~idxnum~font .str_gset:N  = \g_@@_idxfmt_codecall_str,
+  codecall~idxnum~font .default:n   = { textrm },
+  codecall~idxnum~font .initial:n   = { textrm },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -919,12 +921,16 @@
                     { \prop_put:Nnn \l_tmpa_prop } 
                     { #1 }
   \seq_remove_all:Nn \l_tmpa_seq  { verbose }
+  \prop_remove:Nn    \l_tmpa_prop { print }
   \prop_remove:Nn    \l_tmpa_prop { lang }
   \prop_remove:Nn    \l_tmpa_prop { ext }
-  \prop_remove:Nn    \l_tmpa_prop { print }
   \seq_remove_all:Nn \l_tmpa_seq  { intext }
   \prop_remove:Nn    \l_tmpa_prop { delim }
   \prop_remove:Nn    \l_tmpa_prop { outdir }
+  \prop_remove:Nn    \l_tmpa_prop { tmpdir }
+  \prop_remove:Nn    \l_tmpa_prop { vindex  ~idxnum~font }
+  \prop_remove:Nn    \l_tmpa_prop { codedef ~idxnum~font }
+  \prop_remove:Nn    \l_tmpa_prop { codecall~idxnum~font }
 %    \end{macrocode}
 % Note the trailing comma after the \cs{seq_use:Nn}
 %
@@ -1148,6 +1154,20 @@
 % \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
 %
 % \subsection{hyperref}
+% \changes{0.0.10$\alpha$}{2022/12/21}{Only use hyperref if it is already imported}
+% \begin{macro}{\@@_hyperref:nn}
+% Ideally \pkg{hyperref} should be a optional dependency, as it can conflict with a lot of packages. 
+% However, it is common practise to place \pkg{hyperref} at the end of the \tn{usepackage} list, and so detecting its presence becomes a little troublesome. 
+%
+% As such we wrap hyperref, and only use it we know the function exists. 
+% If hyperref was never imported, then this function should be transparent.
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_hyperref:nn #1#2 { 
+  \cs_if_exist_use:NTF \hyperref { [ #1 ] { #2 } } { #2 } 
+}
+%    \end{macrocode}
+% \end{macro}
 % \subsubsection{ Delimiters }
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
@@ -1369,7 +1389,7 @@
   \bool_if:NF { #1 } {
     \@@_vindex_aux:xx { \l_tmpa_tl } { \g_@@_idxfmt_codecall_str }
   }
-  \hyperref [ code: #3 ] {
+  \@@_hyperref:nn { code: #3 } {
     \fortexhypercodelinkfmt{ \detokenize { #2 } } 
   }
 }
@@ -1503,7 +1523,7 @@
 %    \end{macrocode}
 % The text that is getting replaced by looks complex, but simplifying is merely
 % \begin{verbatim}
-% \1¤\hyperref[code:identifier]{\fortexhyperinsert{name}}¤
+% \1¤\fortexhyperinsert{name}{identifier}¤
 % \end{verbatim}
 %
 % Where |\1| is the previously captured group from the first row in the above table, and |¤| is the engine specific delimiter.
@@ -1584,7 +1604,7 @@
 % I plan for the * interfaces is to only track within the parent code block. This is mainly used for private functions that you don't want polluting.
 %
 %    \begin{macrocode}
-\NewDocumentEnvironment { codeblock } { O{} m } {
+\NewDocumentEnvironment { codeblock } { O{} v } {
   \group_begin:
 %    \end{macrocode}
 % So one of the first things that we want to do is to is load our optional args clist into a sequence where we have functions to check if an arg is in later on.
@@ -1592,7 +1612,9 @@
 %
 % |noindex| is used to prevent the function from being registered with the index, and |noref| is used to prevent the automatic insertion of hyperlinks. 
 %    \begin{macrocode}
-  \seq_set_from_clist:Nn \l_@@_argv_seq { #1 }
+  \exp_args:Nnf \seq_set_from_clist:Nn \l_@@_argv_seq { 
+    \bool_if:NTF \g_@@_intext_bool { #1 } { noref, #1 }
+  }
 %    \end{macrocode}
 % Here \cs{l_@@_codename_str} is the name of the function/class/variable that we are going to track. 
 % At the moment this is not fully sanitised and there may be problems if active catcodes come in, but for now it will do. 
@@ -1614,9 +1636,9 @@
 % 
 %    \begin{macrocode}
   \seq_if_in:NnTF \l_@@_argv_seq { noref } { 
-    \aftercodeblock |#2|
+    \aftercodeblock { #2 }
   } {
-    \aftercodeblock |#2| [ \seq_use:Nn \g_@@_codenest_seq {:} ]
+    \aftercodeblock { #2 } [ \seq_use:Nn \g_@@_codenest_seq {:} ]
   }
 %    \end{macrocode}
 % Finally we move up one level of nesting. 
@@ -1641,9 +1663,9 @@
 % The implementation should be simple enough that someone could make it without relying on \pkg{expl3} or having a deep understanding of \LaTeX{}.
 %
 %    \begin{macrocode}
-\NewDocumentCommand { \aftercodeblock } { v O{} } { 
+\NewDocumentCommand { \aftercodeblock } { m O{} } { 
   \noindent \textit { \small End~of~code~block~
-    \tl_if_empty:NF { #2 } { \hyperref [ #2 ] }
+    \tl_if_empty:NF { #2 } { \@@_hyperref:nn { #2 } }
     { \texttt { \tl_to_str:N { #1 } } } . \\
   }
 }
@@ -1669,7 +1691,7 @@
 % |noref| prevents the code from highlighting all of the usages of the variable, and |noindex|
 %
 %    \begin{macrocode}
-\NewDocumentEnvironment { codevar } { O{} m } {
+\NewDocumentEnvironment { codevar } { O{} v } {
   \seq_set_from_clist:Nn \l_@@_argv_seq { #1 }
   \seq_set_from_clist:Nn \l_@@_vars_seq { #2 }
 %    \end{macrocode}
@@ -1696,10 +1718,10 @@
 %
 %    \begin{macrocode}
 } {
-	 \seq_if_in:NnTF \l_@@_argv_seq { noref } { 
-    \aftercodeblock |#2|
+   \seq_if_in:NnTF \l_@@_argv_seq { noref } { 
+    \aftercodeblock { #2 }
   } {
-    \aftercodeblock |#2| [ \seq_use:Nn \g_@@_codenest_seq {:} ]
+    \aftercodeblock { #2 } [ \seq_use:Nn \g_@@_codenest_seq {:} ]
   }
 }
 %    \end{macrocode}
@@ -1716,7 +1738,7 @@
 % The main difference here is by default we do not bother highlighting code variables, though it is easy to change.
 %
 %    \begin{macrocode}
-\NewDocumentCommand { \aftercodevar } { v O{} } { \relax }
+\NewDocumentCommand { \aftercodevar } { m O{} } { \relax }
 %    \end{macrocode}
 % \end{macro}
 % Because we are adding the functions we want to tracked as they are defined, we are unable to add a hyperref a usage before the definition. 
@@ -2188,7 +2210,7 @@
 %
 % \subsubsection{Concatenate files} 
 %
-% \changes{0.0.5$\alpha$}{2022/03/29}{Rename writeoutput to concat\_files}
+% \changes{0.0.5$\alpha$}{2022/03/29}{Rename \texttt{writeoutput} to \texttt{concat\_files}}
 % \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
 % \begin{macro}{\@@_concat_files:nn}
 % \begin{arguments}

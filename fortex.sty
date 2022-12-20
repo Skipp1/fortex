@@ -49,15 +49,15 @@
   tmpdir .tl_gset:N = \g__fortex_tmpfolder_tl,
   tmpdir .default:n = { _fortex-\c_sys_jobname_str },
   tmpdir .initial:n = { _fortex-\c_sys_jobname_str },
-  vindex idxnum font .str_gset:N  = \g__fortex_vindex_fmt_str,
-  vindex idxnum font .default:n   = { textrm },
-  vindex idxnum font .initial:n   = { textrm },
-  codedef idxnum font .str_gset:N  = \g__fortex_idxfmt_codedef_str,
-  codedef idxnum font .default:n   = { textit },
-  codedef idxnum font .initial:n   = { textit },
-  codecall idxnum font .str_gset:N  = \g__fortex_idxfmt_codecall_str,
-  codecall idxnum font .default:n   = { textrm },
-  codecall idxnum font .initial:n   = { textrm },
+  vindex~idxnum~font .str_gset:N  = \g__fortex_vindex_fmt_str,
+  vindex~idxnum~font .default:n   = { textrm },
+  vindex~idxnum~font .initial:n   = { textrm },
+  codedef~idxnum~font .str_gset:N  = \g__fortex_idxfmt_codedef_str,
+  codedef~idxnum~font .default:n   = { textit },
+  codedef~idxnum~font .initial:n   = { textit },
+  codecall~idxnum~font .str_gset:N  = \g__fortex_idxfmt_codecall_str,
+  codecall~idxnum~font .default:n   = { textrm },
+  codecall~idxnum~font .initial:n   = { textrm },
 }
 \ProcessKeysOptions { fortex }
 \bool_if:nT { \g__fortex_verbose_bool } {
@@ -109,12 +109,16 @@
                     { \prop_put:Nnn \l_tmpa_prop }
                     { #1 }
   \seq_remove_all:Nn \l_tmpa_seq  { verbose }
+  \prop_remove:Nn    \l_tmpa_prop { print }
   \prop_remove:Nn    \l_tmpa_prop { lang }
   \prop_remove:Nn    \l_tmpa_prop { ext }
-  \prop_remove:Nn    \l_tmpa_prop { print }
   \seq_remove_all:Nn \l_tmpa_seq  { intext }
   \prop_remove:Nn    \l_tmpa_prop { delim }
   \prop_remove:Nn    \l_tmpa_prop { outdir }
+  \prop_remove:Nn    \l_tmpa_prop { tmpdir }
+  \prop_remove:Nn    \l_tmpa_prop { vindex  ~idxnum~font }
+  \prop_remove:Nn    \l_tmpa_prop { codedef ~idxnum~font }
+  \prop_remove:Nn    \l_tmpa_prop { codecall~idxnum~font }
   \tl_gset:Nx \g__fortex_print_keystore_tl
              { \seq_use:Nn \l_tmpa_seq {,} , }
   \tl_gput_right:Nx \g__fortex_print_keystore_tl
@@ -177,6 +181,9 @@
     }
   }
 }
+\cs_set:Npn \__fortex_hyperref:nn #1#2 {
+  \cs_if_exist_use:NTF \hyperref { [ #1 ] { #2 } } { #2 }
+}
 \str_case_e:nnT { \c_sys_engine_str } {
   { ptex   } {}
   { uptex  } {}
@@ -235,7 +242,7 @@
   \bool_if:NF { #1 } {
     \__fortex_vindex_aux:xx { \l_tmpa_tl } { \g__fortex_idxfmt_codecall_str }
   }
-  \hyperref [ code: #3 ] {
+  \__fortex_hyperref:nn { code: #3 } {
     \fortexhypercodelinkfmt{ \detokenize { #2 } }
   }
 }
@@ -299,28 +306,30 @@
                                          { \g__fortex_idxfmt_codedef_str }
   }
 }
-\NewDocumentEnvironment { codeblock } { O{} m } {
+\NewDocumentEnvironment { codeblock } { O{} v } {
   \group_begin:
-  \seq_set_from_clist:Nn \l__fortex_argv_seq { #1 }
+  \exp_args:Nnf \seq_set_from_clist:Nn \l__fortex_argv_seq {
+    \bool_if:NTF \g__fortex_intext_bool { #1 } { noref, #1 }
+  }
   \str_set:Nn \l__fortex_codename_str { #2 }
   \seq_gput_right:Nx \g__fortex_codenest_seq \l__fortex_codename_str
   \__fortex_codeblock_aux:nn \l__fortex_argv_seq { #2 }
 } {
   \seq_if_in:NnTF \l__fortex_argv_seq { noref } {
-    \aftercodeblock |#2|
+    \aftercodeblock { #2 }
   } {
-    \aftercodeblock |#2| [ \seq_use:Nn \g__fortex_codenest_seq {:} ]
+    \aftercodeblock { #2 } [ \seq_use:Nn \g__fortex_codenest_seq {:} ]
   }
   \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
   \group_end:
 }
-\NewDocumentCommand { \aftercodeblock } { v O{} } {
+\NewDocumentCommand { \aftercodeblock } { m O{} } {
   \noindent \textit { \small End~of~code~block~
-    \tl_if_empty:NF { #2 } { \hyperref [ #2 ] }
+    \tl_if_empty:NF { #2 } { \__fortex_hyperref:nn { #2 } }
     { \texttt { \tl_to_str:N { #1 } } } . \\
   }
 }
-\NewDocumentEnvironment { codevar } { O{} m } {
+\NewDocumentEnvironment { codevar } { O{} v } {
   \seq_set_from_clist:Nn \l__fortex_argv_seq { #1 }
   \seq_set_from_clist:Nn \l__fortex_vars_seq { #2 }
   \seq_map_inline:Nn { \l__fortex_vars_seq } {
@@ -330,13 +339,13 @@
     \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
   }
 } {
- \seq_if_in:NnTF \l__fortex_argv_seq { noref } {
-    \aftercodeblock |#2|
+   \seq_if_in:NnTF \l__fortex_argv_seq { noref } {
+    \aftercodeblock { #2 }
   } {
-    \aftercodeblock |#2| [ \seq_use:Nn \g__fortex_codenest_seq {:} ]
+    \aftercodeblock { #2 } [ \seq_use:Nn \g__fortex_codenest_seq {:} ]
   }
 }
-\NewDocumentCommand { \aftercodevar } { v O{} } { \relax }
+\NewDocumentCommand { \aftercodevar } { m O{} } { \relax }
 \hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
   \iow_now:cx { @auxout } {
      \exp_not:n { \gdef\fortex@codeblockregex }
