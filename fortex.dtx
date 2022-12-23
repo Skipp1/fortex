@@ -109,8 +109,11 @@
 % \clearpage
 % \changes{0.0.10$\alpha$}{2022/12/09}{Table of contents}
 % \tableofcontents
+% \pagenumbering{roman}
 % \restoregeometry
 %
+% \setcounter{page}{1}
+% \pagenumbering{arabic}
 % \changes{0.0.10$\alpha$}{2022/12/08}{Documentation}
 % \section{Introduction}
 % \pkg{fortex} is a language agnostic way of coding other languages in a literate way in \LaTeX{}.
@@ -554,7 +557,7 @@
 % I do plan to backport to \TeX{}Live 2015 as that is what the stable distros seem to be using but for now this is all there is.
 %    \begin{macrocode}
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-12-13} {0.0.10$\alpha$}
+\ProvidesExplPackage {fortex} {2022-12-22} {0.0.10$\alpha$}
                      {like noweb without external tooling}
 %    \end{macrocode}
 %
@@ -1172,6 +1175,7 @@
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
 % \changes{0.0.9$\alpha$}{2022/09/27}{Fix delimiters for all engines}
+% \changes{0.0.10$\alpha$}{2022/12/22}{Fix listings escape, (again)}
 %
 % One of the considerations for escaping code is what delimiters should be used. 
 % Due to limitations with minted, the delimited needs to be one char long. 
@@ -1229,7 +1233,10 @@
 % \end{tabular}
 % \end{center}
 %
-% It should be noted however that \pdfTeX{} needs the full UTF-8 code of |^^c2^^9c|, but \LuaTeX{} being Unicode aware only needs |^^9c|.
+% It should be noted however that \pdfTeX{} needs to use full UTF-8 code of |^^c2^^9c| when passing the delimiter to python. 
+% This only happens when talking to \pkg{minted}, but otherwise python will interpret U+009C as literally 0$\times$9C, which is not a valid UTF-8 character. 
+% On the other hand \pkg{listings} needs the original |^^9c| as it struggles to handle multi-byte characters. 
+%
 % Note that \tn{Uchar} needs to be used over \tn{char} because any delimiter needs to be fully expandable. Where $57344$ is the decimal equivalent of the hex E000
 %
 % Finally, we do a check to see if the delimiter has been previously defined in the package arguments in case a different delimiter needs to be used for whatever reason.
@@ -1237,12 +1244,22 @@
 %    \begin{macrocode}
 \str_if_empty:NT \g_@@_code_delim_str { 
   \str_case_e:nn { \c_sys_engine_str } {
-    { luatex } { \str_set:Nn \g_@@_code_delim_str {     ^^9c    } }
-    { pdftex } { \str_set:Nn \g_@@_code_delim_str { ^^c2^^9c    } }
-    { ptex   } { \str_set:Nn \g_@@_code_delim_str {     ^^1e    } } 
-    { uptex  } { \str_set:Nn \g_@@_code_delim_str {     ^^1e    } }
-    { xetex  } { \str_set:Nx \g_@@_code_delim_str { \Uchar57344 } }
+    { luatex } { \str_gset:Nn \g_@@_code_delim_str {     ^^9c    } }
+    { ptex   } { \str_gset:Nn \g_@@_code_delim_str {     ^^1e    } } 
+    { uptex  } { \str_gset:Nn \g_@@_code_delim_str {     ^^1e    } }
+    { xetex  } { \str_gset:Nx \g_@@_code_delim_str { \Uchar57344 } }
+    { pdftex } { \str_if_eq:NNTF \g_@@_printend_tl { mint } { 
+                   \str_gset:Nn \g_@@_code_delim_str { ^^c2^^9c } 
+               }{ 
+                   \str_gset:Nn \g_@@_code_delim_str { ^^9c } 
+               }
+    }
   }
+}
+\bool_if:nT { \g_@@_verbose_bool }{
+  \exp_args:Nnx \str_set_convert:Nnnn \l_tmpa_str
+                                    { \g_@@_code_delim_str } { } { utf8/hex }
+  \iow_term:x { Code~Delimiter~HEX:~\l_tmpa_str  }
 }
 %    \end{macrocode}
 % \end{variable}
@@ -1885,12 +1902,10 @@
 %    \begin{macrocode}
     \exp_last_unbraced:NNV \cs_set:Npn \@@_shortmint_i: \l_tmpa_a {
       \mode_if_math:TF {
-        \use_i:nn 
+        \token_to_str:N #3
       } {
-        \use_ii:nn 
+        { \@@_shortmint_cs#3##1#3 }
       }
-      { \token_to_str:N #3 }
-      { { \@@_shortmint_cs#3##1#3 } }
     }
   }
 %    \end{macrocode}
@@ -1966,15 +1981,8 @@
 % \changes{0.0.9$\alpha$}{2022/12/11}{Stop reinventing the wheel, and just use dospecials}
 % \begin{macro}{\@@_setcatcode:}
 % Set catcodes required to not mangle the file when reading.
-% 
-% In the below code |^^J| is a newline.
-% and |^^I| is a tab character.
-%
-% |\| is kinda interesting as it will insert a space after the next word ``|\str|'' will turn into ``|\str |'' (note the trailing space).
-% This is an issue mostly for using hyperref labels in the typeset sections.
-%
-% Note: This is probably not a comprehensive list, however I am yet to find any more.
-% There is probably a list of all characters in a certain catcode, but for now this seems to work. 
+% This is function is called when reading back in the code files with \cs{file_get:nnN}. 
+% If we do not call this function, \LaTeX{} will mangle the files upon re-entry. 
 %
 %    \begin{macrocode}
 \cs_set:Nn \@@_setcatcode: {
@@ -1988,6 +1996,8 @@
 % There are a few other characters that need special attention as they are not specified in \tn{dospecials}. 
 % Try and protect some whitespace (Currently we have a few stray newlines but whatever)
 %
+% In the below code |^^J| is a newline.
+% and |^^I| is a tab character.
 %    \begin{macrocode}
   \char_set_catcode_other:N \^^J
   \char_set_catcode_other:N \^^I
@@ -2042,9 +2052,8 @@
 %
 %    \begin{macrocode}
     \iow_new:N   \l_@@_testfile_iow
-    \iow_open:Nn \l_@@_testfile_iow { 
-                 \g_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
-    }
+    \iow_open:Nn \l_@@_testfile_iow 
+               { \g_@@_tmpfolder_tl / \c_sys_jobname_str -0.tmp }
     \iow_close:N \l_@@_testfile_iow
   }
 }
@@ -2257,45 +2266,111 @@
 % \end{macro}
 %
 % \subsubsection{Print code in \texttt{.pdf}}
-%
-% \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
 % \changes{0.0.7$\alpha$}{2022/06/09}{Fix listings escape}
-% \begin{macro}{\@@_printcode:nnn}
+% \changes{0.0.10$\alpha$}{2022/12/22}{Move \texttt{lstinputlisting}/\texttt{inputminted} to an aux macro}
+% \changes{0.0.10$\alpha$}{2022/12/22}{Fix listings escape, (again)}
+% \begin{macro}{\@@_lstinputlistings_aux:nn}
 % \begin{arguments}
-% \item{ keyvals to pass to \pkg{minted}/\pkg{listings} (must be expanded with \cs{exp_args:No} when this function is called)}
-% \item{ programming language we want to highlight}
-% \item{ tmp filename we are going to use (absolute path)}
+% \item Filename to be inserted into the \texttt{.pdf} document  
+% \item Delimiter used to escape back to regular \LaTeX{}
 % \end{arguments}
 %
-% Load the saved tmp file and do all the highlighting/formatting and then place into the pdf.
-% Note that we need to pass the full path when using |-output-dir|.  
+% \pkg{listings} doesn't support no highlighting by setting the key |language=text|, so we need to explicitly \emph{not} pass in a language key.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_printcode:nnn #1#2#3 {
-  \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
-    \tl_set:Nn \minted@cachedir {\g_@@_outputdir_tl \g_@@_tmpfolder_tl}
-    \inputminted [
-      escapeinside={\g_@@_code_delim_str \g_@@_code_delim_str}, 
-      #1,
-    ] { #2 } { #3 }
-  }{
+\cs_set:Npn \@@_lstinputlistings_aux:nn #1#2 {
+  \seq_set_from_clist:NN \l_@@_listings_opt_seq \g_@@_print_keystore_tl
+  \seq_push:Nn \l_@@_listings_opt_seq { escapechar={#2} } 
+  \str_if_eq:NNF { #2 } { text } { 
+    \seq_push:Nx \l_@@_listings_opt_seq { language={\g_@@_lang_tl} }
+  } 
 %    \end{macrocode}
-% \pkg{listings} doesn't support no highlighting by setting the key |language=text|, so we need to explicitly \emph{not} pass in a language key. 
+% A problem arises when using \pkg{listings}, and the delimiters chosen for \pTeX{}, \upTeX{}, and \XeTeX{}. 
+% As listings is a fundamentally 8-bit package, it doesn't play super well with Unicode. 
+% (Even in Unicode-native engines). 
+% However, the delimiters chosen for these specific engines, are high-enough Unicode that listings has issues. 
+% 
+% Fortunately, there is a method to get listings to work with Unicode as documented in the stack exchange question \url{https://tex.stackexchange.com/questions/25391}.
+% This method involves setting the \pkg{listings} key |extendedchars=true|, and changing the definition of what counts as an extended character.
+%
+% However, using the method listed directly, is a little fraught as it will override anything that the user might set. 
+% As such we want to \emph{append} as opposed to \emph{overwrite}. 
+% This is what was done, however there are some subtleties in the implementation that should be addressed.
+%
+% Consider the definition of \tn{lst@DefEC}:
+%
+% \begin{center}
+% |\lst@CCECUse \lst@ProcessLetter ^^80^^81|$\cdots$|^^fe^ff^^00|
+% \end{center}
+% The important thing to note here is that the final terminating \textsc{nul} is important as \pkg{listings} uses this as an ending delimiter (like a C string). 
+% As such we want to insert out delimiter character between final |^^ff| and |^^00|.
+%
+% The cleanest way I have found to perform this insertion, is to pull the final token (\textsc{nul}) off the end of the token list, then add back the delimiter with the \textsc{nul}.
+% However, there is not a super easy way to pull off the final token using the |\tl_|\textellipsis{} series of commands.  
+% As such, I convert it to a sequence and then back again. 
+% doing this seems to be faster, then reversing the tokenlist, gobbling the head, and then reversing back.
+%
+% One thing of note is the catcode of the \textsc{nul}. 
+% By default, it seems to be an `Invalid' catcode unless braced by \tn{lst@InputCatcodes}\textellipsis\tn{lst@RestoreCatcodes}. 
+% As such the easiest, and most foolproof thing to do is to save and restore the character, making sure not to look.
+%
+% Finally, to avoid any potential later surprises, we save and restore the original definition of \tn{lst@DefEC}, around the call to \tn{lstinputlisting}.
 %
 %    \begin{macrocode}
-    \exp_args:Nx \lstset {
-      \exp_not:n { escapechar = } \{ \g_@@_code_delim_str \}
-    }
-    \str_if_eq:NNTF { #2 } { text } {
-      \lstinputlisting [ #1 ] { #3 }
-    }{
-      \lstinputlisting [ language=#2, #1 ] { #3 }
-    }
+  \tl_set_eq:NN \l_@@_lst@DefEC_orig_tl \lst@DefEC
+  \str_case_e:nnT { \c_sys_engine_str } {
+    { xetex } {}
+    { uptex } {}
+    {  ptex } {}
+  }{ 
+    \seq_set_split:NnV \l_@@_lst@DefEC_seq {} { \lst@DefEC }
+    \seq_pop_right:NN  \l_@@_lst@DefEC_seq \l_tmpa_tl
+    \seq_put_right:Nx  \l_@@_lst@DefEC_seq { #2 \exp_not:V \l_tmpa_tl}
+    \tl_set:Nx \lst@DefEC { \seq_use:Nn \l_@@_lst@DefEC_seq {} }
+    \seq_push:Nn \l_@@_listings_opt_seq { extendedchars=true }
   }
+%    \end{macrocode}
+% Expanding commands in optional arguments is always a little bit of a pain.
+% However, here we use it to send all the keys to \pkg{listings}.
+%
+%    \begin{macrocode}
+  \exp_last_unbraced:Nx \lstinputlisting 
+                        { [ \seq_use:Nn \l_@@_listings_opt_seq {,} ] } { #1 }
+  \tl_set_eq:NN \lst@DefEC \l_@@_lst@DefEC_orig_tl
 }
-\cs_generate_variant:Nn \@@_printcode:nnn { onn }
+\cs_generate_variant:Nn \@@_lstinputlistings_aux:nn { xx }
 %    \end{macrocode}
 % \end{macro}
+% 
+% \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
+% \changes{0.0.10$\alpha$}{2022/12/22}{Move \texttt{lstinputlisting}/\texttt{inputminted} to an aux macro}
+% \begin{macro}{\@@_inputminted_aux:nn}
+% \begin{arguments}
+% \item Filename to be inserted into the \texttt{.pdf} document  
+% \item Delimiter used to escape back to regular \LaTeX{}
+% \end{arguments}
+%
+% The \pkg{minted} implementation is a little simpler as \pkg{minted} is fully Unicode aware. 
+% (Infact it will \emph{only} accept bytes that correspond to a python string encoding)
+%
+% Note that we should set the minted cache directory to the same directory that we are storing the files that get highlighted. 
+%
+% Unfortunately, due to the limitations of \pkg{pygments}, only a single character can be used as the escape delimiter.
+% (And as such is the cause of a lot of Unicode woes)
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_inputminted_aux:nn #1#2 {
+  \seq_set_from_clist:NN \l_@@_minted_opt_seq \g_@@_print_keystore_tl
+  \seq_push:Nn \l_@@_minted_opt_seq { escapeinside={#2 #2} }
+  \tl_set:Nn \minted@cachedir { \g_@@_outputdir_tl \g_@@_tmpfolder_tl }
+  \exp_last_unbraced:Nx \inputminted
+                      { [ \seq_use:Nn \l_@@_minted_opt_seq {,} ] } 
+                      { \g_@@_lang_tl } { #1 }
+}
+\cs_generate_variant:Nn \@@_inputminted_aux:nn { xx }
+%    \end{macrocode}
+% \end{macro}
+%
 % 
 % \subsubsection{Main code environment} 
 %
@@ -2341,16 +2416,18 @@
 %
 %    \begin{macrocode}
   \tl_if_exist:NT { \fortex@codeblockregex } {
-    \@@_concat_files:nn \g_@@_tmp_filename_tl \g_@@_out_filename_tl
+    \@@_concat_files:nn \g_@@_tmp_filename_tl
+                              \g_@@_out_filename_tl
 %    \end{macrocode}
 %    \begin{macrocode}
-    \@@_mkref_file:nN { \g_@@_outputdir_tl\g_@@_tmp_filename_tl }
+    \@@_mkref_file:nN { \g_@@_outputdir_tl \g_@@_tmp_filename_tl }
                               \l_tmpa_tl
 %    \end{macrocode}
 %    \begin{macrocode}
-    \@@_printcode:onn { \g_@@_print_keystore_tl }
-                              \g_@@_lang_tl
-                            { \g_@@_outputdir_tl\l_tmpa_tl } 
+    \str_if_eq:NNTF { \g_@@_printend_tl } { mint }
+                    { \@@_inputminted_aux:xx }
+                    { \@@_lstinputlistings_aux:xx } 
+    { \g_@@_outputdir_tl \l_tmpa_tl } \g_@@_code_delim_str
   }
 }
 %    \end{macrocode}
