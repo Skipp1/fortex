@@ -46,6 +46,7 @@
     \draw[rounded corners=1mm] (-1, -1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, -1.5);
     \node[draw=black, fill=white, rounded corners=1mm] at (13.525/2, 0) {\texttt{#1}};
   \end{tikzpicture} 
+  \vspace{0.5ex}
 } {
   \noindent
   \begin{tikzpicture}[overlay]
@@ -68,14 +69,14 @@
 }
 
 \setlength\parfillskip{0pt plus .75\linewidth}
+% \setlength\IndexMin{100pt}
 
 \begin{document}
   \DocInput{\jobname.dtx}
 \end{document}
 %</driver>
 % \fi
-
-% 
+%
 % ^^A Misc changes
 % \changes{0.0.7$\alpha$}{2022/06/09}{Shuffle functions around to make more logical sense}
 % \changes{0.0.5$\alpha$}{2022/03/26}{Initial conversion to .dtx}
@@ -93,13 +94,15 @@
 % \date{\fileversion{} Released \filedate{}}
 %
 % \begin{documentation}
-% \newgeometry{width=418.25368pt}
+% \newgeometry{width=418.25368pt} ^^A default article 
 % \setcounter{page}{0}
 % \maketitle
 % \vspace{2cm}
 %
 % \begin{abstract}
-% \noindent\large{\pkg{fortex} is a \LaTeX{} package that facilitates better documentation of program source code. The package allows highlighting source code along side equations, diagrams and images. In addition, \pkg{fortex} will output the source code to an external file for compilation by the language's compiler. }
+% \noindent\large{\pkg{fortex} is a \LaTeX{} package that facilitates better documentation of program source code.
+% The package allows highlighting source code alongside equations, diagrams and images.
+% In addition, \pkg{fortex} will output the source code to an external file for compilation by the language's compiler. }
 % \end{abstract}
 %
 % \vfill
@@ -275,10 +278,26 @@
 % \begin{syntax}
 % |\begin{codevar}[|\meta{noindex}, \meta{noref}|]|\Arg{comma separated variable names}
 % \qquad \meta{variable definitions}
-% |\end{codeblock}|
+% |\end{codevar}|
 % \end{syntax} \vspace{1ex}
 % \end{environment}
+%
+% A \texttt{codevar} environment is similar to a \texttt{codeblock} environment, however there are 2 key differences.
+% Firstly, \texttt{codevar} allows the definition of multiple variable names separated by commas. 
+% This is designed to allow quick and easy settings of parameter-style constants.
 % 
+% \begin{lstlisting}
+%  \begin{codevar}{a, b, c}
+%  \begin{code}
+%    a=1; b=2; c=3  
+%  \end{code}
+%  \end{codevar}
+% \end{lstlisting}
+%
+% The second difference is a consequence of the first. 
+% Unlike \texttt{codeblock}, nesting further \texttt{codeblock}/\texttt{codevar} inside a  \texttt{codevar} environment is not allowed. 
+% This is because it is ambiguous as to how to construct a nesting tree when there are multiple variables that could act as a parent.
+%
 % \begin{environment}{subfile}
 % \begin{syntax}
 % |\begin{subfile}|\Arg{language}\Arg{oputput file}
@@ -430,26 +449,126 @@
 % \noindent What delimiters 
 %
 % \DescribeOption{ext}{string}[txt]
-% \noindent What File extension 
+% \noindent The file extension for the outputted sourcecode. 
+% By default \pkg{fortex} will try to guess the file extension from the sourcecode language selected.
+% However, guessing the file extensions of all languages is silly, and the same source language may have multiple file extensions (e.g. |.c| and |.h| for C source files).
+% As such, \texttt{ext=\meta{file extension}} allows a manual method of overriding the automatic detection in case it fails.
 %
+% \DescribeOption{ignore active}{string}
+% \noindent \pkg{fortex} can make use of some \LaTeX{} features to approximate namespaces for languages that so not support them. 
+%
+% \begin{examplefile}{file.tex}
+% \begin{lstlisting}
+%  \documentclass{article}
+%  \usepackage[lang=C]{fortex}
+%  
+%  \begin{document}
+%
+%   \catcode`\@=\active 
+%   \def@{mynamespace}
+%   
+%   \begin{code}
+%     double @_calculate_pi(void) {
+%       double retval = 0;
+%       for (int i=0; i < 20; i++) {
+%         retval += pow(-1, i) / (2 * (double)i + 1);
+%       }
+%     return 4 * retval;
+%     }
+%    \end{code}
+% \end{lstlisting}
+% \vspace{-0.6cm}
+% \end{examplefile}
+%
+% This will reveal in the |.pdf| file:
+%
+% \begin{examplefile}{file.pdf}
+% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%  double mynamespace_calculate_pi(void) {
+%    double retval = 0;
+%    for (int i=0; i < 20; i++) {
+%      retval += pow(-1, i) / (2 * (double)i + 1);
+%    }
+%    return 4 * retval;
+%  }
+% \end{lstlisting}
+% \vspace{-0.6cm}
+% \end{examplefile}
+% 
+% And in the outputted C file 
+%
+% \begin{examplefile}{file.C}
+% \begin{lstlisting}[language=C]
+%  double mynamespace_calculate_pi(void) {
+%    double retval = 0;
+%    for (int i=0; i < 20; i++) {
+%      retval += pow(-1, i) / (2 * (double)i + 1);
+%    }
+%    return 4 * retval;
+%  }
+% \end{lstlisting}
+% \vspace{-0.6cm}
+% \end{examplefile}
+%
+% It should be noted that the definition of |@| is only expanded \emph{once}.
+% This means that non-expandable, or definitions that need multiple expansions will not work. 
+% 
+% However sometimes this behaviour of replacing active characters with their definition not desired.
+% This can be the case when something like |"| is set as active, but all quotes in the code should not be affected. 
+% 
+% As such we provide a way to tell \pkg{fortex}, that the active character in question should be ignored. 
+%
+% \DescribeOption{no ignore active}{string}
+% \noindent The opposite of the \texttt{ignore active}.
+% This option should only be needed if \texttt{ignore active} has already been used, but you want to undo the effects. 
+% 
 % \DescribeOption{intext}{boolean}[true]
-% \noindent in-text references?
+% \noindent Making use of \env{codeblock}, \env{codevar}, and regular expressions, \pkg{hyperref} links can be inserted into the code sections in the resulting |.pdf| file. 
+% The hyperlinks will then jump back the resulting \env{codeblock}/\env{codevar} definition.
+% This is the slowest part of the \pkg{fortex} package and turning it of can significantly speed up compilation.
+%
+% Note that even though this option defaults to true, if \tn{hyperref}\texttt{\oarg{label}\Arg{name}} is not defined (e.g. the \pkg{hyperref} package is not loaded) then hyperlinks will not be inserted. 
+% i.e. \pkg{hyperref} \emph{must} be separately loaded for in-text links to work.
 %
 % \DescribeOption{lang}{string}[text]
-% \noindent What source code language
+% \noindent The source code language. Setting this option will tell \pkg{minted}/\pkg{listings} what language to use when applying syntax highlighting. 
+% There are also a section of default file extensions (that may be overridden with the \texttt{ext} package option) for the resultant outputted file. 
+% e.g. setting |lang=bash| will cause the output file to by default be called \texttt{\meta{jobname}.sh}
 %
 % \DescribeOption{outdir}{string}
 % \noindent Output directories
 %
 % \DescribeOption{print}{string}[listings]
-% What backend package is being used to syntax highlight the source code in the generated |.pdf| file. At the moment the only two supported backends are \pkg{minted} or \pkg{listings}.
+% What backend package is being used to syntax highlight the source code in the generated |.pdf| file.
+% At the moment the only two supported backends are \pkg{minted} or \pkg{listings}.
 %
+% There are a bunch of aliases that can be used in \texttt{print=\meta{backend}} select these two backends listed in the following table
+%
+% \begin{center}
+% \begin{tabular}{l|l}
+% \multicolumn{1}{c|}{\pkg{minted}} & \multicolumn{1}{c}{\pkg{listings}} \\\hline
+% \texttt{m}      & \texttt{l}          \\
+% \texttt{mint}   & \texttt{lst}        \\
+% \texttt{minted} & \texttt{listing}    \\
+%                 & \texttt{listings}   \\
+%                 & \texttt{lstlisting} \\
+%                 & \texttt{lstlistings}\\\hline 
+% \end{tabular}
+% \end{center}
+%
+% I don't expect a huge amount of all these variants to be used, but it certainly saves me from remembering the exact spelling of the print backend. 
+% 
 % \DescribeOption{tmpdir}{string}[\_fortex-\meta{jobname}]
-% \noindent Temp directories
+% \noindent The folder that temporary files get written into.
+% This folder also acts as a cache for the the files with intext hyperlinks already inserted. 
+%
+% Due to the limitations of \TeX{}, we cannot create folders, without invoking |-shell-esc|. 
+% Thus, to \emph{avoid} a hard dependency on requiring |-shell-esc|, either the folder can be created manually, or \texttt{tmpdir=\meta{folder}} can be pointed to a folder that already exists.
 %
 % \DescribeOption{verbose}{boolean}[false]
 % Make the package output extra debugging info to stdout. 
-% This includes the code being output to the file, the automatically detected output directory, and the code with hyperref inserts. 
+% This includes the code being output to the file, the automatically detected output directory, engine specific delimiters, and arguments getting forwarded to \pkg{minted}/\pkg{listings}.
 %
 % \DescribeOption{vindex idxnum font}{string}[textrm]
 % How should vindex entries be formatted
@@ -491,10 +610,10 @@
 % The default implementation is:
 %
 % \begin{lstlisting}[numbers=none]
-%  \NewDocumentCommand{\aftercodeblock}{vO{}}{
+%  \NewDocumentCommand{\aftercodeblock}{mO{}}{
 %    \noindent\textit\small{
 %      End of code block
-%      \IfNoValueF{#2}{\hyperref[#2]}{\texttt{\detokenize{ #1}}}.\\
+%      \IfNoValueF{#2}{\hyperref[#2]}{\texttt{\detokenize{#1}}}.\\
 %    }
 %  }
 % \end{lstlisting}
@@ -509,7 +628,7 @@
 % The default implementation is:
 %
 % \begin{lstlisting}[numbers=none]
-%  \NewDocumentCommand{\aftercodeblock}{vO{}}{\relax}
+%  \NewDocumentCommand{\aftercodeblock}{mO{}}{\relax}
 % \end{lstlisting}
 %
 % \end{function}
@@ -519,7 +638,8 @@
 % \cs{vindex}\Arg{index entry}
 % \end{syntax} 
 %
-% Short for Verbatim index. This makes sure that \tn{index} prints the argument verbatim, and things like underscores and \& do not get mangled. 
+% Short for Verbatim index.
+% This makes sure that \tn{index} prints the argument verbatim, and things like underscores and \& do not get mangled. 
 %
 % \end{function}
 %
@@ -530,10 +650,13 @@
 %
 % \begin{enumerate}
 % \item{Finish of |.dtx| by adding Usage instructions}
-% \item{Get line numbering working}
-% ^^A \item{Short verbatim (preferably default "|" with highlighting, and |"| without) should be configurable}  
+% \item{Get line numbering working in \pkg{minted}}
+% \item{Add \texttt{scope=\meta{scope}} options to \env{codevar}/\env{codeblock}}
+% \item{allow customisation of the full filename, not just the extension}
 % \item{Changelog interface (just a wrapper for glossaries)?}
-% \item{Editing}
+% \item{fix the buggy |\aftercodevar| mess}
+% \item{intext and noref should be constant, (in general, we need more consistency)}
+% \item{Editing spelling and grammar}
 % \end{enumerate}
 %
 % \paragraph{What I will be working on next:}
@@ -554,10 +677,11 @@
 % (maybe in the future once this is all done I will switch to older features for older \TeX{}Live installs, but as of now anything before \TeX{}Live 2022 is not officially targeted.)
 %
 % As of version 0.0.6$\alpha$, anything before \TeX{}Live 2022 is broken.
-% I do plan to backport to \TeX{}Live 2015 as that is what the stable distros seem to be using but for now this is all there is.
+% At some point the plan is to backport to \TeX{}Live 2015 as that is what the stable distros seem to be using but for now this is all there is.
+%
 %    \begin{macrocode}
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-12-22} {0.0.10$\alpha$}
+\ProvidesExplPackage {fortex} {2022-12-22} {0.0.11$\alpha$}
                      {like noweb without external tooling}
 %    \end{macrocode}
 %
@@ -566,13 +690,18 @@
 %    \end{macrocode}
 %
 % The package \pkg{fancyvrb} is required to write stuff to file and to define custom-named verbatim environments.
-% I know \pkg{minted} loads this package (I haven't checked \pkg{listings}, but it would not surprise me if they loaded this package too). 
+% \pkg{minted} loads this package (I haven't checked \pkg{listings}, but it would not surprise me if they loaded this package too). 
 % As far as I am aware, this is only used in \env{code}, with \tn{VerbatimEnvironment} and \tn{VerbatimOut}.
 %
 %    \begin{macrocode}
 \RequirePackage { fancyvrb }
 %    \end{macrocode}
 %
+%    \begin{macrocode}
+\cs_generate_variant:Nn \iow_now:Nn  { NV }
+\cs_generate_variant:Nn \iow_term:n  { V }
+\cs_generate_variant:Nn \keys_set:nn { nf }
+%    \end{macrocode}
 % \subsection{Package options}
 %
 % As of now this is the initial package level settings.
@@ -581,7 +710,8 @@
 % However, I still need to give some thought into how that is all going to work (interweaving |.c| and |.h| is probably going to get confusing).
 %
 %    \begin{macrocode}
-% \debug_on:n {all}
+\seq_new:N \g_@@_print_keystore_seq
+\seq_new:N \g_@@_ignoreactive_charcodes_seq
 \keys_define:nn { fortex } {
 %    \end{macrocode}
 % 
@@ -665,7 +795,7 @@
 % When printing the code to the |.pdf| file, we by default use \pkg{hyperref} to create links to where each codeblock and variable is defined. 
 % This is a somewhat slow process, and for some people ma be annoying, so we just give a global option to disable. 
 %
-% Options also exist in the specific codeblock and variable environments to control this behavior. 
+% Options also exist in the specific codeblock and variable environments to control this behaviour. 
 % 
 %    \begin{macrocode}
   intext .bool_gset:N = \g_@@_intext_bool,
@@ -682,7 +812,7 @@
 % The delimiters used here are used to escape from the \pkg{minted}/\pkg{listings} environments, and insert hyperreffed links.
 % By default the delimiters used for the specific engines should all be control characters or private use Unicode. 
 % 
-% However, it is possible that the choice may conflict with someones code. 
+% However, it is possible that the choice may conflict with someone's code. 
 % As such we provide a way to override if needed.
 %
 % The defaults are:
@@ -741,15 +871,43 @@
 % \end{variable}
 % \end{macro}
 %
+% \changes{0.0.11$\alpha$}{2022/12/30}{Allow active characters to be inserted into code verbatim}
+% \begin{macro}{ignore active}
+% This is a bug-turned-feature. 
+% If a user defines a character as active, then by default \tn{VerbatimOut}, will write the definition of the active character, as opposed to the character itself. 
+% This can be mitigated by using the |codes={\catcode`|\meta{char}|=11}| in the optional arguments of \tn{VerbatimOut}, but if a user had defined a character as active elsewhere, then we don't know about it.
+%
+% However as mentioned, this is a bug-turned-feature as this behaviour can be used to approximate namespaces in languages that do not support them. 
+% As such rather than trying to ensure that all characters are not active, we just provide an interface to disable unwanted behaviours. 
+%
+%    \begin{macrocode}
+  ignore active .code:n = {
+    \seq_gpush:Nx \g_@@_ignoreactive_charcodes_seq { \cs_to_str:N #1 }
+  },
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{no ignore active}
+% The other side of the coin is to re-allow active character substitution. 
+% This argument is unlikely to get used, but may a well put it here anyway.
+%
+%    \begin{macrocode}
+  no ignore active .code:n = {
+   \exp_args:Nne \seq_gremove_all:Nn \g_@@_ignoreactive_charcodes_seq 
+                                   { \cs_to_str:N #1 }
+  },
+%    \end{macrocode}
+% \end{macro}
+%
 % \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls}
 % \changes{0.0.10$\alpha$}{2022/12/13}{Move vindex format definitions into package options}
 % \begin{macro}{vindex idxnum font}
 % \begin{variable}{\g_@@_vindex_fmt_str}
 % 
 %    \begin{macrocode}
-  vindex~idxnum~font .str_gset:N  = \g_@@_vindex_fmt_str,
-  vindex~idxnum~font .default:n   = { textrm },
-  vindex~idxnum~font .initial:n   = { textrm },
+  vindex idxnum font .str_gset:N  = \g_@@_vindex_fmt_str,
+  vindex idxnum font .default:n   = { textrm },
+  vindex idxnum font .initial:n   = { textrm },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -759,9 +917,9 @@
 % \begin{variable}{\g_@@_idxfmt_codedef_str}
 % 
 %    \begin{macrocode}
-  codedef~idxnum~font .str_gset:N  = \g_@@_idxfmt_codedef_str,
-  codedef~idxnum~font .default:n   = { textit },
-  codedef~idxnum~font .initial:n   = { textit },
+  codedef idxnum font .str_gset:N  = \g_@@_idxfmt_codedef_str,
+  codedef idxnum font .default:n   = { textit },
+  codedef idxnum font .initial:n   = { textit },
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -777,11 +935,33 @@
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
+% \changes{0.0.11$\alpha$}{2022/12/29}{Make \texttt{setfortex} less silly}
+% \changes{0.0.11$\alpha$}{2022/12/29}{Use sequence to store \pkg{minted}/\pkg{listings} options}
+% \begin{variable}{\g_@@_print_keystore_seq}
+% 
+% One question that arises is how to pass arguments to \pkg{minted}/\pkg{listings}. 
+% As \pkg{minted}/\pkg{listings} will error when passed an unknown key, but we want to be able to mix the \pkg{minted}/\pkg{listings} options and our own options in both the package, and \tn{setfortex} arguments.
 %
+% Rather than doing the silly thing and keeping a list of all \pkg{minted}/\pkg{listings} arguments up to date and making a filter for that, we define an |unknown| key.
+% This has the effect that when a key is passed to \pkg{fortex}, that it doesn't know, then instead of emitting a package warning, it will pass that key onto \pkg{minted}/\pkg{listings} for it to deal with.
+%
+% To implement this we save each \texttt{\meta{key} or }\texttt{\meta{key}=\meta{value}} into a sequence that then gets passed to the relevant package.
+% 
+% 
 %    \begin{macrocode}
+  unknown .code:n = {
+    \exp_args:Nnf \seq_gpush:Nn \g_@@_print_keystore_seq { 
+      \tl_if_empty:nTF { #1 } { 
+        \l_keys_key_str
+      }{
+        \l_keys_key_str=#1
+      }
+    }
+  }
 }
 \ProcessKeysOptions { fortex }
 %    \end{macrocode}
+% \end{variable}
 % \subsection{Engine specific warnings}
 %
 % Unfortunately we have a few issues using  \XeTeX{} \pTeX{} and \upTeX{} due to these engines not using real tab characters when printing to files. 
@@ -879,7 +1059,6 @@
 %    \begin{macrocode}
 \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
   \RequirePackage { minted }
-  \tl_set:Nn \minted@cachedir {.}
 }{
   \RequirePackage { listings }
 }
@@ -887,6 +1066,7 @@
 %
 % \subsubsection{Set \pkg{fortex} options}
 % \changes{0.0.8$\alpha$}{2022/06/26}{Allow overriding package options with \cs{setfortex}}
+% \changes{0.0.11$\alpha$}{2022/12/29}{Make \texttt{setfortex} less silly}
 % \begin{macro}{\setfortex}
 %
 % Keep fortex options separate from global \pkg{minted}/\pkg{listings} options.
@@ -896,52 +1076,8 @@
 %
 % The idea is to provide a unified interface similar to \pkg{minted}/\pkg{listings}.
 %    \begin{macrocode}
-\tl_new:N \g_@@_print_keystore_tl
 \NewDocumentCommand \setfortex { m } {
-%    \end{macrocode}
-% The first thing that we do is we use the keyval interface of \pkg{fortex} to set the keys that we already know.
-%
-% Sadly we cannot do this for \pkg{minted} or \pkg{listings} due to them using the older \LaTeXe interface and I havent figured out a method to bridge the \pkg{expl3} code. 
-% As such, we need to remove the fortex specfic keys, before handing them off to \pkg{minted}/\pkg{listings}
-%
-%    \begin{macrocode}
-  \keys_set_known:nn { fortex } { #1 }
-%    \end{macrocode}
-% 
-% One of the problems that I encountered whilst trying to separate out the \pkg{fortex} keys from the \pkg{minted}/\pkg{listings} keys is that removing keys is hard. 
-%
-% Something like the keyval interface doesn't allow setting arbitrary keys on the fly (\pkg{minted}/\pkg{listings} have a lot of keys and I am not putting them in manually).
-% But the prop interface doesn't allow key-only booleans (e.g. `breaklines' from \pkg{minted}).
-% 
-% Because of this I had to use \cs{keyval_parse:NNn} to put the key-only bools into a sequence and they key-val pairs into a prop. 
-% This is not ideal as I would like to pass around the proper datatype as later on the consolation into a generic tokenlist gets annoying.  
-%
-% Note: we need to empty the contents of \cs{l_tmpa_seq} and \cs{l_tmpa_prop}.
-% As unlike the rest of the times that we use these scratch variables, we are performing regular concatenation, and we may end up with the previous contents if we are not careful. 
-%
-%    \begin{macrocode}
-  \keyval_parse:NNn { \seq_put_left:Nn \l_tmpa_seq }
-                    { \prop_put:Nnn \l_tmpa_prop } 
-                    { #1 }
-  \seq_remove_all:Nn \l_tmpa_seq  { verbose }
-  \prop_remove:Nn    \l_tmpa_prop { print }
-  \prop_remove:Nn    \l_tmpa_prop { lang }
-  \prop_remove:Nn    \l_tmpa_prop { ext }
-  \seq_remove_all:Nn \l_tmpa_seq  { intext }
-  \prop_remove:Nn    \l_tmpa_prop { delim }
-  \prop_remove:Nn    \l_tmpa_prop { outdir }
-  \prop_remove:Nn    \l_tmpa_prop { tmpdir }
-  \prop_remove:Nn    \l_tmpa_prop { vindex  ~idxnum~font }
-  \prop_remove:Nn    \l_tmpa_prop { codedef ~idxnum~font }
-  \prop_remove:Nn    \l_tmpa_prop { codecall~idxnum~font }
-%    \end{macrocode}
-% Note the trailing comma after the \cs{seq_use:Nn}
-%
-%    \begin{macrocode}
-  \tl_gset:Nx \g_@@_print_keystore_tl 
-             { \seq_use:Nn \l_tmpa_seq {,} , }
-  \tl_gput_right:Nx \g_@@_print_keystore_tl 
-                   { \prop_to_keyval:N \l_tmpa_prop }
+  \keys_set:nn { fortex } { #1 }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -950,6 +1086,7 @@
 %
 % \changes{0.0.2$\alpha$}{2022/03/04}{Add extension detection}
 % \changes{0.0.6$\alpha$}{2022/04/02}{Be more structured}
+% \changes{0.0.11$\alpha$}{2022/12/13}{normalise languages to lowercase}
 % \begin{variable}{\g_@@_ext_tl}
 %
 % We guess the file extension defaulting to |.txt| if we don't know.
@@ -967,7 +1104,7 @@
     ~ defaulting ~ to ~ .txt
   }
   \tl_gset:Nx \g_@@_ext_tl { 
-    \str_case_e:nnF { \g_@@_lang_tl } {
+    \str_case_e:nnF { \str_lowercase:f \g_@@_lang_tl } {
       { python       }{ py  }
       { fortran      }{ f90 }
       { fortranfixed }{ f   }
@@ -1011,7 +1148,8 @@
 %
 % As far as I am aware, there are $2.5$ ways to determine if |-output-directory| was used. 
 % \begin{enumerate}
-%  \item{When accessing the log file, the |-output-dir| path is written to the same log file. This can be extracted using regex.}
+%  \item{When accessing the log file, the |-output-dir| path is written to the same log file.
+%        This can be extracted using regex.}
 %  \item{kpsewhich will search the |-output-dir| path (assuming |TEXINPUTS| is set correctly) }
 %  \item[2.5]{Command lines args are accessible via Lua extensions (\LuaTeX{} specific) }
 % \end{enumerate}
@@ -1132,7 +1270,6 @@
 % This (as far as I can tell) only happens when |kpsewhich| is unable to find the log file, and will return \tn{par}. 
 %
 % As such we do a quick chack to make sure it has not returned an ``empty'' string (aka, only a \tn{par}).
-% 
 %
 %    \begin{macrocode}
   \str_if_eq:VnF \l_@@_outputdir_tl \par { 
@@ -1237,7 +1374,8 @@
 % This only happens when talking to \pkg{minted}, but otherwise python will interpret U+009C as literally 0$\times$9C, which is not a valid UTF-8 character. 
 % On the other hand \pkg{listings} needs the original |^^9c| as it struggles to handle multi-byte characters. 
 %
-% Note that \tn{Uchar} needs to be used over \tn{char} because any delimiter needs to be fully expandable. Where $57344$ is the decimal equivalent of the hex E000
+% Note that \tn{Uchar} needs to be used over \tn{char} because any delimiter needs to be fully expandable.
+% Where $57344$ is the decimal equivalent of the hex E000
 %
 % Finally, we do a check to see if the delimiter has been previously defined in the package arguments in case a different delimiter needs to be used for whatever reason.
 %
@@ -1250,7 +1388,7 @@
     { xetex  } { \str_gset:Nx \g_@@_code_delim_str { \Uchar57344 } }
     { pdftex } { \str_if_eq:NNTF \g_@@_printend_tl { mint } { 
                    \str_gset:Nn \g_@@_code_delim_str { ^^c2^^9c } 
-               }{ 
+               } { 
                    \str_gset:Nn \g_@@_code_delim_str { ^^9c } 
                }
     }
@@ -1267,7 +1405,8 @@
 % As previously mentioned, \LuaTeX{} and \XeTeX{} both have |^^1e| have catcode 15 (invalid) by default. 
 % We should put it back to the way it was previously to prevent any unforeseen effects. 
 % 
-% Note that \pTeX{}/\upTeX{} still has |^^1e| with catcode 12 (other) instead of 13 (active). This is by design as we need to read this sequence back later on.
+% Note that \pTeX{}/\upTeX{} still has |^^1e| with catcode 12 (other) instead of 13 (active).
+% This is by design as we need to read this sequence back later on.
 %
 %    \begin{macrocode}
 \str_case_e:nnT { \c_sys_engine_str } {
@@ -1302,8 +1441,9 @@
 % \end{macro}
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
+% \changes{0.0.11$\alpha$}{2022/12/15}{\pdfTeX{} no longer crashes when using vindex}
 %
-%  \begin{macro}{\@@_vindex_aux:nx}
+%  \begin{macro}{\@@_vindex_aux:nn}
 % This is the implementation of \cs{vindex}. 
 % The reason that we use this aux function is to get around the restrictions of using verbatim commands inside other commands. 
 % We use this function in both \cs{vindex} and \env{var} etc. 
@@ -1319,15 +1459,15 @@
 % One of the annoying things specifically about the \pdfTeX{} engine is that \tn{input} assumes a latin1 encoding. 
 % This means that when \tn{printindex} is used, the |.ind| file has to only have latin1 letters.
 %
-% As we previously has to use UTF-8 to get \LaTeX talking to python, we need to change the |^^c2^^9c| into just |^^9c| when writing delimiters to the index file.  
+% As we previously has to use UTF-8 to get \LaTeX{} talking to python, we need to change the |^^c2^^9c| into just |^^9c| when writing delimiters to the index file.  
 %
 % Honestly I have no idea why this should be the case as \pdfTeX{} normally handles UTF-8 just fine, but whatever. 
 %
 %    \begin{macrocode}
-  \str_if_eq:VnTF \g_@@_code_delim_str { ^^c2^^9c } {
-    \str_set:Nn \l_@@_verb_delim_str   { ^^9c }
-  }{
-    \str_set:NV \l_@@_verb_delim_str { \g_@@_code_delim_str }
+  \str_set:Nx \l_@@_verb_delim_str {
+    \str_if_eq:VnTF \g_@@_code_delim_str { ^^c2^^9c } 
+                    { \exp_not:n { ^^9c } } 
+                    { \exp_not:V \g_@@_code_delim_str }
   }
 %    \end{macrocode}
 % The regex here replaces ``|my!str|'' with ``|my¤!\verb¤str|''.
@@ -1348,9 +1488,9 @@
       \exp_not:V { \l_@@_verb_delim_str }
       | #2
   }
-  \iow_term:x { \exp_not:o \l_@@_idxvar_str}
 %    \end{macrocode}
-% As mentioned, but with reiterating, \tn{index} is designed to be overwritten by whatever indexing package is being used. There is no need for a hard requirement on a specific package. 
+% As mentioned, but with reiterating, \tn{index} is designed to be overwritten by whatever indexing package is being used.
+% There is no need for a hard requirement on a specific package. 
 %
 %    \begin{macrocode}
   \exp_args:No \index { \l_@@_idxvar_str }
@@ -1363,7 +1503,7 @@
 % \changes{0.0.7$\alpha$}{2022/06/09}{Allow hyperrefed code to not be monospaced}
 % \begin{macro}{\fortexhypercodelinkfmt}
 % Because the code may not always be monospace. 
-% Some weird people done like monospace code. 
+% Some weird people don't like monospace code. 
 % However The real reason is that because listings isn't monospace by default (although everyone makes it as the first step).
 % So we just abstract this function out that can easily be redefined by the user if they so please. 
 %
@@ -1395,7 +1535,8 @@
 % This may become an issue in the future, but for the languages that I work with it isn't. 
 %
 % The final interesting thing about this function is that it has to be callable with the default selection of letter catcodes. 
-% This means no |@| or |_|,|:| characters. This is due to the contents being \tn{insert} by minted in the middle of the document, characters like |@|,|_|,|:| are still defined as catcode other. 
+% This means no |@| or |_|,|:| characters.
+% This is due to the contents being \tn{insert} by minted in the middle of the document, characters like |@|,|_|,|:| are still defined as catcode other. 
 %
 % Its not ideal, but it is the easiest way to deal with it
 %
@@ -1416,6 +1557,10 @@
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
 % \begin{macro}{\@@_mkref_file:nN}
+% \begin{arguments}
+% \item{Input filename, to insert hyperlinks}
+% \item{Output filename, where hyperlinks have been inserted}
+% \end{arguments}
 %
 % The easiest way to insert the hyper references, is to read in the file we are going to highlight, and then use some regex to modify it. 
 % \cs{@@_mkref_file:nN} is dealing with the file creation and caching of the results side. 
@@ -1428,7 +1573,7 @@
 % Because we don't care about the first pass, before the |.aux| file is created, it is quickest to not even bother regexing the code. 
 %
 %    \begin{macrocode}
-  \tl_if_exist:NT { \fortex@codeblockregex } {
+  \tl_if_exist:NT { \fortex@codeblock@unscoped@regex } {
 %    \end{macrocode}
 % Here we are going to be using the md5 hash of the code we want to highlight as a simple way to check if we have already done the hard work.
 % This is the biggest time-saver of the hyperrefing process, as nobody wants to do the same work twice.
@@ -1451,36 +1596,159 @@
 %    \end{macrocode}
 % \end{macro}
 % \changes{0.0.7$\alpha$}{2022/06/24}{fix crash when no codeblock is used}
+% \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
 % \begin{macro}{\@@_mkref_file_aux:nn}
-% This Macro does the hard work of doing the actual regexing and substituting. Before writing the contents back out to a file. 
+% \begin{arguments}
+% \item{Input filename, to insert hyperlinks}
+% \item{Output filename, where hyperlinks have been inserted}
+% \end{arguments}
+% This Macro does the hard work of doing the actual regexing and substituting,before writing the contents back out to a file. 
 % 
 %    \begin{macrocode}
 \iow_new:N \c_@@_reffile_iow
 \cs_set:Npn \@@_mkref_file_aux:nn #1#2 {
   \file_get:nnN { #1 } { \@@_setcatcode: } \l_@@_filecontents_tl
 %    \end{macrocode}
-% Behold the slowest part in the code. 
-% As mentioned elsewhere in this document I have tried a few different methods to speed this up including \cs{seq_map_indexed_inline:Nn}, but that just made things slower. 
-% This dos mean that we are locked to \TeX{}Live 2022 as a min version though. 
+% As it stands the different regex token lists are scattered around. 
+% There is the unscoped replacements who's regex will appear in every replacement pass.
+% But we also have the more complex scoped replacements, where re replacement will only occur if we are sitting on a direct branch back to the required scope. 
 % 
-% I am not going to lie, getting the correct expansion of the \tn{fortex@codeblockregex} macro was an absolute pain.
-% This is mainly due to having to interleave the matching regex and the replacement, as well as keeping the brackets |{...}| intact.
+% In terms on token lists that we need to gather to put into \cs{regex_replace_case_all} function, we have the following list. 
 %
-% However it seems to be working now and I don't want to touch it. 
+% \begin{enumerate}
+% \itemsep-1ex 
+% \item \cs{g_@@_codeblock_/path_scope_tl}
+% \item \cs{g_@@_codeblock_/path/to_scope_tl}
+% \item \cs{g_@@_codeblock_/path/to/scope_scope_tl}
+% \item[$\vdots$]
+% \item[$n$.] \tn{fortex@codeblock@unscoped@regex}
+% \end{enumerate}
+%
+% This is a rather laborious task of gathering all these token lists and putting them into a single variable.
 %
 %    \begin{macrocode}
-  \tl_if_empty:NF { \fortex@codeblockregex } {
+  \bool_lazy_or:nnF
+    { \tl_if_empty_p:N { \fortex@codeblock@unscoped@regex } }
+    { \tl_if_empty_p:N { \fortex@codeblock@scoped@regex   } }
+  {
+    \tl_clear_new:N \l_@@_regex_tl
+    \tl_clear_new:N \l_tmpa_tl
+%    \end{macrocode}
+% Here we are finding walking back up the scope branch, and adding everything in the parent branches into the regex. 
+%
+% The reason we do this walking can be shown in the following code snippet.
+%
+% \begin{center}
+% \begin{minipage}{0.5\linewidth}
+% \begin{lstlisting}
+%   \begin{codeblock}{alpha}
+%     \begin{codeblock}{beta}
+%
+% \end{lstlisting}
+% \vspace{-1em}$\vdots$
+% \end{minipage}
+% \end{center}
+% 
+% Let us define a new function \texttt{gamma()}, where \texttt{gamma} only has scope in \texttt{alpha}. 
+% It makes sense that any occurrences of \texttt{gamma} in \texttt{beta} should also be matched (as \texttt{beta} is a subblock of \texttt{alpha}). 
+%
+% As such, the code block \texttt{beta} needs to search though its own scope, as well as the scope of its parent \texttt{alpha} to find any replacements.
+%
+% This scoping is realised by using dynamically named variables. 
+% Using this method, we only need to check a single branch of the scoping tree, and do not need an $O(n^2)$ checking for scopes that are not valid. 
+%
+% The path is formatted as |/my/path| where the leading |/| is automatically inserted by \pkg{fortex}.
+% This way the user has the friendlier scope command of |scope=my/path|.
+%
+% Note that the below code looks slightly deceptive as the variable getting read out is not \cs{l_tmpb_tl} directly.
+% Instead, \cs{l_tmpb_tl} contains the \emph{name} of the variable getting read using the \textellipsis|:c| style functions.
+%
+%    \begin{macrocode}
+    \seq_map_inline:Nn \g_@@_codenest_seq {
+      \tl_set:NV \l_tmpa_tl { \l_tmpa_tl / ##1 }
+      \tl_set:Nn \l_tmpb_tl { g_@@_codeblock_ \l_tmpa_tl _scope_tl }
+      \tl_set:Nf \l_tmpa_regex {
+        \tl_if_exist:cTF \l_tmpb_tl {
+          \tl_use:c \l_tmpb_tl
+        } { }
+      }
+      \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl
+                                         \l_tmpa_regex
+    }
+%    \end{macrocode}
+% Finally, we also need to include the unscoped regexes.
+% These should come last to make sure the scoped versions have precedence.
+%
+%    \begin{macrocode}
+    \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl
+                                       \fortex@codeblock@unscoped@regex 
+%    \end{macrocode}
+% Behold the slowest part in the code. 
+% As mentioned elsewhere in this document I have tried a few different methods to speed this up including \cs{seq_map_indexed_inline:Nn}, but that just made things slower. 
+% This dos mean that we are locked to \TeX{}Live 2022 as a minimum version though. 
+% 
+%    \begin{macrocode}
     \exp_args:NV \regex_replace_case_all:nN {
-      \fortex@codeblockregex
+      \l_@@_regex_tl
     } \l_@@_filecontents_tl
   }
   \iow_open:Nn \c_@@_reffile_iow { #2 }
-  \iow_now:Nx  \c_@@_reffile_iow { \exp_not:V { \l_@@_filecontents_tl } } 
-  \iow_close:N \c_@@_reffile_iow  
+  \iow_now:NV  \c_@@_reffile_iow { \l_@@_filecontents_tl } 
+  \iow_close:N \c_@@_reffile_iow
 }
 \cs_generate_variant:Nn \@@_mkref_file_aux:nn { xx }
 %    \end{macrocode}
 % \end{macro}
+%
+% \subsubsection{Scoping}
+%
+% \begin{variable}{\g_@@_codeblock_#1_scope_tl}
+% One of the problems that I encountered when I first started using \pkg{fortex} was that the \env{codeblock} definitions were global (to the file).
+% This meant that if you have a class |alpha| with a private method |beta|. 
+% Then all other uses of |beta| (even in an unrelated function outside of the class) would cause the regex to match.
+% This ended up being such a problem, that I stopped using the \env{codeblock} environments on all |beta|.
+%
+% The solution was to introduce scoping to \pkg{fortex}, so that the regex would only match in certain codeblocks. 
+% This ended up being a harder problem than anticipated due to needing to write the regex out to the |.aux| file, whilst still keeping the scope that the regex is applicable.
+% Unfortunately, the regex \emph{needs} to be written to the |.aux| file as we want to match instances before the \env{codeblock} was declared. 
+%
+% The final implementation ended up being to write the regex to the |.aux| file:
+%
+% \begin{center}
+% \texttt{\Arg{scope\textsubscript1}=\char`\{\Arg{regex\textsubscript1}\Arg{replacement\textsubscript1}\char`\}, 
+%         \Arg{scope\textsubscript2}=\char`\{\Arg{regex\textsubscript2}\Arg{replacement\textsubscript2}\char`\}}
+% \end{center}
+%
+% In this way the scope and the regex are kept together. 
+% When the |.aux| file is then loaded, this information is passed to a prop in order to interpret the \texttt{\meta{scope}} key and the regex value. 
+% 
+% One question that then arises is how to avoid an $O(n^2)$ search though all of the scoped regexs at every \env{code} environment.
+% As doing a na\"ive search though all scoped regexs is going to be slow. 
+% 
+% This was resolved by getting \cs{@@_mkref_file_aux:nn} to only search the direct scope branch by using dynamic variable naming. 
+%
+% note that we need to run this at |begin{document}|, as the |.aux| file needs to be read in for \tn{fortex@codeblock@scoped@regex} to exist.
+%
+%    \begin{macrocode}
+\hook_gput_code:nnn { begindocument/end } { fortex } {
+  \tl_if_exist:NT \fortex@codeblock@scoped@regex {
+    \exp_args:NnV \prop_set_from_keyval:Nn \l_tmpa_prop 
+                                         { \fortex@codeblock@scoped@regex }
+    \prop_map_inline:Nn \l_tmpa_prop { 
+%    \end{macrocode}
+% Here we append all of the \texttt{\Arg{regex}\Arg{replacement}} pairs into a token list called \cs{g_@@_codeblock_\meta{scope}_scope_tl}. 
+%
+% Note that a \texttt{:c} variable needs to actually exist before it can be used by any other \texttt{:c} variable.
+%
+%    \begin{macrocode}
+      \tl_set:Nn \l_tmpa_tl { g_@@_codeblock_ #1 _scope_tl }
+      \tl_if_exist:cF \l_tmpa_tl { \tl_new:c \l_tmpa_tl }
+      \tl_set:cf \l_tmpa_tl { \tl_use:c \l_tmpa_tl #2 }
+    }
+  } 
+}
+%    \end{macrocode}
+% \end{variable}
 %
 % \subsubsection{Codeblock}
 %
@@ -1490,31 +1758,90 @@
 % \begin{variable}{\g_@@_codenest_seq, \c_@@_codeblock_types_seq}
 %    \begin{macrocode}
 \seq_new:N \g_@@_codenest_seq
-\seq_new:N \g_@@_codeblock_regex_toaux_seq
+\seq_new:N \g_@@_codeblock_regex_unscoped_toaux_seq
+\seq_new:N \g_@@_codeblock_regex_scoped_toaux_seq
+%    \end{macrocode}
+% \end{variable}
+%
+% \changes{0.0.11$\alpha$}{2022/12/21}{Move clist options to keyval}
+% \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
+%
+%
+% Here are some codeblock specific keys. 
+% These mostly control if the codeblock is going to show up in the regex/index. 
+% This was originally all extracted using the clist commands. 
+% However, this is more robust and flexible. 
+%
+% \begin{variable}{l_@@_codeblock_noref_bool}
+% \noindent\texttt{noref} \hspace{2em} \textsf{(bool)} \hfill Default: \texttt{True}\linebreak
+% Should hyperlinks be inserted into the code, for all uses of this \env{codeblock}?
+% This option was added as the insertion of the hyperrefs is very slow, but also because sometimes the regex goes a bit silly and can accidentally match things it is not supposed to.
+%
+%    \begin{macrocode}
+\keys_define:nn { fortex/codeblock } {
+  noref .bool_set:N = \l_@@_codeblock_noref_bool,
+  noref .default:n  = { true  },
+  noref .initial:n  = { false },
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{l_@@_codeblock_noidx_bool}
+% \texttt{noidx} \hspace{2em} \textsf{(bool)} \hfill Default: \texttt{True}\linebreak
+% Should the codeblock be added to the index?
+% This option was added as not all instances of a \env{codeblock} are meaningful enough to warrent an entry into the index. 
+% This is especially the case for things in the \env{codevar} category.
+% For example, there might be half a dozen globals, and it makes more sense to add a |\index{globals}| than it does to give every global its own index. 
+%
+%    \begin{macrocode}
+  noindex .bool_set:N = \l_@@_codeblock_noidx_bool,
+  noindex .default:n  = { true  },
+  noindex .initial:n  = { false },
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{l_@@_codeblock_scope_str}
+% \texttt{scope} \hspace{2em} \textsf{(string)}\hfill~\linebreak
+% Scoping allows the hyperreffing to only search in the specified scope. 
+% This is an important option as sometimes two classes have a private function with the same name. 
+% If this occurs, it makes more sense to search only within the classes \env{codeblock}, then it does to search the whole file. 
+% 
+% It should be noted that this does also speed up the regex matching as there are now less variables to search through.
+%
+%    \begin{macrocode}
+  scope .str_set:N = \l_@@_codeblock_scope_str,
+  scope .default:n = { },
+  scope .initial:n = { },
+}
 %    \end{macrocode}
 % \end{variable}
 %
 % \changes{0.0.8$\alpha$}{2022/07/23}{Move \env{codeblock} implementation into aux macro}
 % \changes{0.0.8$\alpha$}{2022/08/11}{Update regex to allow matching the first string in the file}
+% \changes{0.0.11$\alpha$}{2022/12/21}{Update replacement to be less verbose}
+% \changes{0.0.11$\alpha$}{2022/12/21}{Move clist options to keyval}
+% \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
 %
-% \begin{macro}{\@@_codeblock_aux:nn}
+% \begin{macro}{\@@_codeblock_aux:nnnn}
 % \begin{arguments}
-% \item{Sequence of optional argv from \env{codeblock} or \env{codevar}}
 % \item{Name we are going to highlight}
+% \item{Scope of the code we want to highlight}
+% \item{bool if we do not want references}
+% \item{bool if we do not want indexing}
 % \end{arguments}
 %
 % This auxiliary macro contains the regex logic and implementation for both \env{codeblock} and \env{codevar}. 
 % This macro mainly is dealing with the creation for the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_mkref_file:nN}.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_codeblock_aux:nn #1#2 {
+\cs_set:Npn \@@_codeblock_aux:nnnn #1#2#3#4 {
 %    \end{macrocode}
 % We need to make a non-command version of the \tn{verb} command to make sure we can safely pass around and replace into the code.
-% This is probs not the best way to do it. However if we use \tn{detokenize}, there will be a space after the \tn{verb}.
+% This is probs not the best way to do it.
+% However, if we use \tn{detokenize}, there will be a space after the \tn{verb}.
 % This will then lead to the delimiters being incorrectly defined.  
 %
 %    \begin{macrocode}
-  \seq_if_in:NnF { #1 } { noref } {
+  \bool_if:NF { #3 } {
     \tl_set:No \l_@@_verbstr_str { \c_backslash_str verb }
 %    \end{macrocode}
 % Here we create the matching regex, and the thing that is going to replace it.
@@ -1525,43 +1852,39 @@
 % The regex is in 3 basic sections as follows
 % \begin{table}[!h]
 % \begin{tabular}{|c|p{10cm}|} \hline
-% |([^\w:])| & The |[^\w]| matches any non-letter character, note that at the moment this is equivalent to |\W| \newline
+% |([^\w:])| & The |[^\w]| matches any non-letter character, note that at the moment this is equivalent to |\W|. \newline
 % We then have a list of chars that we are going to say should never precede an identifier, but are accidentally matched by |\w|.
-% At the moment this is only ``|:|''. \emph{This is important} because we could accidentally overwrite a previously inserted hyperref link as identifiers are formatted as code:name. If another search were to pass through I have seen it nest replacements. \newline 
-% Finally we place this all in a capturing group to allow us to reinsert the char we would otherwise be replacing \\\hline
-% |^| & If the matched code is the first thing in a new |\begin{code}| block then |([^\w:])| is not going to match it. As such we explicitly check for this edge case. \\\hline
+% At the moment this is only ``|:|''.
+% \emph{This is important} because we could accidentally overwrite a previously inserted hyperref link as identifiers are formatted as code:name.
+% If another search were to pass through I have seen it nest replacements. \newline 
+% Finally we place this all in a capturing group to allow us to reinsert the char we would otherwise be replacing. \\\hline
+% |^| & If the matched code is the first thing in a new |\begin{code}| block then |([^\w:])| is not going to match it.
+% As such we explicitly check for this edge case. \\\hline
 % |#2| & This active sequence inserts the name of the function that we want to find. \\\hline
 % |\b| & Finally we match a word boundary. \\\hline
 % \end{tabular}
 % \end{table}
 %
 %    \begin{macrocode}
-    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#2\b}
+    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#1\b}
 %    \end{macrocode}
 % The text that is getting replaced by looks complex, but simplifying is merely
+%
 % \begin{verbatim}
-% \1¤\fortexhyperinsert{name}{identifier}¤
+% \1¤\\fortexhyperinsert\{name\}\{identifier\}¤
 % \end{verbatim}
 %
 % Where |\1| is the previously captured group from the first row in the above table, and |¤| is the engine specific delimiter.
 %
+% It should be noted that the escapes on the |\{| and |\\| are required as this is going into a regex engine, and these are ``special'' characters.
 %    \begin{macrocode}
-    \seq_if_in:NnTF { #1 } { noindex } {
-        \tl_set:Nn \l_tmpa_tl { fortexhyperinsert* }
-    }{
-        \tl_set:Nn \l_tmpa_tl { fortexhyperinsert }
-    }
     \str_set:Nx \l_tmpa_str {
-                  \exp_not:n { \1                     }
-                               \g_@@_code_delim_str
-                  \exp_not:n { \\                     }
-                              \l_tmpa_tl
-                  \exp_not:n { \{                     }
-                              #2
-                  \exp_not:n { \} \{                  }
-                               \seq_use:Nn \g_@@_codenest_seq {:}
-                  \exp_not:n { \}                     }
-                               \g_@@_code_delim_str
+      \exp_not:n { \1 }
+      \g_@@_code_delim_str
+      \exp_not:n { \\ }
+      fortexhyperinsert \bool_if:NT { #4 } { * }
+                        \{ #1 \} \{ \seq_use:Nn \g_@@_codenest_seq {:} \}
+      \g_@@_code_delim_str
     }
 %    \end{macrocode}
 % One thing I should not is that yes: I do actually know about pre-compiling regex using \cs{regex_set:Nn}.
@@ -1581,12 +1904,19 @@
 % Doing it all this way does mean that I am stuck with using a minimum version of \TeX{}Live 2022.
 % In the future I would like to have a fallback method that will work with \TeX{}Live 2015, due to that's what the stable distros seem to be supporting. 
 %
+% Finally, the regex is sorted into scoped and unscoped variants.
+% Where unscoped searches the entire document, and scoped only searches the codeblock specified in the \texttt{scope=\meta{scope}} argument.
+%
+% To attach the scope information to the information written to the |aux| file, we use a kayval of the form \texttt{\Arg{scope}=\char`\{\Arg{regex}\Arg{replacement}\char`\}}
+%
 %    \begin{macrocode}
-    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq {
-                  { \exp_not:V \l_tmpa_str } 
-    }
-    \seq_gpush:Nx \g_@@_codeblock_regex_toaux_seq {
-                  { \exp_not:V \l_tmpa_regex }
+    \tl_if_empty:NTF { #2 } { 
+      \seq_gpush:Nx \g__fortex_codeblock_regex_unscoped_toaux_seq
+                   { { \exp_not:V \l_tmpa_regex } { \exp_not:V \l_tmpa_str } }
+    }{
+      \seq_gpush:Nx \g__fortex_codeblock_regex_scoped_toaux_seq
+                   { { / \exp_not:V { #2 } } 
+                   = { { \exp_not:V \l_tmpa_regex } { \exp_not:V \l_tmpa_str } } }
     }
 %    \end{macrocode}
 % Finally we add the bits of code that are linked to. 
@@ -1598,7 +1928,7 @@
 %    \begin{macrocode}
     \exp_args:Nx \label { code: \seq_use:Nn \g_@@_codenest_seq {:}  }
   }
-  \seq_if_in:NnF { #1 } { noindex } {
+  \bool_if:NF { #4 } {
     \@@_vindex_aux:xx { \seq_use:Nn \g_@@_codenest_seq {!} }
                                          { \g_@@_idxfmt_codedef_str }
   }
@@ -1606,19 +1936,47 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
+% \begin{variable}[int]{\fortex@codeblock@unscoped@regex, \fortex@codeblock@scoped@regex}
+% Because we are adding the functions we want to tracked as they are defined, we are unable to add a hyperref a usage before the definition. 
+% 
+% For this reason we don't bother hyperrefing on the first passthough and instead just generate the regex for the next. 
+% This way we are able to get the correct hyperrefing on the second passthough. 
+%
+% Like the previous write to |.aux| we use the old \LaTeXe{} syntax to prevent the insertion of \tn{ExplSyntaxOn} in the |.aux| file.
+%
+% Here |^^J| is a newline to avoid calling \cs{iow_now:cx} twice.
+%
+% Note that as there is no scope-dependency on the unscoped regex, it makes more sense to save it in the form where it can be inserted into \cs{regex_replace_case_all} without any modifications. 
+% On the other hand, the scoped regex requires some additional processing to ensure that only the relevant regex is used. 
+% As such we insert commas between the all the \texttt{\Arg{scope}=\char`\{\Arg{regex}\Arg{replacement}\char`\}}, so that it can be easily processed using the |\prop_|\textellipsis series of commands.
+% 
+%    \begin{macrocode}
+\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
+  \iow_now:cx { @auxout } {
+     \exp_not:n { \gdef\fortex@codeblock@unscoped@regex }
+     { \seq_use:Nn \g_@@_codeblock_regex_unscoped_toaux_seq { } } ^^J
+     \exp_not:n { \gdef\fortex@codeblock@scoped@regex }
+     { \seq_use:Nn \g_@@_codeblock_regex_scoped_toaux_seq {,} }
+  }
+}
+%    \end{macrocode}
+% \end{variable}
+%
 % \changes{0.0.8$\alpha$}{2022/07/23}{Move \env{codeblock} implementation into aux macro}
 %
 % \begin{macro}{codeblock}
 %
 % \begin{arguments}
-% \item{ Optional flags: |noref| or |noindex| }
+% \item{ Optional flags: |noref|, |noindex| or \texttt{scope=\meta{scope}} }
 % \item{ Name of codeblock to be highlighted}
 % \end{arguments}
 %
 % This function exists to automatically add hyperlinks from the usage of a function to its definition somewhere else in the code. 
 % At the moment this is not complete and I am still yet to add the * interfaces. 
 %
-% I plan for the * interfaces is to only track within the parent code block. This is mainly used for private functions that you don't want polluting.
+% I plan for the * interfaces is to only track within the parent code block.
+% This is mainly used for private functions that you don't want polluting.
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment { codeblock } { O{} v } {
@@ -1629,30 +1987,29 @@
 %
 % |noindex| is used to prevent the function from being registered with the index, and |noref| is used to prevent the automatic insertion of hyperlinks. 
 %    \begin{macrocode}
-  \exp_args:Nnf \seq_set_from_clist:Nn \l_@@_argv_seq { 
-    \bool_if:NTF \g_@@_intext_bool { #1 } { noref, #1 }
-  }
+  \keys_set:nf { fortex/codeblock } 
+               { \bool_if:NTF \g_@@_intext_bool { #1 } { #1, noref } }
 %    \end{macrocode}
-% Here \cs{l_@@_codename_str} is the name of the function/class/variable that we are going to track. 
 % At the moment this is not fully sanitised and there may be problems if active catcodes come in, but for now it will do. 
 % 
 % Because we want to keep track of the nesting of the code -- two classes can have the same function name -- we add this to a stack, that we then read out of when we go to use the indexing. 
 %
 %    \begin{macrocode}
-  \str_set:Nn \l_@@_codename_str { #2 }
-  \seq_gput_right:Nx \g_@@_codenest_seq \l_@@_codename_str
+  \seq_gput_right:Nx \g_@@_codenest_seq { \tl_to_str:n { #2 } }
 %    \end{macrocode}
 % Finally we call the common hyperref regex generating function for both \env{codeblock} and \env{codevar}
 %
 %    \begin{macrocode}
-  \@@_codeblock_aux:nn \l_@@_argv_seq { #2 }
+  \@@_codeblock_aux:nnnn { #2 } \l_@@_codeblock_scope_str
+                                      \l_@@_codeblock_noref_bool
+                                      \l_@@_codeblock_noidx_bool
 } {
 %    \end{macrocode}
 % This is a bit of an ugly way to call \tn{aftercodeblock}.
 % However, \cs{seq_if_in:NnTF} is not expandable, and so makes any implementation of \tn{aftercodeblock} much more annoying if a user were to modify it.
 % 
 %    \begin{macrocode}
-  \seq_if_in:NnTF \l_@@_argv_seq { noref } { 
+  \bool_if:NTF \l_@@_codeblock_noref_bool { 
     \aftercodeblock { #2 }
   } {
     \aftercodeblock { #2 } [ \seq_use:Nn \g_@@_codenest_seq {:} ]
@@ -1682,7 +2039,7 @@
 %    \begin{macrocode}
 \NewDocumentCommand { \aftercodeblock } { m O{} } { 
   \noindent \textit { \small End~of~code~block~
-    \tl_if_empty:NF { #2 } { \@@_hyperref:nn { #2 } }
+    \tl_if_empty:NF { #2 } { \@@_hyperref:nn { code: #2 } }
     { \texttt { \tl_to_str:N { #1 } } } . \\
   }
 }
@@ -1694,7 +2051,7 @@
 % \begin{macro}{codevar}
 %
 % \begin{arguments}
-% \item{ Optional flags: |noref| or |noindex| }
+% \item{ Optional flags: |noref|, |noindex| or \texttt{scope=\meta{scope}} }
 % \item{ Name of code variable to be highlighted}
 % \end{arguments}
 %
@@ -1709,7 +2066,8 @@
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment { codevar } { O{} v } {
-  \seq_set_from_clist:Nn \l_@@_argv_seq { #1 }
+  \keys_set:nf { fortex/codeblock } 
+               { \bool_if:NTF \g_@@_intext_bool { #1 } { #1, noref } }
   \seq_set_from_clist:Nn \l_@@_vars_seq { #2 }
 %    \end{macrocode}
 % The easiest way to deal with the multiple variables defined is to use \cs{seq_map_inline}.
@@ -1724,21 +2082,24 @@
     \seq_gput_right:Nx \g_@@_codenest_seq \l_@@_codename_str
 %    \end{macrocode}
 %    \begin{macrocode}
-    \@@_codeblock_aux:nn \l_@@_argv_seq { ##1 }
+    \@@_codeblock_aux:nnnn { ##1 } \l_@@_codeblock_scope_str
+                                         \l_@@_codeblock_noref_bool
+                                         \l_@@_codeblock_noidx_bool
     \seq_gpop_right:NN \g_@@_codenest_seq \l_tmpa_tl
   }
 %    \end{macrocode}
-% For variables we don't define a footer. 
-%
-% In the future I want to go though and make this user-configurable for both \env{codeblock} and \env{codevar}. 
-% This would probably be done by defining a user-visible macro than can be redefined. 
+% The variable implementation of the footer is a bit weird.
+% \tn{aftercodeblock} gets the variables names and labels parsed in as a comma list. 
+% However, the handling of this comma list is not written by me, but I imaging if someone does write it, it will be painful to do. 
+% 
+% Unfortunately, I don't know of a super great way to pass the names and labels in a non-\pkg{expl3} specific way.
 %
 %    \begin{macrocode}
 } {
-   \seq_if_in:NnTF \l_@@_argv_seq { noref } { 
-    \aftercodeblock { #2 }
+  \bool_if:NTF \l_@@_codeblock_noref_bool {  
+    \aftercodevar { #2 }
   } {
-    \aftercodeblock { #2 } [ \seq_use:Nn \g_@@_codenest_seq {:} ]
+    \aftercodevar { #2 } [ \seq_use:Nn \g_@@_codenest_seq {:}  ]
   }
 }
 %    \end{macrocode}
@@ -1758,24 +2119,10 @@
 \NewDocumentCommand { \aftercodevar } { m O{} } { \relax }
 %    \end{macrocode}
 % \end{macro}
-% Because we are adding the functions we want to tracked as they are defined, we are unable to add a hyperref a usage before the definition. 
-% 
-% For this reason we don't bother hyperrefing on the first passthough and instead just generate the regex for the next. 
-% This way we are able to get the correct hyperrefing on the second passthough. 
-%
-% Like the previous write to |.aux| we use the old \LaTeXe{} syntax to prevent the insertion of \tn{ExplSyntaxOn} in the |.aux| file.
-% 
-%    \begin{macrocode}
-\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
-  \iow_now:cx { @auxout } {
-     \exp_not:n { \gdef\fortex@codeblockregex }
-     { \seq_use:Nn \g_@@_codeblock_regex_toaux_seq { } }
-  }
-}
-%    \end{macrocode}
 %
 % \subsection{Short Code Snippits}
 % \changes{0.0.9$\alpha$}{2022/09/01}{Add \texttt{\char`\\MakeShortFortex} for short code snippits}
+% \changes{0.0.11$\alpha$}{2022/12/29}{Allow shortvrb characters to be included in code}
 % 
 % One of the things I find my self wanting every now and then is a quick way to have highlighted code snippits without the need to specify a while command setup. 
 % Moreover, It seems that I am not the only one asking for this and a few different versions of this features have been created over the years. 
@@ -1815,6 +2162,7 @@
 %
 %    \begin{macrocode}
   \NewDocumentCommand { \MakeShortFortex } { O{} m m } {
+    \seq_gpush:Nx \g_@@_ignoreactive_charcodes_seq { \token_to_str:N #3 }
     \int_new:c   { g_@@_default_#3_catcode_int }
     \int_gset:cn { g_@@_default_#3_catcode_int } { 
       \char_value_catcode:n { `#3 }
@@ -1861,7 +2209,8 @@
 % \end{minipage}
 % \end{center}
 %
-% One of the key points of defining a function like this is that the catcodes of the delimiters \emph{must} match. it is not enough to start with a catcode 12, and end with 13. 
+% One of the key points of defining a function like this is that the catcodes of the delimiters \emph{must} match.
+% it is not enough to start with a catcode 12, and end with 13. 
 %
 % This is the main reason why many of the earlier versions that I tried didn't work. 
 %    \begin{macrocode}
@@ -1904,7 +2253,11 @@
       \mode_if_math:TF {
         \token_to_str:N #3
       } {
-        { \@@_shortmint_cs#3##1#3 }
+        { 
+          \tl_set:NV \minted@outputdir \g_@@_outputdir_tl
+          \tl_set:NV \minted@cachedir  \g_@@_tmpfolder_tl
+          \@@_shortmint_cs#3##1#3 
+        }
       }
     }
   }
@@ -1926,9 +2279,11 @@
       \char_set_active_eq:NN #1 { @@_default_#1_cs: }
     }
   }
-} {
 %    \end{macrocode}
 % \end{macro}
+%    \begin{macrocode}
+} {
+%    \end{macrocode}
 % \subsubsection{Listings}
 %
 % In contrast to the minted implementation, \pkg{listings} already provides a way to create short inline code. 
@@ -1950,6 +2305,7 @@
 %
 %    \begin{macrocode}
   \NewDocumentCommand { \MakeShortFortex } { O{} m v} {
+    \seq_gpush:Nn \g_@@_ignoreactive_charcodes_seq { #3 }
     \str_if_eq:NNTF { #2 } { text } {
       \lstMakeShortInline [ #1 ] { #3 }
     }{
@@ -1977,8 +2333,29 @@
 %
 % \subsubsection{Set catcode}
 %
+% \changes{0.0.11$\alpha$}{2022/12/29}{Allow shortvrb characters to be included in code}
+% \begin{macro}{\@@_reset_shortvrb_catcodes:}
+% \tn{MakeShortFortex} has an unavoidable side effect of marking a character as active. 
+% This however, means that if left unattended, the character will be expanded both in \tn{VerbatimOut}, and when the file is read back in during \cs{@@_concat_files:nn} and \cs{@@_mkref_file:nN}. 
+% 
+% This behaviour is a bug-turned-feature, as it allows an approximation of namespaces in languages that do not support them. 
+% However, this behaviour can be undesirable with for example \tn{MakeShortFortex}, where instead of a namespace, it's just \LaTeX{} code that will certainly cause an error. 
+%
+% As such, \cs{g_@@_ignoreactive_charcodes_seq} contains a string of every active catcode that we want to filter out and keep ad verbatim. 
+% This means every character that is activated with \tn{MakeShortFortex}, as well as anything set with |ignore active=|\meta{char}. 
+%
+% The reason that this is in a separate function and not inline as part of \cs{@@_setcatcode:} is because the unsetting of the active catcodes \emph{also} needs to happen separately in \tn{VerbatimOut}.
+%
+%    \begin{macrocode}
+\cs_set:Nn \@@_reset_active_catcodes: {
+  \seq_map_function:NN \g_@@_ignoreactive_charcodes_seq 
+                       \char_set_catcode_other:N
+}
+%    \end{macrocode}
+% \end{macro}
 % \changes{0.0.6$\alpha$}{2022/04/01}{Figure out a bunch more catcodes that need setting when reading files }
 % \changes{0.0.9$\alpha$}{2022/12/11}{Stop reinventing the wheel, and just use dospecials}
+% \changes{0.0.11$\alpha$}{2022/12/29}{Allow shortvrb characters to be included in code}
 % \begin{macro}{\@@_setcatcode:}
 % Set catcodes required to not mangle the file when reading.
 % This is function is called when reading back in the code files with \cs{file_get:nnN}. 
@@ -1988,10 +2365,12 @@
 \cs_set:Nn \@@_setcatcode: {
 %    \end{macrocode}
 % The first thing that we do is set all of the ``normal'' specials to catcode other. 
+% We also set the active catcodes that we do not want substituted.
 %
 %    \begin{macrocode}
   \cs_set_eq:NN \do \char_set_catcode_other:N 
   \dospecials
+  \@@_reset_active_catcodes:
 %    \end{macrocode}
 % There are a few other characters that need special attention as they are not specified in \tn{dospecials}. 
 % Try and protect some whitespace (Currently we have a few stray newlines but whatever)
@@ -2005,7 +2384,7 @@
 % Finally we need to specify the newline to be used in the sourcecode file. 
 % At the moment I am developing on Linux, with no access to Windows/MacOS, so lets just use $0\times0a$ as the newline.
 % 
-% We need to fallback to 2$\varepsilon$ interface for \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isn't marked as do not use (|:D|)
+% We need to fallback to 2$\varepsilon$ interface for \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isn't marked as do not use (\textellipsis|:D|)
 %
 %    \begin{macrocode}
   \endlinechar=`\^^J
@@ -2063,14 +2442,20 @@
 % \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
 % Finally we register this with with a hook to be called at the end of |\begin{document}|
 %
-% Note: as \cs{g_@@_outputdir_tl} is overridable, we just check if it has been set.
+% There is the special case where the cache tmp directory is requested by the user to be |.|. 
+% In this situation there is no need to make a directory to hold the temporary files. 
+% If we filter for this case, we can also avoid creating the now-superfluous |fortex-0.tmp|. 
+%
+% Note: as \cs{g_@@_outputdir_tl} is user overridable, we just check if it has been set, and only autodetect if has not been.
 %
 %    \begin{macrocode}
 \hook_gput_code:nnn { begindocument/end } { fortex } {
     \tl_if_empty:NT \g_@@_outputdir_tl { 
       \@@_outputdir:
     }
-    \@@_mktmpdir:
+    \str_if_eq:NNF \g_@@_tmpfolder_tl { . } {
+      \@@_mktmpdir:
+    }
 }
 %    \end{macrocode}
 %
@@ -2096,7 +2481,8 @@
 % \end{macro}
 %
 % \begin{variable}{\c_@@_default_out_filename_tl}
-% Build the filename we are going to save the concatenated code segments to. This is \file{jobname.ext}.
+% Build the filename we are going to save the concatenated code segments to.
+% This is \file{jobname.ext}.
 %
 %    \begin{macrocode}
 \tl_const:Nn \c_@@_default_out_filename_tl
@@ -2120,7 +2506,8 @@
 %
 % This way we can clear the files that we know we are going to use when we next start up \LaTeX{}. 
 % It is also not a huge problem that the first run will not clear the file, as chances are there is nothing in the file to begin with (potentially not even existing). 
-% If there is some junk in the file that previously existed, oh well a recompile should fix it and this is such a small edge case that I probably wont even bother handling it. (Maybe in the future)
+% If there is some junk in the file that previously existed, oh well a recompile should fix it and this is such a small edge case that I probably wont even bother handling it.
+% (Maybe in the future)
 %
 % \begin{variable}{\g_@@_lang_stack_seq, \g_@@_outfile_stack_seq, \g_@@_outfile_history_seq}
 %    \begin{macrocode}
@@ -2258,8 +2645,8 @@
 %
 %    \begin{macrocode}
   \iow_open:Nn \c_@@_outfile_iow { #2 }
-  \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpa_tl }
-  \iow_now:Nx  \c_@@_outfile_iow { \exp_not:V \l_tmpb_tl }
+  \iow_now:NV  \c_@@_outfile_iow { \l_tmpa_tl }
+  \iow_now:NV  \c_@@_outfile_iow { \l_tmpb_tl }
   \iow_close:N \c_@@_outfile_iow
 }
 %    \end{macrocode}
@@ -2269,6 +2656,7 @@
 % \changes{0.0.7$\alpha$}{2022/06/09}{Fix listings escape}
 % \changes{0.0.10$\alpha$}{2022/12/22}{Move \texttt{lstinputlisting}/\texttt{inputminted} to an aux macro}
 % \changes{0.0.10$\alpha$}{2022/12/22}{Fix listings escape, (again)}
+% \changes{0.0.11$\alpha$}{2022/12/29}{Use sequence to store \pkg{minted}/\pkg{listings} options}
 % \begin{macro}{\@@_lstinputlistings_aux:nn}
 % \begin{arguments}
 % \item Filename to be inserted into the \texttt{.pdf} document  
@@ -2279,10 +2667,9 @@
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_lstinputlistings_aux:nn #1#2 {
-  \seq_set_from_clist:NN \l_@@_listings_opt_seq \g_@@_print_keystore_tl
-  \seq_push:Nn \l_@@_listings_opt_seq { escapechar={#2} } 
+  \seq_push:Nn \g_@@_print_keystore_seq { escapechar={#2} } 
   \str_if_eq:NNF { #2 } { text } { 
-    \seq_push:Nx \l_@@_listings_opt_seq { language={\g_@@_lang_tl} }
+    \seq_push:Nx \g_@@_print_keystore_seq { language={\g_@@_lang_tl} }
   } 
 %    \end{macrocode}
 % A problem arises when using \pkg{listings}, and the delimiters chosen for \pTeX{}, \upTeX{}, and \XeTeX{}. 
@@ -2319,15 +2706,15 @@
 %    \begin{macrocode}
   \tl_set_eq:NN \l_@@_lst@DefEC_orig_tl \lst@DefEC
   \str_case_e:nnT { \c_sys_engine_str } {
-    { xetex } {}
+    { ptex  } {}
     { uptex } {}
-    {  ptex } {}
-  }{ 
+    { xetex } {}
+  } { 
     \seq_set_split:NnV \l_@@_lst@DefEC_seq {} { \lst@DefEC }
     \seq_pop_right:NN  \l_@@_lst@DefEC_seq \l_tmpa_tl
     \seq_put_right:Nx  \l_@@_lst@DefEC_seq { #2 \exp_not:V \l_tmpa_tl}
     \tl_set:Nx \lst@DefEC { \seq_use:Nn \l_@@_lst@DefEC_seq {} }
-    \seq_push:Nn \l_@@_listings_opt_seq { extendedchars=true }
+    \seq_push:Nn \g_@@_print_keystore_seq { extendedchars=true }
   }
 %    \end{macrocode}
 % Expanding commands in optional arguments is always a little bit of a pain.
@@ -2335,8 +2722,15 @@
 %
 %    \begin{macrocode}
   \exp_last_unbraced:Nx \lstinputlisting 
-                        { [ \seq_use:Nn \l_@@_listings_opt_seq {,} ] } { #1 }
+                        { [ { \seq_use:Nn \g_@@_print_keystore_seq {,} } ] }
+                        { #1 }
   \tl_set_eq:NN \lst@DefEC \l_@@_lst@DefEC_orig_tl
+%    \end{macrocode}
+%    \begin{macrocode}
+  \bool_if:nT { \g_@@_verbose_bool } {
+    \iow_term:x { Arguments~passed~to~listings:~
+                 \seq_use:Nn \g_@@_print_keystore_seq {,~} }
+  }
 }
 \cs_generate_variant:Nn \@@_lstinputlistings_aux:nn { xx }
 %    \end{macrocode}
@@ -2344,6 +2738,7 @@
 % 
 % \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
 % \changes{0.0.10$\alpha$}{2022/12/22}{Move \texttt{lstinputlisting}/\texttt{inputminted} to an aux macro}
+% \changes{0.0.11$\alpha$}{2022/12/29}{Use sequence to store \pkg{minted}/\pkg{listings} options}
 % \begin{macro}{\@@_inputminted_aux:nn}
 % \begin{arguments}
 % \item Filename to be inserted into the \texttt{.pdf} document  
@@ -2351,7 +2746,7 @@
 % \end{arguments}
 %
 % The \pkg{minted} implementation is a little simpler as \pkg{minted} is fully Unicode aware. 
-% (Infact it will \emph{only} accept bytes that correspond to a python string encoding)
+% (In fact it will \emph{only} accept bytes that correspond to a python string encoding)
 %
 % Note that we should set the minted cache directory to the same directory that we are storing the files that get highlighted. 
 %
@@ -2360,12 +2755,20 @@
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_inputminted_aux:nn #1#2 {
-  \seq_set_from_clist:NN \l_@@_minted_opt_seq \g_@@_print_keystore_tl
-  \seq_push:Nn \l_@@_minted_opt_seq { escapeinside={#2 #2} }
-  \tl_set:Nn \minted@cachedir { \g_@@_outputdir_tl \g_@@_tmpfolder_tl }
+  \seq_push:Nn \g_@@_print_keystore_seq { escapeinside={#2 #2} }
+  \tl_set:NV \minted@outputdir { \g_@@_outputdir_tl }
+  \tl_set:NV \minted@cachedir  { \g_@@_tmpfolder_tl }
+%    \end{macrocode}
+%    \begin{macrocode}
   \exp_last_unbraced:Nx \inputminted
-                      { [ \seq_use:Nn \l_@@_minted_opt_seq {,} ] } 
+                      { [ \seq_use:Nn \g_@@_print_keystore_seq {,} ] } 
                       { \g_@@_lang_tl } { #1 }
+%    \end{macrocode}
+%    \begin{macrocode} 
+  \bool_if:nT { \g_@@_verbose_bool } {
+    \iow_term:x { Arguments~passed~to~minted:~
+                  \seq_use:Nn \g_@@_print_keystore_seq {,~} }
+  }
 }
 \cs_generate_variant:Nn \@@_inputminted_aux:nn { xx }
 %    \end{macrocode}
@@ -2373,6 +2776,7 @@
 %
 % 
 % \subsubsection{Main code environment} 
+% \changes{0.0.11$\alpha$}{2022/12/29}{Allow shortvrb characters to be included in code}
 %
 % \begin{macro}{code}
 % The actual environment that gets called.
@@ -2401,7 +2805,8 @@
 % One interesting thing to note, is that \tn{VerbatimOut} seems to be sensitive to ASCII $<20$ (space), as a tab is commonly used in sourcecode (but afaik nothing else), we make sure to correct the catcode of it. 
 %
 %    \begin{macrocode}
-  \VerbatimOut [ codes = { \char_set_catcode_other:N \^^I } ]
+  \VerbatimOut [ codes = { \char_set_catcode_other:N \^^I 
+                           \@@_reset_active_catcodes: } ]
                { \g_@@_tmp_filename_tl }
 %    \end{macrocode}
 % If we are using |-output-dir|, we need to pass full name to \pkg{minted}/\pkg{listings}
@@ -2415,7 +2820,7 @@
 % Hence the cache will not be invalidated.
 %
 %    \begin{macrocode}
-  \tl_if_exist:NT { \fortex@codeblockregex } {
+  \tl_if_exist:NT { \fortex@codeblock@unscoped@regex } {
     \@@_concat_files:nn \g_@@_tmp_filename_tl
                               \g_@@_out_filename_tl
 %    \end{macrocode}
