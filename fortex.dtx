@@ -20,7 +20,7 @@
 %
 %<*driver>
 \documentclass[cm-default, a4paper]{l3doc}
-\usepackage[verbose, tmpdir=.]{fortex}
+\usepackage[verbose]{fortex}
 \usepackage{expl3}
 \usepackage[UKenglish]{babel}
 \usepackage[dvipsnames]{xcolor}
@@ -78,8 +78,14 @@
 % \fi
 %
 % ^^A Misc changes
+% \changes{0.0.12$\alpha$}{2023/02/08}{Remove |\@@_inctmpname:| }
+% \changes{0.0.12$\alpha$}{2023/02/08}{Remove |\@@_mktmpdir:| }
+% \changes{0.0.12$\alpha$}{2023/02/08}{Remove |\@@_concat_files:nn| }
+% \changes{0.0.10$\alpha$}{2022/12/12}{Allow temporary directory to be customisable}
 % \changes{0.0.7$\alpha$}{2022/06/09}{Shuffle functions around to make more logical sense}
+% \changes{0.0.5$\alpha$}{2022/03/29}{Rename \texttt{writeoutput} to \texttt{concat\_files}}
 % \changes{0.0.5$\alpha$}{2022/03/26}{Initial conversion to .dtx}
+% \changes{0.0.3$\alpha$}{2022/03/10}{Add automatic folder creation}
 % \changes{0.0.3$\alpha$}{2022/03/10}{Move to git}
 % \changes{0.0.2$\alpha$}{2022/03/02}{Translate to \pkg{expl3}}
 % \changes{0.0.1$\alpha$}{2022/02/27}{Initial prototype in \LaTeXe{}}
@@ -169,7 +175,7 @@
 %    \begin{code}
 %     double calculate_pi(void) {
 %       double retval = 0;
-%        for (int i=0; i < 20; i++) {
+%       for (int i=0; i < 20; i++) {
 %         retval += pow(-1, i) / (2 * (double)i + 1);
 %       }
 %       return 4 * retval;
@@ -209,7 +215,7 @@
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  double calculate_pi(void) {
 %    double retval = 0;
-%     for (int i=0; i < 20; i++) {
+%    for (int i=0; i < 20; i++) {
 %      retval += pow(-1, i) / (2 * (double)i + 1);
 %    }
 %    return 4 * retval;
@@ -236,7 +242,7 @@
 %
 %  double calculate_pi(void) {
 %    double retval = 0;
-%     for (int i=0; i < 20; i++) {
+%    for (int i=0; i < 20; i++) {
 %      retval += pow(-1, i) / (2 * (double)i + 1);
 %    }
 %    return 4 * retval;
@@ -649,14 +655,16 @@
 % \section {Things left to do}
 %
 % \begin{enumerate}
-% \item{Finish of |.dtx| by adding Usage instructions}
-% \item{Get line numbering working in \pkg{minted}}
-% \item{Add \texttt{scope=\meta{scope}} options to \env{codevar}/\env{codeblock}}
-% \item{allow customisation of the full filename, not just the extension}
-% \item{Changelog interface (just a wrapper for glossaries)?}
-% \item{fix the buggy |\aftercodevar| mess}
-% \item{intext and noref should be constant, (in general, we need more consistency)}
-% \item{Editing spelling and grammar}
+% \item Finish of |.dtx| by adding Usage instructions
+% \item \rule[0.5ex]{6cm}{0.5pt}\hspace{-6cm}Get line numbering working in \pkg{minted}
+% \item Expose line number to user in case they want to continue from a specified point
+% \item \rule[0.5ex]{8cm}{0.5pt}\hspace{-8cm}Add \texttt{scope=\meta{scope}} options to \env{codevar}/\env{codeblock} 
+% \item allow customisation of the full filename, not just the extension
+% \item Changelog interface (just a wrapper for glossaries)?
+% \item fix the buggy |\aftercodevar| mess
+% \item intext and noref should be constant, (in general, we need more consistency)
+% \item Draft mode that disables intext and \pkg{minted}/\pkg{listings}
+% \item Editing spelling and grammar 
 % \end{enumerate}
 %
 % \paragraph{What I will be working on next:}
@@ -681,8 +689,9 @@
 %
 %    \begin{macrocode}
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2022-12-22} {0.0.11$\alpha$}
+\ProvidesExplPackage {fortex} {2023-01-31} {0.0.12$\alpha$}
                      {like noweb without external tooling}
+\RequirePackage{ l3benchmark }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
@@ -698,9 +707,11 @@
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\cs_generate_variant:Nn \iow_now:Nn  { NV }
-\cs_generate_variant:Nn \iow_term:n  { V }
+\cs_generate_variant:Nn \iow_term:n { V }
+\cs_generate_variant:Nn \iow_now:Nn { NV }
 \cs_generate_variant:Nn \keys_set:nn { nf }
+\cs_generate_variant:Nn \prop_gput:Nnn { NVo }
+\cs_generate_variant:Nn \tl_replace_all:Nnn { Nnx }
 %    \end{macrocode}
 % \subsection{Package options}
 %
@@ -712,6 +723,10 @@
 %    \begin{macrocode}
 \seq_new:N \g_@@_print_keystore_seq
 \seq_new:N \g_@@_ignoreactive_charcodes_seq
+\int_new:N \g_@@_cur_lineno_int
+\int_new:N \g_@@_block_lineno_int
+\int_gincr:N \g_@@_cur_lineno_int 
+\int_gset_eq:NN \g_@@_block_lineno_int \g_@@_cur_lineno_int 
 \keys_define:nn { fortex } {
 %    \end{macrocode}
 % 
@@ -723,9 +738,9 @@
 % Default: |False| 
 %
 %    \begin{macrocode}
-  verbose .bool_gset:N = \g_@@_verbose_bool,
-  verbose .default:n   = { true },
-  verbose .initial:n   = { false },
+    verbose .bool_gset:N = \g_@@_verbose_bool
+  , verbose .default:n   = { true }
+  , verbose .initial:n   = { false }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -741,15 +756,15 @@
 % 
 % Default: \pkg{listings}
 %    \begin{macrocode}
-  print .tl_gset:N = \g_@@_printend_tl,
-  print .default:n = { listings },
-  print .initial:n = { listings },
+  , print .tl_gset:N = \g_@@_printend_tl
+  , print .default:n = { listings }
+  , print .initial:n = { listings }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 % 
 % \begin{macro}{lang}
-% \begin{variable}{\g_@@_lang_tl}
+% \begin{variable}{\l_@@_lang_tl}
 % This is the setting that determines what language we are going to be setting.
 % This is used for 2 things:
 %
@@ -761,9 +776,9 @@
 % Default: |text|
 %
 %    \begin{macrocode}
-  lang .tl_gset:N = \g_@@_lang_tl,
-  lang .default:n = { text },
-  lang .initial:n = { text },
+  , lang .tl_gset:N = \l_@@_lang_tl
+  , lang .default:n = { text }
+  , lang .initial:n = { text }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -781,9 +796,9 @@
 % \end{itemize}
 %
 %    \begin{macrocode}
-  ext .tl_gset:N = \g_@@_ext_tl,
-  ext .default:n = {},
-  ext .initial:n = {},
+  , ext .tl_gset:N = \g_@@_ext_tl
+  , ext .default:n = {}
+  , ext .initial:n = {}
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -798,9 +813,9 @@
 % Options also exist in the specific codeblock and variable environments to control this behaviour. 
 % 
 %    \begin{macrocode}
-  intext .bool_gset:N = \g_@@_intext_bool,
-  intext .default:n   = { false },
-  intext .initial:n   = { true },
+  , intext .bool_gset:N = \g_@@_intext_bool
+  , intext .default:n   = { false }
+  , intext .initial:n   = { true }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -828,9 +843,9 @@
 % \end{center}
 % 
 %    \begin{macrocode}
-  delim .str_gset:N  = \g_@@_code_delim_str,
-  delim .default:n   = {},
-  delim .initial:n   = {},
+  , delim .str_gset:N  = \g_@@_code_delim_str
+  , delim .default:n   = {}
+  , delim .initial:n   = {}
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -844,29 +859,25 @@
 % Default: `|.|' or `|-output-directory=|'
 %
 %    \begin{macrocode}
-  outdir .tl_gset:N = \g_@@_outputdir_tl,
-  outdir .initial:n = {},
-  outdir .default:n = {},
+  , outdir .tl_gset:N = \g_@@_outputdir_tl
+  , outdir .initial:n = {}
+  , outdir .default:n = {}
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 %
-% \changes{0.0.10$\alpha$}{2022/12/12}{Allow temporary directory to be customisable}
-% \begin{macro}{tmpdir}
-% \begin{variable}{\g_@@_tmpfolder_tl}
-%
-% By default \pkg{fortex} will write all of the temporary files into a folder called |_fortex-\jobname|. 
-% However, this is not always desired.
-% This can especially be the case when \pkg{fortex} is used in a environment \emph{without} |-shell-esc|. 
+% \begin{macro}{filename}
+% \begin{variable}{\l_@@_out_filename_tl}
 % 
-% If the temporary folder is set to `|.|', then a temporary directory will not be created, and there is no need to use |-shell-esc| to create the temporary directory.
+% The directory where we are going to output the code and temporary files. 
+% This should be automatically detected, but in the case that it is not, or we want to change the defaults, it can be overwritten.
 %
-% Generally however, this option allows an name to be specified.
-% 
+% Default: `|.|' or `|-output-directory=|'
+%
 %    \begin{macrocode}
-  tmpdir .tl_gset:N = \g_@@_tmpfolder_tl,
-  tmpdir .default:n = { _fortex-\c_sys_jobname_str },
-  tmpdir .initial:n = { _fortex-\c_sys_jobname_str },
+  , filename .tl_gset:N = \l_@@_out_filename_tl
+  , filename .initial:n = {}
+  , filename .default:n = {}
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -881,9 +892,9 @@
 % As such rather than trying to ensure that all characters are not active, we just provide an interface to disable unwanted behaviours. 
 %
 %    \begin{macrocode}
-  ignore active .code:n = {
-    \seq_gpush:Nx \g_@@_ignoreactive_charcodes_seq { \cs_to_str:N #1 }
-  },
+  , ignore active .code:n = {
+      \seq_gpush:Nx \g_@@_ignoreactive_charcodes_seq { \cs_to_str:N #1 }
+    }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -892,10 +903,10 @@
 % This argument is unlikely to get used, but may a well put it here anyway.
 %
 %    \begin{macrocode}
-  no ignore active .code:n = {
-   \exp_args:Nne \seq_gremove_all:Nn \g_@@_ignoreactive_charcodes_seq 
-                                   { \cs_to_str:N #1 }
-  },
+  , no ignore active .code:n = {
+      \exp_args:Nne \seq_gremove_all:Nn \g_@@_ignoreactive_charcodes_seq
+                                      { \cs_to_str:N #1 }
+    }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -905,9 +916,9 @@
 % \begin{variable}{\g_@@_vindex_fmt_str}
 % 
 %    \begin{macrocode}
-  vindex idxnum font .str_gset:N  = \g_@@_vindex_fmt_str,
-  vindex idxnum font .default:n   = { textrm },
-  vindex idxnum font .initial:n   = { textrm },
+  , vindex idxnum font .str_gset:N  = \g_@@_vindex_fmt_str
+  , vindex idxnum font .default:n   = { textrm }
+  , vindex idxnum font .initial:n   = { textrm }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -917,9 +928,9 @@
 % \begin{variable}{\g_@@_idxfmt_codedef_str}
 % 
 %    \begin{macrocode}
-  codedef idxnum font .str_gset:N  = \g_@@_idxfmt_codedef_str,
-  codedef idxnum font .default:n   = { textit },
-  codedef idxnum font .initial:n   = { textit },
+  , codedef idxnum font .str_gset:N  = \g_@@_idxfmt_codedef_str
+  , codedef idxnum font .default:n   = { textit }
+  , codedef idxnum font .initial:n   = { textit }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -929,12 +940,45 @@
 % \begin{variable}{\g_@@_idxfmt_codecall_str}
 % 
 %    \begin{macrocode}
-  codecall~idxnum~font .str_gset:N  = \g_@@_idxfmt_codecall_str,
-  codecall~idxnum~font .default:n   = { textrm },
-  codecall~idxnum~font .initial:n   = { textrm },
+  , codecall~idxnum~font .str_gset:N  = \g_@@_idxfmt_codecall_str
+  , codecall~idxnum~font .default:n   = { textrm }
+  , codecall~idxnum~font .initial:n   = { textrm }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
+% \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
+% \begin{macro}{firstnumber}
+% \begin{variable}{\g_@@_firstnumber_last_bool, \g_@@_cur_lineno_int, \g_@@_block_lineno_int}
+%
+% I do not know why, but line numbering where \texttt{firstnumber=last} with minted is completely and utterly broken. 
+% It will start at a random line number in every single code environment.
+% I can only assume that there is some weird scoping issue that I have not figured out.
+%
+% Rather than dealing with that I have decided to override the default implementation, instead using our own implementation to make sure that the line numbers are consecutive.%
+% 
+% I have also changed the default behaviour, so that instead of starting every code environment on line number 1, we now default to \texttt{firstnumber=last}
+%
+% \texttt{firstnumber} has 3 different options, \texttt{last} continues the numbering from where it left off. 
+% \texttt{auto} starts each new environment with line number 1. 
+% Finally if \texttt{firstnumber=\meta{num}}, then the first number is set to \texttt{\meta{num}}.
+%
+%    \begin{macrocode}
+  , firstnumber .code:n = {
+      \str_case_e:nnF { #1 } { 
+        { last } { \bool_gset_true:N  \g_@@_firstnumber_last_bool }
+        { auto } { \bool_gset_false:N \g_@@_firstnumber_last_bool }
+      } {
+        \int_gset:Nn  \g_@@_cur_lineno_int { #1 }
+        \int_gset_eq:NN \g_@@_block_lineno_int \g_@@_cur_lineno_int 
+      }
+    }
+  , firstnumber .initial:n = { last }
+
+  
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
 % \changes{0.0.11$\alpha$}{2022/12/29}{Make \texttt{setfortex} less silly}
 % \changes{0.0.11$\alpha$}{2022/12/29}{Use sequence to store \pkg{minted}/\pkg{listings} options}
 % \begin{variable}{\g_@@_print_keystore_seq}
@@ -949,15 +993,15 @@
 % 
 % 
 %    \begin{macrocode}
-  unknown .code:n = {
-    \exp_args:Nnf \seq_gpush:Nn \g_@@_print_keystore_seq { 
-      \tl_if_empty:nTF { #1 } { 
-        \l_keys_key_str
-      }{
-        \l_keys_key_str=#1
+  , unknown .code:n = {
+      \exp_args:Nnf \seq_gpush:Nn \g_@@_print_keystore_seq { 
+        \tl_if_empty:nTF { #1 } { 
+          \l_keys_key_str
+        }{
+          \l_keys_key_str=#1
+        }
       }
     }
-  }
 }
 \ProcessKeysOptions { fortex }
 %    \end{macrocode}
@@ -985,7 +1029,7 @@
 % \changes{0.0.3$\alpha$}{2022/03/14}{Add warnings about \XeTeX{}, \pTeX{} and \upTeX{} and their handling of tabs}
 %
 %    \begin{macrocode}
-\bool_if:nT { \g_@@_verbose_bool } {
+\bool_if:NT \g_@@_verbose_bool {
   \msg_new:nnn { fortex } { 8bit_tabs } {
     #1 ~ has ~ problems ~ printing ~ tabs ~ to ~ files. ~
     ~ (tabs ~ may ~ turn ~ into ~ \c_circumflex_str \c_circumflex_str I) ~
@@ -1058,6 +1102,7 @@
 %
 %    \begin{macrocode}
 \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
+  \PassOptionsToPackage { outputdir=. } { minted }
   \RequirePackage { minted }
 }{
   \RequirePackage { listings }
@@ -1104,7 +1149,7 @@
     ~ defaulting ~ to ~ .txt
   }
   \tl_gset:Nx \g_@@_ext_tl { 
-    \str_case_e:nnF { \str_lowercase:f \g_@@_lang_tl } {
+    \str_case_e:nnF { \str_lowercase:f \l_@@_lang_tl } {
       { python       }{ py  }
       { fortran      }{ f90 }
       { fortranfixed }{ f   }
@@ -1123,7 +1168,7 @@
 %
 %    \begin{macrocode}
       txt 
-      \msg_warning:nnx { fortex } { language } { \g_@@_lang_tl }
+      \msg_warning:nnx { fortex } { language } { \l_@@_lang_tl }
     } 
   }
 }
@@ -1394,9 +1439,9 @@
     }
   }
 }
-\bool_if:nT { \g_@@_verbose_bool }{
+\bool_if:NT \g_@@_verbose_bool {
   \exp_args:Nnx \str_set_convert:Nnnn \l_tmpa_str
-                                    { \g_@@_code_delim_str } { } { utf8/hex }
+                                    { \g_@@_code_delim_str } {} { utf8/hex }
   \iow_term:x { Code~Delimiter~HEX:~\l_tmpa_str  }
 }
 %    \end{macrocode}
@@ -1556,58 +1601,61 @@
 % \subsubsection{Create file with refs}
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
-% \begin{macro}{\@@_mkref_file:nN}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{\@@_reference_code:nn}
 % \begin{arguments}
-% \item{Input filename, to insert hyperlinks}
-% \item{Output filename, where hyperlinks have been inserted}
+% \item{md5 sum of the code}
+% \item{text to insert references into}
 % \end{arguments}
 %
-% The easiest way to insert the hyper references, is to read in the file we are going to highlight, and then use some regex to modify it. 
-% \cs{@@_mkref_file:nN} is dealing with the file creation and caching of the results side. 
-% The actual call to the regex function, is in \cs{@@_mkref_file_aux:nn} and is the slowest bit..
+% The actual call to the regex function, is in \cs{@@_reference_code_aux:Nn} and is the slowest bit.
+% Whereas this function is to mostly deal with caching the code and to avoid calling the slow function twice.
 % Whats not contained in this function is the regex itself. That is contained in \env{codeblock}.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_mkref_file:nN #1#2 {
+\cs_set:Npn \@@_reference_code:nn #1#2 {
 %    \end{macrocode}
-% Because we don't care about the first pass, before the |.aux| file is created, it is quickest to not even bother regexing the code. 
-%
-%    \begin{macrocode}
-  \tl_if_exist:NT { \fortex@codeblock@unscoped@regex } {
-%    \end{macrocode}
+
 % Here we are going to be using the md5 hash of the code we want to highlight as a simple way to check if we have already done the hard work.
 % This is the biggest time-saver of the hyperrefing process, as nobody wants to do the same work twice.
 %
-%    \begin{macrocode}
-    \tl_set:Nx \l_@@_ref_cache_filename_tl { \g_@@_tmpfolder_tl/
-                                             \file_mdfive_hash:n { #1 } .tmp 
-    }
-    \file_if_exist:nF { \g_@@_outputdir_tl \l_@@_ref_cache_filename_tl } {
-      \@@_mkref_file_aux:xx { #1 } { \l_@@_ref_cache_filename_tl }
-    }
+%    \begin{macrocode}  
+  \prop_get:NnN \g_@@_ref_cache_toaux_prop { #2 } \l_@@_ref_tl  
+
+  \bool_lazy_and:nnT { \quark_if_no_value_p:N \l_@@_ref_tl }
+                     { \tl_if_exist_p:N \fortex@codeblock@unscoped@regex } {
+    \@@_reference_code_aux:Nn \l_@@_ref_tl { #1 }
 %    \end{macrocode}
-% Finally return the output file that we calculated \emph{without} the leading directory.
-% This needs to be done after \cs{@@_mkref_file_aux:nn}, due to clobbering
+% Here we add the referenced code to two property lists, the list going to the aux file, and the list that gets read out from the aux file. 
+%
+% The reason we add it to both is so we don't have to require 3 rebuilds. 
+% This way the referenced code can be used on the same build that it is created, whilst still be written out to the aux file. 
+%
+% Note that the string |@d5>]G<s3@| is used as a newline marker when written to the aux file.
+% This is because as actual newlines will break the line-by-line keyval store implementation that is implemented.
 %
 %    \begin{macrocode}
-    \tl_set:Nx { #2 } { \l_@@_ref_cache_filename_tl }
+    \prop_gput:Nno \g_@@_ref_cache_toaux_prop { #2 } { \l_@@_ref_tl } 
+    \tl_replace_all:Nnx \l_@@_ref_tl { @ d5>]G<s3 @ }
+                                     { \char_generate:nn {13} {12} }
+    \prop_gput:Nno \g_@@_ref_cache_prop { #2 } { \l_@@_ref_tl } 
   }
 }
+\cs_generate_variant:Nn \@@_reference_code:nn { xx }
 %    \end{macrocode}
 % \end{macro}
+%
 % \changes{0.0.7$\alpha$}{2022/06/24}{fix crash when no codeblock is used}
 % \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
-% \begin{macro}{\@@_mkref_file_aux:nn}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{\@@_reference_code_aux:Nn}
 % \begin{arguments}
-% \item{Input filename, to insert hyperlinks}
-% \item{Output filename, where hyperlinks have been inserted}
+% \item{Token list to insert references}
 % \end{arguments}
 % This Macro does the hard work of doing the actual regexing and substituting,before writing the contents back out to a file. 
 % 
 %    \begin{macrocode}
-\iow_new:N \c_@@_reffile_iow
-\cs_set:Npn \@@_mkref_file_aux:nn #1#2 {
-  \file_get:nnN { #1 } { \@@_setcatcode: } \l_@@_filecontents_tl
+\cs_set:Npn \@@_reference_code_aux:Nn #1#2 {
 %    \end{macrocode}
 % As it stands the different regex token lists are scattered around. 
 % There is the unscoped replacements who's regex will appear in every replacement pass.
@@ -1617,9 +1665,9 @@
 %
 % \begin{enumerate}
 % \itemsep-1ex 
-% \item \cs{g_@@_codeblock_/path_scope_tl}
-% \item \cs{g_@@_codeblock_/path/to_scope_tl}
-% \item \cs{g_@@_codeblock_/path/to/scope_scope_tl}
+% \item |\g_@@_codeblock_/path_scope_tl|
+% \item |\g_@@_codeblock_/path/to_scope_tl|
+% \item |\g_@@_codeblock_/path/to/scope_scope_tl|
 % \item[$\vdots$]
 % \item[$n$.] \tn{fortex@codeblock@unscoped@regex}
 % \end{enumerate}
@@ -1627,10 +1675,12 @@
 % This is a rather laborious task of gathering all these token lists and putting them into a single variable.
 %
 %    \begin{macrocode}
-  \bool_lazy_or:nnF
+  \bool_lazy_and:nnTF
     { \tl_if_empty_p:N { \fortex@codeblock@unscoped@regex } }
     { \tl_if_empty_p:N { \fortex@codeblock@scoped@regex   } }
   {
+    \tl_gset:Nn #1 { #2 }
+  }{
     \tl_clear_new:N \l_@@_regex_tl
     \tl_clear_new:N \l_tmpa_tl
 %    \end{macrocode}
@@ -1688,20 +1738,20 @@
 % This dos mean that we are locked to \TeX{}Live 2022 as a minimum version though. 
 % 
 %    \begin{macrocode}
+    \tl_set:Nn \l_@@_data_tl { #2 }
     \exp_args:NV \regex_replace_case_all:nN {
       \l_@@_regex_tl
-    } \l_@@_filecontents_tl
+    } \l_@@_data_tl
+    \tl_gset:No #1 \l_@@_data_tl 
   }
-  \iow_open:Nn \c_@@_reffile_iow { #2 }
-  \iow_now:NV  \c_@@_reffile_iow { \l_@@_filecontents_tl } 
-  \iow_close:N \c_@@_reffile_iow
 }
-\cs_generate_variant:Nn \@@_mkref_file_aux:nn { xx }
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Fix scoping so more than 1 regex can exist per scope}
+% 
 % \subsubsection{Scoping}
-%
 % \begin{variable}{\g_@@_codeblock_#1_scope_tl}
 % One of the problems that I encountered when I first started using \pkg{fortex} was that the \env{codeblock} definitions were global (to the file).
 % This meant that if you have a class |alpha| with a private method |beta|. 
@@ -1725,26 +1775,35 @@
 % One question that then arises is how to avoid an $O(n^2)$ search though all of the scoped regexs at every \env{code} environment.
 % As doing a na\"ive search though all scoped regexs is going to be slow. 
 % 
-% This was resolved by getting \cs{@@_mkref_file_aux:nn} to only search the direct scope branch by using dynamic variable naming. 
+% This was resolved by getting \cs{@@_reference_code_aux:Nn} to only search the direct scope branch by using dynamic variable naming. 
 %
 % note that we need to run this at |begin{document}|, as the |.aux| file needs to be read in for \tn{fortex@codeblock@scoped@regex} to exist.
 %
 %    \begin{macrocode}
 \hook_gput_code:nnn { begindocument/end } { fortex } {
-  \tl_if_exist:NT \fortex@codeblock@scoped@regex {
-    \exp_args:NnV \prop_set_from_keyval:Nn \l_tmpa_prop 
-                                         { \fortex@codeblock@scoped@regex }
-    \prop_map_inline:Nn \l_tmpa_prop { 
+  \cs_set:Npn \@@_load_regex:nn #1#2 { 
 %    \end{macrocode}
 % Here we append all of the \texttt{\Arg{regex}\Arg{replacement}} pairs into a token list called \cs{g_@@_codeblock_\meta{scope}_scope_tl}. 
 %
 % Note that a \texttt{:c} variable needs to actually exist before it can be used by any other \texttt{:c} variable.
 %
 %    \begin{macrocode}
-      \tl_set:Nn \l_tmpa_tl { g_@@_codeblock_ #1 _scope_tl }
-      \tl_if_exist:cF \l_tmpa_tl { \tl_new:c \l_tmpa_tl }
-      \tl_set:cf \l_tmpa_tl { \tl_use:c \l_tmpa_tl #2 }
-    }
+    \tl_set:Nn \l_tmpa_tl { g_@@_codeblock_ #1 _scope_tl }
+    \tl_if_exist:cF \l_tmpa_tl { \tl_new:c \l_tmpa_tl }
+    \tl_set:cf \l_tmpa_tl { \tl_use:c \l_tmpa_tl #2 }
+    \iow_term:n { #1 : #2 }
+    \exp_args:Nf \iow_term:n { \tl_use:c \l_tmpa_tl } 
+  }
+%    \end{macrocode}
+% property lists could not be used in this case because multiple \texttt{\meta{value}} have the same \texttt{\meta{key}}. 
+% Keyvals allow this and when parsing will feed them all in regardless. 
+% Props on the other hand require that all the keys be unique.
+% As the keys we are using is the scope of the regex, there will be multiple regex's that we want to use that will have the same scope.  
+%
+%    \begin{macrocode}
+  \tl_if_exist:NT \fortex@codeblock@scoped@regex {
+    \exp_args:NnnV \keyval_parse:NNn \use_none:n \@@_load_regex:nn
+                      \fortex@codeblock@scoped@regex
   } 
 }
 %    \end{macrocode}
@@ -1830,7 +1889,7 @@
 % \end{arguments}
 %
 % This auxiliary macro contains the regex logic and implementation for both \env{codeblock} and \env{codevar}. 
-% This macro mainly is dealing with the creation for the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_mkref_file:nN}.
+% This macro mainly is dealing with the creation for the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_reference_code:nn}.
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_codeblock_aux:nnnn #1#2#3#4 {
@@ -1911,10 +1970,10 @@
 %
 %    \begin{macrocode}
     \tl_if_empty:NTF { #2 } { 
-      \seq_gpush:Nx \g__fortex_codeblock_regex_unscoped_toaux_seq
+      \seq_gpush:Nx \g_@@_codeblock_regex_unscoped_toaux_seq
                    { { \exp_not:V \l_tmpa_regex } { \exp_not:V \l_tmpa_str } }
     }{
-      \seq_gpush:Nx \g__fortex_codeblock_regex_scoped_toaux_seq
+      \seq_gpush:Nx \g_@@_codeblock_regex_scoped_toaux_seq
                    { { / \exp_not:V { #2 } } 
                    = { { \exp_not:V \l_tmpa_regex } { \exp_not:V \l_tmpa_str } } }
     }
@@ -2243,19 +2302,17 @@
 % I did initially want to use |#| as the parameter, however it was causing conflicts with |#1| from \cs{MakeShortFortex} and I was getting keyvals in the argument spec. 
 %
 %    \begin{macrocode}
-    \exp_args:Nnno \tl_set_rescan:Nnn \l_tmpa_a {
+    \exp_args:Nnno \tl_set_rescan:Nnn \l_tmpa_tl {
       \char_set_catcode_parameter:N e 
       \char_set_catcode_active:N   #3
     } { e1#3 }
 %    \end{macrocode}
 %    \begin{macrocode}
-    \exp_last_unbraced:NNV \cs_set:Npn \@@_shortmint_i: \l_tmpa_a {
+    \exp_last_unbraced:NNV \cs_set:Npn \@@_shortmint_i: \l_tmpa_tl {
       \mode_if_math:TF {
         \token_to_str:N #3
       } {
         { 
-          \tl_set:NV \minted@outputdir \g_@@_outputdir_tl
-          \tl_set:NV \minted@cachedir  \g_@@_tmpfolder_tl
           \@@_shortmint_cs#3##1#3 
         }
       }
@@ -2336,7 +2393,7 @@
 % \changes{0.0.11$\alpha$}{2022/12/29}{Allow shortvrb characters to be included in code}
 % \begin{macro}{\@@_reset_shortvrb_catcodes:}
 % \tn{MakeShortFortex} has an unavoidable side effect of marking a character as active. 
-% This however, means that if left unattended, the character will be expanded both in \tn{VerbatimOut}, and when the file is read back in during \cs{@@_concat_files:nn} and \cs{@@_mkref_file:nN}. 
+% This however, means that if left unattended, the character will be expanded when writing the code to the file. 
 % 
 % This behaviour is a bug-turned-feature, as it allows an approximation of namespaces in languages that do not support them. 
 % However, this behaviour can be undesirable with for example \tn{MakeShortFortex}, where instead of a namespace, it's just \LaTeX{} code that will certainly cause an error. 
@@ -2392,53 +2449,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsubsection{Create temp working directory}
-% \changes{0.0.3$\alpha$}{2022/03/10}{Add automatic folder creation}
-%
-% \begin{macro}{\@@_mktmpdir:}
-% If we are writing files into a folder, we need to make sure that the folder exists, and if we not we will either create it ourselves or say a warning that the folder can be created manually.
-% I want to avoid explicitly depending on |-shell-esc|, so as a consequence this function is on the jankier side.  
-% The main issue is that \LaTeX{} doesn't support doing anything with folders.
-% As such we cannot check if a folder exists, or create a new folder without |-shell-esc| permissions. 
-% 
-% The basic idea is to check if a test file: \file{outdir/_fortex-jobname/jobname-0.tmp} exists in our output folder.
-% If the folder doesn't exist the \cs{file_if_exist:nF}, will not cause any errors, but will just say the file doesn't exist. 
-% If we don't find the file and we don't have |-shell-esc| permissions, we warn the user, and try to write a new test file. 
-% If the folder doesn't exist trying to write to the file will cause a critical error.
-%
-% If we do have |-shell-esc| permissions, we create a folder and continue on our way. 
-% 
-%    \begin{macrocode}
-\cs_set:Npn \@@_mktmpdir: {
-  \file_if_exist:nF { \g_@@_outputdir_tl
-                      \g_@@_tmpfolder_tl/\c_sys_jobname_str -0.tmp
-  }{
-    \sys_if_shell_unrestricted:TF {
-      \sys_shell_now:x { mkdir~\g_@@_outputdir_tl \g_@@_tmpfolder_tl }
-    }{
-%    \end{macrocode}
-% We throw a warning if we cannot open our test file explaining how to resolve the issue.
-%
-%    \begin{macrocode}
-      \msg_new:nnn { fortex } { make_folder } {
-        Unable ~ to ~ find ~ folder ~ "##1" ~ please ~ create ~ it ~ 
-        ~ manually ~ or ~ enable ~ -shell-esc ~ to ~ create ~ automatically
-      }
-      \msg_warning:nnx { fortex } { make_folder } { \g_@@_tmpfolder_tl }
-    }
-%    \end{macrocode}
-% Create file for next time, or if we do not have |-shell-esc| and the tmp folder does not exist, stop compilation.
-%
-%    \begin{macrocode}
-    \iow_new:N   \l_@@_testfile_iow
-    \iow_open:Nn \l_@@_testfile_iow 
-               { \g_@@_tmpfolder_tl / \c_sys_jobname_str -0.tmp }
-    \iow_close:N \l_@@_testfile_iow
-  }
-}
-%    \end{macrocode}
-% \end{macro}
-%
 % \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
 % Finally we register this with with a hook to be called at the end of |\begin{document}|
 %
@@ -2453,44 +2463,12 @@
     \tl_if_empty:NT \g_@@_outputdir_tl { 
       \@@_outputdir:
     }
-    \str_if_eq:NNF \g_@@_tmpfolder_tl { . } {
-      \@@_mktmpdir:
+    \str_if_eq:NNT { \g_@@_printend_tl } { mint } {
+      \tl_gset:NV \minted@outputdir \g_@@_outputdir_tl 
+      \ProvideDirectory { \minted@outputdir \minted@cachedir }
     }
 }
 %    \end{macrocode}
-%
-% \begin{macro}{\@@_inctmpname:}
-% \begin{variable}{\g_@@_tmp_filename_tl}
-% Build the series of tmp filenames by incrementing the number on the end of the filename on every call.
-% The general output is of the form \file{_fortex-jobname/jobname-1.tmp}.
-% Note that there is no |-output-dir| on the front of the path.  
-%
-%    \begin{macrocode}
-\int_new:N \g_@@_inctmpname_namecount_int
-\tl_new:N \g_@@_tmp_filename_tl
-\cs_set:Npn \@@_inctmpname: {
-  \int_gincr:N \g_@@_inctmpname_namecount_int
-  \tl_gset:Nn \g_@@_tmp_filename_tl {
-    \g_@@_tmpfolder_tl /
-    \c_sys_jobname_str -
-    \int_to_arabic:n { \g_@@_inctmpname_namecount_int } .tmp
-  }
-}
-%    \end{macrocode}
-% \end{variable}
-% \end{macro}
-%
-% \begin{variable}{\c_@@_default_out_filename_tl}
-% Build the filename we are going to save the concatenated code segments to.
-% This is \file{jobname.ext}.
-%
-%    \begin{macrocode}
-\tl_const:Nn \c_@@_default_out_filename_tl
-           { \c_sys_jobname_str.\g_@@_ext_tl }
-\tl_new:N   \g_@@_out_filename_tl
-\tl_gset:No \g_@@_out_filename_tl \c_@@_default_out_filename_tl
-%    \end{macrocode}
-% \end{variable}
 %
 % \subsubsection{Subfile}
 %
@@ -2502,17 +2480,10 @@
 % This function overwrites the global variable \cs{g_@@_out_filename_tl}, between its |\begin| and |\end| calls. 
 %
 % One problem that I encountered is that you cannot empty a file on |\begin{subfile}| as you may want to have multiple subfile sections all pointing to the same output file. 
-% The work around I have devised for this is to save every subfile filename into a sequence and then appending it to the end of the |.aux| file at the end of the document. 
-%
-% This way we can clear the files that we know we are going to use when we next start up \LaTeX{}. 
-% It is also not a huge problem that the first run will not clear the file, as chances are there is nothing in the file to begin with (potentially not even existing). 
-% If there is some junk in the file that previously existed, oh well a recompile should fix it and this is such a small edge case that I probably wont even bother handling it.
-% (Maybe in the future)
+% The work around I have devised for this is to save every subfile filename into a sequence, and copy the contents into a new file of the same name if we have already seen that subfile before.
 %
 % \begin{variable}{\g_@@_lang_stack_seq, \g_@@_outfile_stack_seq, \g_@@_outfile_history_seq}
 %    \begin{macrocode}
-\seq_new:N \g_@@_lang_stack_seq
-\seq_new:N \g_@@_outfile_stack_seq
 \seq_new:N \g_@@_outfile_history_seq
 %    \end{macrocode}
 % \end{variable}
@@ -2525,139 +2496,471 @@
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment { subfile } { m m } {
-  \seq_gpush:Nn \g_@@_outfile_history_seq { #2 }
+  \tl_set:Nn \l_@@_lang_tl { #1 }
 %    \end{macrocode}
-% Let us first save the old state of the output file and highlighting and replace it with our newly defined options. 
-%
-%    \begin{macrocode}
-  \seq_gpush:No \g_@@_outfile_stack_seq \g_@@_out_filename_tl
-  \seq_gpush:No \g_@@_lang_stack_seq \g_@@_lang_tl
-  \tl_gset:Nn \g_@@_out_filename_tl { #2 }
-  \tl_gset:Nn \g_@@_lang_tl { #1 }
-} {
-%    \end{macrocode}
-% We need to pop our variable into a temp variable as opposed to back into the input stream. 
-% Not ideal, but whatever easy enough to do. 
-% If I find a way of popping back into the stream that's what I will switch to.
-%
-%    \begin{macrocode}
-  \seq_gpop:NN \g_@@_outfile_stack_seq \l_tmpa_tl
-  \tl_gset:No \g_@@_out_filename_tl \l_tmpa_tl
-%    \end{macrocode}
-%    \begin{macrocode}
-  \seq_gpop:NN  \g_@@_lang_stack_seq \l_tmpa_tl
-  \tl_gset:No \g_@@_lang_tl \l_tmpa_tl
-}
-%    \end{macrocode}
-% We need to specify |enddocument/afterlastpage| to make sure everything has finished being typeset, but the file handle for |.aux| is still open. 
-%
-% At the moment I am using \cs{exp_not:f} to keep the \cs{seq_use:Nn} from expanding too far, as we cannot use \pkg{expl3} inside the |.aux| file.  
-% Note that we need to put an extra set of |{}| around the \cs{seq_use:Nn} incase there are no subfiles to write to.
-%
-%    \begin{macrocode}
-\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
-  \iow_now:cx { @auxout } {
-     \exp_not:n { \gdef\fortex@subfiles } 
-     { \exp_not:f { \seq_use:Nn \g_@@_outfile_history_seq {,} } }
-  }
-}
-%    \end{macrocode}
-% And here is where we read \tn{fortex@subfile} back into \LaTeX{}.
-% We need to read this in \emph{after} the |.aux| file has been loaded, but before any \env{subfile} environment would have occurred.  
+% Unlike tokes, files are always in the global state.
+% As such we cannot use any groups to keep around the old \cs{g_@@_outfile_iow}.
 % 
+% I also don't want to open a new file on every subfile call as at least in \TeX{}Live, only 15 files are allowed to be open at any one time.
+% 
+% As such we close the old file and then reopen it once we close the subfile.
+%
 %    \begin{macrocode}
-\hook_gput_code:nnn { begindocument/end } { fortex } {
-  \tl_if_exist:NT { \fortex@subfiles } {
-    \seq_set_from_clist:Nn \l_tmpa_seq \fortex@subfiles
-     \seq_map_inline:Nn { \l_tmpa_seq } {
-      \@@_clearfile:n { #1 }
+  \iow_close:N \g_@@_outfile_iow
+  {
+    \tl_set:Nn \l_@@_out_filename_tl { #2 }
+    \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
+    \seq_if_in:NnTF \g_@@_outfile_history_seq { #2 } { 
+%    \end{macrocode}
+% One of the limitations of \TeX{} is that there is no way to \emph{append} to a file. 
+% However, the easy workaround for this is to just copy the previous contents of the file into a new file of the same name. 
+% There is however a cost to doing this, as it adds 2 newlines every time we do this.
+%
+%    \begin{macrocode}
+      \file_get:nnN { \g_@@_outputdir_tl \l_@@_out_filename_tl }
+                    { \@@_setcatcode: } \l_tmpa_tl
+      \iow_now:NV \g_@@_outfile_iow \l_tmpa_tl
+    } {
+      \seq_gpush:Nn \g_@@_outfile_history_seq { #2 }
     }
   }
+} {
+%    \end{macrocode}
+% Finally we go back to our previous file pointer. 
+% Note that we need to also do the copy trick to get around the limitations of appending.
+% and again this will cost us two extraneous newlines in the source code file. 
+%
+%    \begin{macrocode}
+  \file_get:nnN { \g_@@_outputdir_tl \l_@@_out_filename_tl }
+                { \@@_setcatcode: } \l_tmpa_tl
+  \iow_close:N \g_@@_outfile_iow
+  \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
+  \iow_now:NV  \g_@@_outfile_iow \l_tmpa_tl
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \subsubsection{Writing the code to the output file}
 % \changes{0.0.7$\alpha$}{2022/06/24}{change firstcall to hook}
-% \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
-% \begin{macro}{\@@_clearfile:n}
-% \begin{arguments}
-% \item{ Filename to empty the contents from}
-% \end{arguments}
-% The first thing that we want to to is clear the contents of the file.
-% As all other writes to the main output file are going to be contatinations, we need to empty it first. 
-% 
-% We abstract \cs{@@_clearfile:n} out into its own function so that it cal also be called in the \env{subfile} environment.
+% \begin{variable}{\l_@@_out_filename_tl, \g_@@_outfile_iow}
 %
-% Note that at the moment \cs{@@_clearfile:n} adds a spare newline to the file, This is annoying as we cannot use |#! /usr/bin/env| to create scripts. 
-% At the moment I don't really know how to fix this but whatever. 
+% Build the default filename we are going to save the concatenated code segments to.
+% This is \file{jobname.ext}.
+%
+% We also open the file. 
+% Note that we do this at |\begin{document}| as someone may want to use the \tn{setfortex} interface for changing the output filename. 
 %
 %    \begin{macrocode}
-\iow_new:N \c_@@_outfile_iow
-\cs_set:Npn \@@_clearfile:n #1 { 
-  \iow_open:Nn \c_@@_outfile_iow { #1 }
-  \iow_close:N \c_@@_outfile_iow
+\hook_gput_code:nnn { begindocument } { fortex } {
+  \tl_if_empty:NT \l_@@_out_filename_tl {
+    \tl_set:Nn \l_@@_out_filename_tl { \c_sys_jobname_str.\g_@@_ext_tl }
+  }
+  \iow_new:N \g_@@_outfile_iow
+  \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
 }
-\hook_gput_code:nnn { begindocument/end } { fortex } {
-  \@@_clearfile:n { \c_@@_default_out_filename_tl }
+%    \end{macrocode}
+% Technically, the file is closed anyway when \TeX{} exits, but we may as well clean up after ourselves.
+%
+%    \begin{macrocode}
+\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
+  \iow_close:N \g_@@_outfile_iow
+}
+%    \end{macrocode}
+% \end{variable}
+% 
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{g_@@_env_to_cmd, \FVB@g_@@_env_to_cmd}
+% \begin{arguments}
+% \item Macro to execute on every line of verbatim content
+% \end{arguments}
+%
+% One of the main problems that I encountered when I was writing the first iteration of \pkg{fortex}, was how do I take the contents of an environment and do two different things with it.
+% To me, when I was first beginning to actually write \LaTeX{}, I was surprised that environments don't take their contents as an argument.
+% (Though having more latex experience, this now makes more sense why this is the case). 
+% There are certain flags you can give to the environment like the \texttt{b} flag in the \tn{NewDocumentEnvironment}. 
+% However, these do not capture the contents verbatim, and as such will fall over when given some source code.
+% 
+% At the time I devised a way to use \tn{VerbatimOut} to write the verbatim contents to a file, that I could then read back in at 2 different places throughout the code. 
+% This however had quire a few drawbacks.
+% The main one is that because we don't want to spam the users working directory with thousands of temp files, it makes sense to put them in a folder. 
+% However to create a folder \emph{requires} shell escape, and I wanted to avoid this. 
+% 
+% Finally by digging into the \pkg{fancyvrb} source, I was able to see how \tn{VerbatimOut} was implemented. 
+% It turns out it constructs a verbatim environment, and then for each line call \cs{iow_now:Nn}.
+%
+% I realised, if \cs{iow_now:Nn} is replaced by a macro of my own choosing, then I am able to capture the content of the verbatim environment just as I wished. 
+% As such below is essentially a stripped down copy of the \tn{VerbatimOut} function from \pkg{fancyvrb}.
+% Note that there re a few important things here.
+%
+% Firstly, because we are constructing a environment out of individual commands, we need to manually add the \cs{group_begin:} and \cs{group_end:} macros. 
+% Secondly, because we are using \pkg{fancyvrb} to construct this macro the naming scheme is slightly different, with the |\begin| command prefixed by |\FVB@| and the |\end| by |\FVE@|. 
+%
+%    \begin{macrocode}
+\NewDocumentCommand { \FVB@g_@@_env_to_cmd } { m } {
+  \group_begin:
+    \FV@UseKeyValues
+    \tl_set:Nn \FV@Space { \space }
+%    \end{macrocode}
+% One of the changes that I made was to make sure that horizontal tabs, remain as tabs when they are passed around and written out to the file. 
+% \pkg{fancyvrb} by default takes a tab to mean 4 spaces, and as everyone knows this is not the case, and a tab means a tab. 
+%
+%    \begin{macrocode}
+    \tl_set:Nn \FV@Tab   { \^^I }
+%    \end{macrocode}
+% This is the location that the call to \cs{iow_now:Nn} would go had this been the original \tn{VerbatimOut}. 
+% Instead we replace it with a passed in argument. 
+% This allows the verbatim environment to command, to appear in two different places. 
+% 
+% Note that \tn{FV@ProcessLine} takes one argument (The verbatim contents of each line), and will be called multiple times.
+%
+%    \begin{macrocode}
+    \def \FV@ProcessLine { #1 }
+    \tl_set_eq:NN \FV@FontScanPrep \relax
+    \tl_set_eq:NN \@noligs \relax
+%    \end{macrocode} 
+% Finally we set \pkg{fancyvrb} off scanning.
+% 
+%    \begin{macrocode}
+    \FV@Scan
+}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\FVE@g_@@_env_to_cmd}
+% All that's needed for the |\end| macro is to close the group that we initially opened.
+% 
+%    \begin{macrocode}
+\NewDocumentCommand { \FVE@g_@@_env_to_cmd } {} {
+  \group_end:
+}
+\DefineVerbatimEnvironment { g_@@_env_to_cmd } { g_@@_env_to_cmd } {}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}[int]{fortex@verb@hashmap}
+%
+% When I was transitioning from the ``many small files'' to keeping it all inside \TeX{}, one of the problems I encountered was caching.
+% The absolute slowest bit of code used in the \pkg{fortex} package is the referencing code, that uses regex to search though all the code.
+% As such it was my desire early on to cache the code after the replacements have been inserted. 
+% This way the slow bit only has to be done once. 
+%
+% In the previous implementation this was easy as I after I was done regexing, I would write it back to to a file. 
+% That file has a filename that was the md5sum of the original code. 
+% In this way I was able to check if the code had already been regexed, and could avoid doing it a second time. 
+%
+% In this new implementation without a million small files, this is a bit more difficult to achieve.
+% Instead of writing the code out to a million small named files, I am writing the code, and its hash out to the aux file. 
+% However this comes with its own challenges, I need to keep the code verbatim, and how do I encode the hash of the file alongside the verbatim code. 
+%
+% This is solved by using the |g_fortex_env_to_cmd| environment that I just defined. 
+% Note that we need to use a \LaTeXe{} style name when writing to aux, so the environment needs to be called |fortex@verb@hashmap|
+%
+%    \begin{macrocode}
+\prop_new:N \g_@@_ref_cache_prop
+\prop_new:N \g_@@_ref_cache_toaux_prop
+\NewDocumentEnvironment { fortex@verb@hashmap } {} {
+  \VerbatimEnvironment
+  \begin{g_@@_env_to_cmd}{ \@@_hashmap_split_lines:n }%
+}{
+  \end{g_@@_env_to_cmd}
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsubsection{Concatenate files} 
-%
-% \changes{0.0.5$\alpha$}{2022/03/29}{Rename \texttt{writeoutput} to \texttt{concat\_files}}
-% \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
-% \begin{macro}{\@@_concat_files:nn}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{\@@_hashmap_split_lines:n}
 % \begin{arguments}
-% \item{ Filename to read from }
-% \item{ Filename to be concatenated into }
+% \item Raw verbatim hashmap data
 % \end{arguments}
 %
-% Append the contents of the tmp file to the output file.
-% Ideally we would open \cs{c_@@_outfile_iow} in append mode, however \LaTeX{} does not support append mode. 
+% When we read the aux file back in, we end up executing \cs{@@_hashmap_split_lines:n} on every line within the |fortex@verb@hashmap| environment.
+% However, our hash and code data is stored like 
+%
+% \begin{lstlisting}[escapechar={&}, basicstyle=\footnotesize\ttfamily, xleftmargin=-1cm, numbers=none]
+% \begin{fortex@verb@hashmap}
+% 1308D907DDD9FEF992B9513B06E23695@subroutine &|¤|&\fortexhyperinsert{func}{func}&|¤|&(arg)@d5>]G<s3@
+%   & \textellipsis{} &
+% \end{fortex@verb@hashmap}
+% \end{lstlisting}
+%
+% There are a few things to note about the storage of this code. 
+% The first is that it is stored as \texttt{\meta{hash}@\meta{code}}. 
+% Here we are using |@| as a delimiter. 
+% Whilst this may seem like a problem due to |@| being a fairly common term, it is actually fine. 
+% This is because \cs{@@_hashmap_split_lines_aux:nn} has a function signature |#1@#2\q_nil|, as such only the \emph{first} |@| is actually used as the delimiter.
+% Because I can guarantee that no |@| will occur inside the hash, it is fine. 
+%
+% The second thing of note is that we are using |@d5>]G<s3@| as a newline delimiter. 
+% This may seem rather odd, however, there is a good reason for this. 
+% If we naively write out our block of code to the aux file it will use the carriage return as a newline. 
+% However, if |-8bit| is not enabled this will be written to the aux file as literally |^^M| and when we read the code back verbatim, it will see 2 carets' and an |M|.
+% This is problematic.
 % 
-% As such this function exists to emulate the effects of opening a file in append mode, by copying the previous content of the file, then writing it back with the new content.
+% The other option is that |-8bit| is enabled. 
+% In this case, the aux file will contain actual carriage returns. 
+% However this is also problematic, as we read back the verbatim content 1 line at a time. 
 %
-% This is the function that is actually responsible for writing the output file.
+% As such, it was decided that the best method was to use a delimiter that should under normal circumstances never get used. 
+% I did a quick google for |@d5>]G<s3@| to see if it shows up anywhere, and it looks clean. 
+% Note that I have placed a |@| on either end. 
+% This is to make sure that it can never join on to the back of a word. 
+% (IDK what would happen if it did, but lets just be safe)
 %
-% Note that because this is a programming language with lots of special chars (tabs/\%/\&/etc) we need to set a bunch of catcodes so that \LaTeX{} does not mangle the file as it comes in.
 %    \begin{macrocode}
-\cs_set:Npn \@@_concat_files:nn #1#2 {
+\cs_set:Npn \@@_hashmap_split_lines:n #1 { 
+  \@@_hashmap_split_lines_aux:nn #1\q_nil
+}
 %    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{\@@_hashmap_split_lines_aux:nn}
+% \begin{arguments}
+% \item \textsc{md}\oldstylenums5 hash of the code
+% \item The code itself
+% \end{arguments}
+%
+% Note that the function signature here is delimited by the control sequence \cs{q_nil}.
+% Because in this form it is a \emph{control sequence}, this means that any phrases of |\q_nil| inserted into the body of the code will not match as they are not a \emph{control sequence}.
 %
 %    \begin{macrocode}
-  \file_get:nnN { \g_@@_outputdir_tl #2 }
-                { \@@_setcatcode: } \l_tmpa_tl
+\cs_set:Npn \@@_hashmap_split_lines_aux:nn #1@#2\q_nil { 
+  \tl_set:Nn \l_tmpa_tl { #2 }
 %    \end{macrocode}
-%    \begin{macrocode}
-  \file_get:nnN { \g_@@_outputdir_tl #1 }
-                { \@@_setcatcode: } \l_tmpb_tl
-%    \end{macrocode}
-% Print the tmp file to terminal for debugging
+% The first thing that we do now we have the hashmap data is to write it back out to the aux file. 
+% This prevents it from disappearing after it has been used. 
 %
 %    \begin{macrocode}
-  \bool_if:nT { \g_@@_verbose_bool }{
-    \iow_term:x { \exp_not:V { \l_tmpb_tl } }
+  \prop_gput:Nnn \g_@@_ref_cache_toaux_prop { #1 } { #2 }
+%    \end{macrocode}
+% However, we also want a copy of the data where our newlines delimiters ave been changed back to actual newlines. 
+% Note that we need to use \cs{char_generate:nn} here as putting in |^^M| directly makes the tokeniser confused and think a \tn{par} is inserted where it should not.
+%
+%    \begin{macrocode}
+  \tl_replace_all:Nnx \l_tmpa_tl { @ d5>]G<s3 @ }
+                                 { \char_generate:nn {13} {12} }
+  \prop_gput:Nno \g_@@_ref_cache_prop { #1 } { \l_tmpa_tl }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% Here we are writing the hashmap data back out to the aux file. 
+% Note that we nee to specify |afterlastpage| in order to have the aux file still open for writing.
+%
+%    \begin{macrocode}
+\hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
+%    \end{macrocode}
+% As we are storing our keyval hashmap data in a property list, we need to make sure that it is written back out to the aux file in our \texttt{\meta{hash}@\meta{code}} format.
+% This requires a small auxiliary function to format the data as needed. 
+%
+% \begin{macro}{\@@_write_fmt:nn}
+%    \begin{macrocode}
+  \cs_set:Npn \@@_write_fmt:nn #1#2 {
+    \iow_now:cx { @auxout } {
+      #1 @ \exp_not:n { #2 }
+    }
   }
 %    \end{macrocode}
-% Finally we concatenate the two files by writing out the contents previously in it, as well as the new stuff. 
+% \end{macro}
+% Don't forget to include our verbatim begin/end blocks. 
+% Note that using \cs{iow_now:Nn} passes the data though \cs{tl_to_str:n}.
+% This is mildly annoying for begin/end blocks as \cs{tl_to_str:n} inserts a space after every control sequence. 
+% As such |\begin{fortex@verb@hashmap}| will instead get written as |\begin {fortex@verb@hashmap}|.
+% This is not a huge deal, but avoiding the extra space is nice, so we make sure that \tn{begin} is not actually a control sequence.
 %
 %    \begin{macrocode}
-  \iow_open:Nn \c_@@_outfile_iow { #2 }
-  \iow_now:NV  \c_@@_outfile_iow { \l_tmpa_tl }
-  \iow_now:NV  \c_@@_outfile_iow { \l_tmpb_tl }
-  \iow_close:N \c_@@_outfile_iow
+  \iow_now:cx { @auxout } {
+      \c_backslash_str \exp_not:n { begin{fortex@verb@hashmap} }
+  } 
+  \prop_map_function:NN \g_@@_ref_cache_toaux_prop \@@_write_fmt:nn
+  \iow_now:cx { @auxout } {
+      \c_backslash_str \exp_not:n { end{fortex@verb@hashmap} }
+  }
 }
+%    \end{macrocode}
+%
+% \subsubsection{Print code in \texttt{.pdf}}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{\@@_print_code:n}
+% \begin{arguments}
+% \item The code to print 
+% \end{arguments}
+%
+% Here is the final generic function for printing before it gets split off into \pkg{minted}\\pkg{listings} specific code. 
+% 
+% One optimisation that has been made is to only highlight the code if it has already been completely referenced (This is less of an issue for listings).
+% Due to \pkg{minted} both taking a long time, and keeping its own cache, we should try not to validate the cache by changing the referencing.
+%
+% In order to help speed up the build process, if the code has not been completely referenced, we use the much faster method of just using the verbatim environment.
+% By using the verbatim environment as opposed to nothing at all, we can also keep all the other hyperlinks and labels in the document from shifting around too much. 
+% If the labels shift around too much then \TeX{} will need to recalculate the page numbers, requiring a third rebuild. 
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_print_code:n #1 { 
+  \prop_get:NVN \g_@@_ref_cache_prop
+              { \tex_mdfivesum:D { \exp_not:n { #1 } } }
+                \l_@@_cached_code_tl
+  \quark_if_no_value:NTF \l_@@_cached_code_tl {
+    \@@_multiline_verb:n { #1 }
+  } {
+    \str_if_eq:NNTF { \g_@@_printend_tl } { mint }
+                    { \@@_multiline_mint:oV }
+                    { \@@_multiline_listings:oV } 
+    { \l_@@_cached_code_tl } \g_@@_code_delim_str
+  }
+}
+\cs_generate_variant:Nn \@@_print_code:n { o }
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsubsection{Print code in \texttt{.pdf}}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+%
+% One big problem that I found was that the following code does not work. 
+%
+% \begin{center}
+% \begin{minipage}{7cm}
+% \begin{lstlisting}[numbers=none]
+%  \cs_set:Npn \multiline_verb:n #1 { 
+%    \begin{Verbatim}
+%      #1
+%    \end{verbatim}
+%  }
+% \end{lstlisting}
+% \end{minipage}
+% \end{center}
+%
+% This is because once the catcodes of the argument have been scanned, they are not able to be reassigned like they should be in the |Verbatim| environment.
+%
+% This problem also exists with the |minted| environment (That uses \pkg{fancyvrb} under the hood). 
+% \pkg{listings} is also affected to a lesser extent, although instead of crashing like \pkg{fancyvrb} does, it just has a restricted feature set (that makes highlighting impossible).
+%
+% I found this \tn{scantokens} workaround when reading the minted source code as it uses a similar method to use the |Verbatim| environment when in draft mode.
+% This \tn{scantokens} workaround under normal circumstances would add a space after very control character. 
+% However, because we have already used a verbatim environment to sanitise everything, there should be no control sequences that accidentally sneak in.
+%
+% Because we use scantokens a few times, it makes sense to reassign some catcodes in order to make passing everything in and out easier. 
+%
+% Finally, we need to make sure that |^^M| is the current newline character, and it has an active catcode. 
+% This is because \pkg{fancyvrb} environments use |^^M|\textsubscript{\texttt{13}} as a marker to stop scanning on the |\begin{Verbatim}|.
+% If |^^M|\textsubscript{\texttt{13}} is missing, \pkg{fancyvrb} will seep scanning until the end of the `virtual file' than scantokens creates, and then throw a hissyfit as it reached the end of the file.
+%
+%    \begin{macrocode}
+\group_begin:
+\endlinechar=`\^^M
+\char_set_catcode_active:N \^^M
+%    \end{macrocode}
+%
+% Here we reassign a few important characters in order to make sure that they are correctly passed to scantokens.
+%
+% \begin{center}
+% \begin{tabular}{r|l}
+% New & Old \\\hline
+% |<| & |{| \\
+% |>| & |}| \\
+% |!| & |\| \\
+% \end{tabular}
+% \end{center}
+%
+% Note that because |\| is present in the command \cs{char_set_catcode_other:N}, we need to make sure that is the \emph{last} command of the bunch.
+% 
+%    \begin{macrocode}
+\char_set_catcode_group_begin:N \<       \char_set_catcode_other:N \{
+\char_set_catcode_group_end:N   \>       \char_set_catcode_other:N \}
+\char_set_catcode_escape:N      \!       \char_set_catcode_other:N \\
+%    \end{macrocode}
+%
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{ \@@_multiline_mint_aux:nnn }
+% \begin{arguments}
+% \item Arguments to pass to minted
+% \item Source code language
+% \item Code to place into minted environment
+% \end{arguments}
+%
+% The minted environment is a little odd here as minted does not like active characters being used for \texttt{escapeinside}.
+% Under normal circumstances, our engine specific \texttt{escapeinside} characters have a catcode of ``other''. 
+% However, because scantokens rescans all tokens and applies the default catcodes, it resets our nice catcode other, into a catcode active. 
+% This causes minted to freak out.
+%The default catcode is active because all characters in fancy Unicode blocks are active in order to print the ``This character is not defined'' message. 
+% (Note this is not the case with \XeTeX{} and \LuaTeX{}, but we want to support all engines).
+%
+% As such we pass the |\begin{minted}|\texttt{\oarg{Args}\Arg{Lang}} command via a temporary variable.  
+% By doing this, The tokens encapsulated by that variable escape the retokenisation and maintain their catcode other status.
+% 
+%    \begin{macrocode}
+!cs_gset:Npn !@@_multiline_mint_aux:nnn #1#2#3 <
+  !tl_set:Nn !l_tmpa_tl < !begin<minted>[<#1>]<#2> >
+  !scantokens<%
+    \csname~l_tmpa_tl\endcsname
+    #3
+    \end{minted}
+    !noexpand%
+  >
+>
+!cs_generate_variant:Nn !@@_multiline_mint_aux:nnn < xxn >
+%    \end{macrocode}
+% \end{macro}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{ \@@_multiline_listings_aux:nn }
+% \begin{arguments}
+% \item Arguments to pass to listings
+% \item Code to place into listings environment
+% \end{arguments}
+% 
+% The Listings environment on the other hand is slightly different again. 
+% Because it is not based on a \pkg{fancyvrb} environment, (and a fair bit of magic on the behalf of the \pkg{listings} devs), it does \emph{technically} work without scantokens.
+% 
+% However, that is not the whole story. 
+% \pkg{listings} makes very clear in their documentation that just using \texttt{lstlisting} in a command is still ill-advised.
+% Moreover, many features that would otherwise work with \texttt{lstlisting}, don't.
+% Importantly for us, \emph{if} we were to use \texttt{lstlisting} inside a command (without scantokens) then \texttt{escapechar} would no longer work.
+% As we use \texttt{escapechar} to insert code hyperlinks, this is not acceptable, so we end up using scantokens here too. 
+%
+% Note that unlike \pkg{minted}, \pkg{listings} is able to handle an active escapechar without any issues.
+% 
+%    \begin{macrocode}
+!cs_gset:Npn !@@_multiline_listings_aux:nn #1#2 <
+  !scantokens<%
+    \begin{lstlisting}[{#1}]
+    #2
+    \end{lstlisting}
+    !noexpand%
+  >
+>
+!cs_generate_variant:Nn !@@_multiline_listings_aux:nn < xn > 
+%    \end{macrocode}
+% \end{macro}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{ \@@_multiline_verb:n }
+%
+% \begin{arguments}
+% \item Code to place into verbatim environment.
+% \end{arguments}
+%
+% Finally we also wrap the plain-old \pkg{fancyvrb} verbatim environment. 
+% This like the minted environment is a fancyvrb environment and needs \tn{endlinechar} to be |^^M|\textsubscript{\texttt{13}}.
+%
+%    \begin{macrocode}
+!cs_gset:Npn !@@_multiline_verb:n #1 <
+  !scantokens<%
+    \begin{Verbatim}
+    #1
+    \end{Verbatim}
+    !noexpand%
+  >
+>
+!group_end:
+%    \end{macrocode}
+% \end{macro}
+%
+% \paragraph{listings}
 % \changes{0.0.7$\alpha$}{2022/06/09}{Fix listings escape}
 % \changes{0.0.10$\alpha$}{2022/12/22}{Move \texttt{lstinputlisting}/\texttt{inputminted} to an aux macro}
 % \changes{0.0.10$\alpha$}{2022/12/22}{Fix listings escape, (again)}
 % \changes{0.0.11$\alpha$}{2022/12/29}{Use sequence to store \pkg{minted}/\pkg{listings} options}
-% \begin{macro}{\@@_lstinputlistings_aux:nn}
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \begin{macro}{\@@_multiline_listings:nn}
 % \begin{arguments}
 % \item Filename to be inserted into the \texttt{.pdf} document  
 % \item Delimiter used to escape back to regular \LaTeX{}
@@ -2666,10 +2969,10 @@
 % \pkg{listings} doesn't support no highlighting by setting the key |language=text|, so we need to explicitly \emph{not} pass in a language key.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_lstinputlistings_aux:nn #1#2 {
+\cs_set:Npn \@@_multiline_listings:nn #1#2 {
   \seq_push:Nn \g_@@_print_keystore_seq { escapechar={#2} } 
-  \str_if_eq:NNF { #2 } { text } { 
-    \seq_push:Nx \g_@@_print_keystore_seq { language={\g_@@_lang_tl} }
+  \str_if_eq:NNF \l_@@_lang_tl { text } { 
+    \seq_push:Nx \g_@@_print_keystore_seq { language={\l_@@_lang_tl} }
   } 
 %    \end{macrocode}
 % A problem arises when using \pkg{listings}, and the delimiters chosen for \pTeX{}, \upTeX{}, and \XeTeX{}. 
@@ -2687,7 +2990,7 @@
 % Consider the definition of \tn{lst@DefEC}:
 %
 % \begin{center}
-% |\lst@CCECUse \lst@ProcessLetter ^^80^^81|$\cdots$|^^fe^ff^^00|
+% |\lst@CCECUse \lst@ProcessLetter ^^80^^81|$\cdots$|^^fe^^ff^^00|
 % \end{center}
 % The important thing to note here is that the final terminating \textsc{nul} is important as \pkg{listings} uses this as an ending delimiter (like a C string). 
 % As such we want to insert out delimiter character between final |^^ff| and |^^00|.
@@ -2716,32 +3019,31 @@
     \tl_set:Nx \lst@DefEC { \seq_use:Nn \l_@@_lst@DefEC_seq {} }
     \seq_push:Nn \g_@@_print_keystore_seq { extendedchars=true }
   }
-%    \end{macrocode}
-% Expanding commands in optional arguments is always a little bit of a pain.
-% However, here we use it to send all the keys to \pkg{listings}.
-%
-%    \begin{macrocode}
-  \exp_last_unbraced:Nx \lstinputlisting 
-                        { [ { \seq_use:Nn \g_@@_print_keystore_seq {,} } ] }
-                        { #1 }
-  \tl_set_eq:NN \lst@DefEC \l_@@_lst@DefEC_orig_tl
-%    \end{macrocode}
-%    \begin{macrocode}
-  \bool_if:nT { \g_@@_verbose_bool } {
+  \bool_if:NT \g_@@_verbose_bool {
     \iow_term:x { Arguments~passed~to~listings:~
                  \seq_use:Nn \g_@@_print_keystore_seq {,~} }
   }
+%    \end{macrocode}
+%    \begin{macrocode}
+  \@@_multiline_listings_aux:xn {
+    \seq_use:Nn \g_@@_print_keystore_seq {,}
+  } { #1 }
+  \tl_set_eq:NN \lst@DefEC \l_@@_lst@DefEC_orig_tl
 }
-\cs_generate_variant:Nn \@@_lstinputlistings_aux:nn { xx }
+\cs_generate_variant:Nn \@@_multiline_listings:nn { oV }
 %    \end{macrocode}
 % \end{macro}
 % 
+% \paragraph{minted}
+%
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
 % \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
 % \changes{0.0.10$\alpha$}{2022/12/22}{Move \texttt{lstinputlisting}/\texttt{inputminted} to an aux macro}
 % \changes{0.0.11$\alpha$}{2022/12/29}{Use sequence to store \pkg{minted}/\pkg{listings} options}
-% \begin{macro}{\@@_inputminted_aux:nn}
+% \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
+% \begin{macro}{\@@_multiline_mint:nn}
 % \begin{arguments}
-% \item Filename to be inserted into the \texttt{.pdf} document  
+% \item Verbatim code to be inserted into the \texttt{.pdf} document  
 % \item Delimiter used to escape back to regular \LaTeX{}
 % \end{arguments}
 %
@@ -2754,95 +3056,155 @@
 % (And as such is the cause of a lot of Unicode woes)
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_inputminted_aux:nn #1#2 {
-  \seq_push:Nn \g_@@_print_keystore_seq { escapeinside={#2 #2} }
-  \tl_set:NV \minted@outputdir { \g_@@_outputdir_tl }
-  \tl_set:NV \minted@cachedir  { \g_@@_tmpfolder_tl }
+\cs_set:Npn \@@_multiline_mint:nn #1#2 {
+  \seq_push:Nn \g_@@_print_keystore_seq { escapeinside={#2#2} }
+%    \end{macrocode}
+% One tripping point for calculating the first line number is that the printing function is called \emph{after} the code has been processed and the line number incremented. 
+%
+% Consider the case where we have already called the code environment $\alpha$ times. 
+% If a code environment has $n$ lines of code then the total lines of code so far is given by
+%
+% \begin{equation*}
+%   N_\alpha = \sum_{i=1}^\alpha n_i  
+% \end{equation*}
+% 
+% Now let us call the $\alpha+1$\textsuperscript{th} code environment.
+% The first thing that happens is \cs{@@_process_code:nn} gets called and our total line number gets updated as
+%
+% \begin{equation*}
+%   N_\alpha \to N_{\alpha+1}
+% \end{equation*}
+%
+% The second thing that happens is that we print our code. 
+% However, this code environment should start at line number $1+N_\alpha$, not $1+N_{\alpha+1}$.
+% 
+% As such we cannot use the \cs{g_@@_cur_lineno_int} variable directly, as it contains the number $N_{\alpha+1}$.
+% To combat this we use a secondary variable \cs{g_@@_block_lineno_int}, that lags behind \cs{g_@@_cur_lineno_int} by one code environment.
+%
+% This way \cs{g_@@_block_lineno_int} should always contain $N_\alpha$ when the code is being printed.
+%
+%    \begin{macrocode}
+  \bool_if:NT \g_@@_firstnumber_last_bool {
+    \seq_push:Nx \g_@@_print_keystore_seq {
+      firstnumber={ \int_use:N \g_@@_block_lineno_int }
+    }
+  }
+  \int_gset_eq:NN \g_@@_block_lineno_int \g_@@_cur_lineno_int
 %    \end{macrocode}
 %    \begin{macrocode}
-  \exp_last_unbraced:Nx \inputminted
-                      { [ \seq_use:Nn \g_@@_print_keystore_seq {,} ] } 
-                      { \g_@@_lang_tl } { #1 }
-%    \end{macrocode}
-%    \begin{macrocode} 
-  \bool_if:nT { \g_@@_verbose_bool } {
+  \bool_if:NT \g_@@_verbose_bool {
     \iow_term:x { Arguments~passed~to~minted:~
                   \seq_use:Nn \g_@@_print_keystore_seq {,~} }
   }
+%    \end{macrocode}
+%    \begin{macrocode}
+  \@@_multiline_mint_aux:xxn { 
+    \seq_use:Nn \g_@@_print_keystore_seq {,}
+  } { \l_@@_lang_tl } { #1 }
 }
-\cs_generate_variant:Nn \@@_inputminted_aux:nn { xx }
+\cs_generate_variant:Nn \@@_multiline_mint:nn { oV }
 %    \end{macrocode}
 % \end{macro}
 %
-% 
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
+% \begin{macro}{\@@_process_code:nn}
+% \begin{arguments}
+% \item Sequence we are saving every line of code into
+% \item Line of code we want to add to the sequence
+% \end{arguments}
+%
+% This is the function that gets called on every line of code in the \env{code} environment.
+% We see that it does a few different things. 
+% The first is that it writes the current line of code out to our file. 
+% We also add the line of code to a sequence in order to pass it to \pkg{minted}/\pkg{listings}
+
+% Finally, due to minted having a buggy \texttt{firstnumber=last} implementation, we need to keep track of our own line numbers, so we increment our global line number counter. 
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_process_code:nn #1#2 {
+  \iow_now:Nn \g_@@_outfile_iow { #2 }
+  \seq_gput_right:Nn #1 { #2 }
+  \bool_if:NT \g_@@_verbose_bool {
+    \iow_term:V { \g_@@_cur_lineno_int|~ #2 }
+  }
+  \int_gincr:N \g_@@_cur_lineno_int
+}
+%    \end{macrocode}
+%
+% \end{macro}
 % \subsubsection{Main code environment} 
+% \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
 % \changes{0.0.11$\alpha$}{2022/12/29}{Allow shortvrb characters to be included in code}
-%
 % \begin{macro}{code}
-% The actual environment that gets called.
-% There are a few things about this function that are not optimal, but I have tried and cannot think of any more elegant way to do them.
-% 
-% The main issue is that there seems to be no way to have a verbatim environment that allows the insertion of the content into two locations, or to insert into a command argument. 
-% We want to do this because we need to:
 %
-% \begin{enumerate}
-% \item{Append verbatim content to file}
-% \item{Highlight and print in the |.pdf|}
-% \end{enumerate}
-%
-% As such we go on a whole side-quest into writing to folders and detecting output directories, etc. 
-% All because of this one issue.
-% I have had a look at other solutions including \pkg{skdoc} and \pkg{minted}, and they seem to do the same thing of writing out to a file and then reading back in.
-% Our implementation is both more advanced and jankier as we, unlike the previously mentioned packages are able to handle |-output-dir| flags batter and do not have a hard |-shell-esc| requirement. 
-% However, in doing so we have jank and workarounds. 
+% This is the main code environment that is going to be called the most. 
+% At the moment not a lot of code actually resides here, 
 %
 % (Note: \tn{VerbatimEnvironment} is needed to detect the end of the environment when using verbatim content)
+%
 %    \begin{macrocode}
 \NewDocumentEnvironment { code } {} {
   \VerbatimEnvironment
-  \@@_inctmpname:
+  \group_begin:
+  \seq_clear_new:N \l_@@_curcode_seq
+  \@bsphack
 %    \end{macrocode}
-% One interesting thing to note, is that \tn{VerbatimOut} seems to be sensitive to ASCII $<20$ (space), as a tab is commonly used in sourcecode (but afaik nothing else), we make sure to correct the catcode of it. 
+% One interesting thing about the fancyvrb environment is that it will expand any active characters.
+% This can be annoying (especially when using non-\textsc{ascii} in \pdfTeX{}, so we provide a way to disable this behaviour.
+%
+% However, this behaviour is not \emph{completely} undesirable, as it can be used to add a crude form of namespacing to languages that do not provide it. 
+% (Similar to the |\@@_mycommand:n| idea in \pkg{l3doc}, where the |@@| is expanded into a namespace.)
 %
 %    \begin{macrocode}
-  \VerbatimOut [ codes = { \char_set_catcode_other:N \^^I 
-                           \@@_reset_active_catcodes: } ]
-               { \g_@@_tmp_filename_tl }
-%    \end{macrocode}
-% If we are using |-output-dir|, we need to pass full name to \pkg{minted}/\pkg{listings}
-%    \begin{macrocode}
+  \begin{g_@@_env_to_cmd}
+    [ codes={ \@@_reset_active_catcodes: } ]
+    { \@@_process_code:nn \l_@@_curcode_seq }%
 }{
-  \endVerbatimOut
+  \end{g_@@_env_to_cmd}
+  \@esphack
 %    \end{macrocode}
-% Don't build on the first passthough.
-% Searching for links to hyperref is \emph{excruciatingly} slow, so we should avoid doing it unnecessarily.
-% If we \emph{do} build on the first pass then this also makes our caching strategy invalid as the actual code will not have changed. 
-% Hence the cache will not be invalidated.
+% The reason that we use a sequence, as opposed to just concatenating everything into a single token list, is we still need to insert line breaks.
+% As te code is processed line-by-line, there is no easy way to detect which line is the final line.
+% As such, any concatenating scheme that consists of \texttt{\meta{new} = \meta{old} + \meta{line} + }|^^M|\textsubscript{\texttt{12}} is going to end with an extra linebreak at the beginning or end. 
+% Whilst it is then possible to remove the final linebreak, it makes more sense to use sequences, particularly \cs{seq_use:Nn}, as we no longer need to deal with that hassle.  
 %
 %    \begin{macrocode}
-  \tl_if_exist:NT { \fortex@codeblock@unscoped@regex } {
-    \@@_concat_files:nn \g_@@_tmp_filename_tl
-                              \g_@@_out_filename_tl
-%    \end{macrocode}
-%    \begin{macrocode}
-    \@@_mkref_file:nN { \g_@@_outputdir_tl \g_@@_tmp_filename_tl }
-                              \l_tmpa_tl
-%    \end{macrocode}
-%    \begin{macrocode}
-    \str_if_eq:NNTF { \g_@@_printend_tl } { mint }
-                    { \@@_inputminted_aux:xx }
-                    { \@@_lstinputlistings_aux:xx } 
-    { \g_@@_outputdir_tl \l_tmpa_tl } \g_@@_code_delim_str
+  \tl_set:Nx \l_@@_curcode_tl {
+    \exp_args:NNe \seq_use:Nn \l_@@_curcode_seq 
+                            { \char_generate:nn {13} {12} }  
   }
+%    \end{macrocode}
+% Finally we reference and print the code. 
+% Note that the function calls are a little bit deceptive here as \cs{@@_reference_code:nn} writes the referencing information to the aux file.
+% This reference information is read back in on the next run, and as such it doesn't make a huge amount of sense to pass it to \cs{@@_print_code:n} as a function argument.
+%
+% So then what is the data doing getting passed as a function argument?
+% When the pre-referenced code is not yet available, we should still try and do something to prevent the document text from jumping around too much. 
+% (When the document text jumps around, the page references will possibly be incorrect and may necessitate a rebuild.)
+% As such we pass in a fallback, un-referenced version of the code so that it can be placed in a simple verbatim environment. 
+% This way the spacing should be (roughly) correct and not as many rebuilds should be required.
+%
+% As mentioned, the string |@d5>]G<s3@| is used as a newline when written to the aux file as actual newlines will break the line-by-line keyval store implementation.
+%
+%    \begin{macrocode}
+  \@@_reference_code:xx {
+    \seq_use:Nn \l_@@_curcode_seq { @ d5>]G<s3 @ }
+  }{
+    \tex_mdfivesum:D { \exp_not:o { \l_@@_curcode_tl } }
+  }
+  \@@_print_code:o \l_@@_curcode_tl 
+  \group_end:
+  \@doendpe
 }
 %    \end{macrocode}
-% \end{macro}
+%  \end{macro}
 %
 % \end{implementation}
 %    \begin{macrocode}
 %</package>
 %    \end{macrocode}
-%
+% \clearpage
 % \PrintChanges
 % \PrintIndex
 %
