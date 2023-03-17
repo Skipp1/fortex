@@ -30,11 +30,9 @@
 \cs_generate_variant:Nn \prop_gput:Nnn { NVo }
 \cs_generate_variant:Nn \tl_replace_all:Nnn { Nnx }
 \seq_new:N \g__fortex_print_keystore_seq
-\seq_new:N \g__fortex_ignoreactive_charcodes_seq
-\int_new:N \g__fortex_cur_lineno_int
-\int_new:N \g__fortex_block_lineno_int
-\int_gincr:N \g__fortex_cur_lineno_int
-\int_gset_eq:NN \g__fortex_block_lineno_int \g__fortex_cur_lineno_int
+\seq_new:N   \g__fortex_ignoreactive_charcodes_seq
+\int_new:N   \fortexcurlineno
+\int_gincr:N \fortexcurlineno
 \keys_define:nn { fortex } {
     verbose .bool_gset:N = \g__fortex_verbose_bool
   , verbose .default:n   = { true }
@@ -46,47 +44,62 @@
   , lang .default:n = { text }
   , lang .initial:n = { text }
   , ext .tl_gset:N = \g__fortex_ext_tl
-  , ext .default:n = {}
   , ext .initial:n = {}
   , intext .bool_gset:N = \g__fortex_intext_bool
-  , intext .default:n   = { false }
+  , intext .default:n   = { true }
   , intext .initial:n   = { true }
   , delim .str_gset:N  = \g__fortex_code_delim_str
-  , delim .default:n   = {}
   , delim .initial:n   = {}
+  , escapechar .meta:n = { delim = {#1} }
+  , escapeinside .code:n  = {
+     \exp_args:Nno \keys_set:nn { fortex } { \use_i:nn #1 }
+    }
   , outdir .tl_gset:N = \g__fortex_outputdir_tl
   , outdir .initial:n = {}
-  , outdir .default:n = {}
   , filename .tl_gset:N = \l__fortex_out_filename_tl
   , filename .initial:n = {}
-  , filename .default:n = {}
-  , ignore active .code:n = {
+  , draft .bool_gset:N = \g__fortex_draft_bool
+  , draft .default:n   = { true }
+  , draft .initial:n   = { false }
+  , ignore~active .code:n = {
       \seq_gpush:Nx \g__fortex_ignoreactive_charcodes_seq { \cs_to_str:N #1 }
     }
-  , no ignore active .code:n = {
+  , no~ignore~active .code:n = {
       \exp_args:Nne \seq_gremove_all:Nn \g__fortex_ignoreactive_charcodes_seq
                                       { \cs_to_str:N #1 }
     }
-  , vindex idxnum font .str_gset:N  = \g__fortex_vindex_fmt_str
-  , vindex idxnum font .default:n   = { textrm }
-  , vindex idxnum font .initial:n   = { textrm }
-  , codedef idxnum font .str_gset:N  = \g__fortex_idxfmt_codedef_str
-  , codedef idxnum font .default:n   = { textit }
-  , codedef idxnum font .initial:n   = { textit }
-  , codecall~idxnum~font .str_gset:N  = \g__fortex_idxfmt_codecall_str
-  , codecall~idxnum~font .default:n   = { textrm }
-  , codecall~idxnum~font .initial:n   = { textrm }
+  , hyperlink~fmt .tl_gset:N  = \__fortex_hyperlink_fmt:
+  , hyperlink~fmt .initial:n  = \ttfamily
+  , vindex~idxnum~fmt .code:n = {
+      \str_gset:Nx \g__fortex_vindex_fmt_str {
+        \exp_last_unbraced:Ne \use_i:nnn { \cs_split_function:N #1 }
+      }
+    }
+  , vindex~idxnum~fmt .initial:n = { \textrm }
+  , codedef~idxnum~fmt .code:n = {
+      \str_gset:Nx \g__fortex_idxfmt_codedef_str {
+        \exp_last_unbraced:Ne \use_i:nnn { \cs_split_function:N #1 }
+      }
+    }
+  , codedef~idxnum~fmt .initial:n = { \textit }
+  , codecall~idxnum~fmt .code:n   = {
+      \str_gset:Nx \g__fortex_idxfmt_codecall_str {
+        \exp_last_unbraced:Ne \use_i:nnn { \cs_split_function:N #1 }
+      }
+    }
+  , codecall~idxnum~fmt .initial:n = { \textrm }
   , firstnumber .code:n = {
       \str_case_e:nnF { #1 } {
         { last } { \bool_gset_true:N  \g__fortex_firstnumber_last_bool }
         { auto } { \bool_gset_false:N \g__fortex_firstnumber_last_bool }
       } {
-        \int_gset:Nn  \g__fortex_cur_lineno_int { #1 }
-        \int_gset_eq:NN \g__fortex_block_lineno_int \g__fortex_cur_lineno_int
+        \int_gset:Nn  \fortexcurlineno { #1 }
       }
     }
   , firstnumber .initial:n = { last }
-
+  , after~codeblock .tl_gset:N = \__fortex_after_codeblock:n
+  , after~codevar .tl_gset:N = \__fortex_after_codevar:n
+  , after~codevar .initial:n = {}
   , unknown .code:n = {
       \exp_args:Nnf \seq_gpush:Nn \g__fortex_print_keystore_seq {
         \tl_if_empty:nTF { #1 } {
@@ -203,6 +216,7 @@
 \cs_set:Npn \__fortex_hyperref:nn #1#2 {
   \cs_if_exist_use:NTF \hyperref { [ #1 ] { #2 } } { #2 }
 }
+\cs_generate_variant:Nn \__fortex_hyperref:nn { xn }
 \str_case_e:nnT { \c_sys_engine_str } {
   { ptex   } {}
   { uptex  } {}
@@ -261,9 +275,6 @@
   \exp_args:No \index { \l__fortex_idxvar_str }
 }
 \cs_generate_variant:Nn \__fortex_vindex_aux:nn {nx, xx}
-\NewDocumentCommand \fortexhypercodelinkfmt { m } {
-  \texttt { #1 }
-}
 \NewDocumentCommand \fortexhyperinsert { s m m } {
   \tl_set:Nn \l_tmpa_tl { #3 }
   \str_replace_all:Nnn \l_tmpa_tl {:} {!}
@@ -271,15 +282,16 @@
     \__fortex_vindex_aux:xx { \l_tmpa_tl } { \g__fortex_idxfmt_codecall_str }
   }
   \__fortex_hyperref:nn { code: #3 } {
-    \fortexhypercodelinkfmt{ \detokenize { #2 } }
+    \__fortex_hyperlink_fmt: \detokenize { #2 }
   }
 }
 \cs_set:Npn \__fortex_reference_code:nn #1#2 {
 
   \prop_get:NnN \g__fortex_ref_cache_toaux_prop { #2 } \l__fortex_ref_tl
 
-  \bool_lazy_and:nnT { \quark_if_no_value_p:N \l__fortex_ref_tl }
-                     { \tl_if_exist_p:N \fortex@codeblock@unscoped@regex } {
+  \bool_lazy_all:nT { { \quark_if_no_value_p:N \l__fortex_ref_tl }
+                      { \tl_if_exist_p:N \fortex@codeblock@unscoped@regex }
+                      { \bool_not_p:n \g__fortex_draft_bool } } {
     \__fortex_reference_code_aux:Nn \l__fortex_ref_tl { #1 }
     \prop_gput:Nno \g__fortex_ref_cache_toaux_prop { #2 } { \l__fortex_ref_tl }
     \tl_replace_all:Nnx \l__fortex_ref_tl { @ d5>]G<s3 @ }
@@ -301,12 +313,11 @@
       \tl_set:NV \l_tmpa_tl { \l_tmpa_tl / ##1 }
       \tl_set:Nn \l_tmpb_tl { g__fortex_codeblock_ \l_tmpa_tl _scope_tl }
       \tl_set:Nf \l_tmpa_regex {
-        \tl_if_exist:cTF \l_tmpb_tl {
+        \tl_if_exist:cT \l_tmpb_tl {
           \tl_use:c \l_tmpb_tl
-        } { }
+        }
       }
-      \tl_concat:NNN \l__fortex_regex_tl \l__fortex_regex_tl
-                                         \l_tmpa_regex
+      \tl_concat:NNN \l__fortex_regex_tl \l__fortex_regex_tl \l_tmpa_regex
     }
     \tl_concat:NNN \l__fortex_regex_tl \l__fortex_regex_tl
                                        \fortex@codeblock@unscoped@regex
@@ -341,7 +352,6 @@
   noindex .default:n  = { true  },
   noindex .initial:n  = { false },
   scope .str_set:N = \l__fortex_codeblock_scope_str,
-  scope .default:n = { },
   scope .initial:n = { },
 }
 \cs_set:Npn \__fortex_codeblock_aux:nnnn #1#2#3#4 {
@@ -383,24 +393,22 @@
   \group_begin:
   \keys_set:nf { fortex/codeblock }
                { \bool_if:NTF \g__fortex_intext_bool { #1 } { #1, noref } }
-  \seq_gput_right:Nx \g__fortex_codenest_seq { \tl_to_str:n { #2 } }
+  \seq_gput_right:Nn \g__fortex_codenest_seq { #2 }
   \__fortex_codeblock_aux:nnnn { #2 } \l__fortex_codeblock_scope_str
                                       \l__fortex_codeblock_noref_bool
                                       \l__fortex_codeblock_noidx_bool
 } {
-  \bool_if:NTF \l__fortex_codeblock_noref_bool {
-    \aftercodeblock { #2 }
-  } {
-    \aftercodeblock { #2 } [ \seq_use:Nn \g__fortex_codenest_seq {:} ]
+  \tl_if_empty:NF \__fortex_after_codeblock:n { \__fortex_after_codeblock:n {
+    \bool_if:NF \l__fortex_codeblock_noref_bool {
+      \__fortex_hyperref:xn { code: \seq_use:Nn \g__fortex_codenest_seq {:} }
+    } { #2 }
+  }
   }
   \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
   \group_end:
 }
-\NewDocumentCommand { \aftercodeblock } { m O{} } {
-  \noindent \textit { \small End~of~code~block~
-    \tl_if_empty:NF { #2 } { \__fortex_hyperref:nn { code: #2 } }
-    { \texttt { \tl_to_str:N { #1 } } } . \\
-  }
+\cs_set:Npn \__fortex_after_codeblock_aux:n #1 {
+  \hfill \itshape End~of~codeblock:~\texttt{ #1 }.
 }
 \NewDocumentEnvironment { codevar } { O{} v } {
   \keys_set:nf { fortex/codeblock }
@@ -415,13 +423,17 @@
     \seq_gpop_right:NN \g__fortex_codenest_seq \l_tmpa_tl
   }
 } {
-  \bool_if:NTF \l__fortex_codeblock_noref_bool {
-    \aftercodevar { #2 }
-  } {
-    \aftercodevar { #2 } [ \seq_use:Nn \g__fortex_codenest_seq {:}  ]
+  \tl_if_empty:NF \__fortex_after_codevar:n { \__fortex_after_codevar:n {
+    \seq_set_map:NNn \l_tmpa_seq \l__fortex_vars_seq { {
+      \bool_if:NF \l__fortex_codeblock_noref_bool {
+        \seq_push:Nn \g__fortex_codenest_seq { ##1 }
+        \__fortex_hyperref:xn { code: \seq_use:Nn \g__fortex_codenest_seq {:} }
+      } { ##1 }
+    } }
+    \seq_use:Nn \l_tmpa_seq {,~}
+  }
   }
 }
-\NewDocumentCommand { \aftercodevar } { m O{} } { \relax }
 \str_if_eq:NNTF { \g__fortex_printend_tl } { mint } {
   \NewDocumentCommand { \MakeShortFortex } { O{} m m } {
     \seq_gpush:Nx \g__fortex_ignoreactive_charcodes_seq { \token_to_str:N #3 }
@@ -570,11 +582,14 @@
       \c_backslash_str \exp_not:n { end{fortex@verb@hashmap} }
   }
 }
+\int_new:N   \g__fortex_tmp_lineno_int
+\int_gincr:N \g__fortex_tmp_lineno_int
 \cs_set:Npn \__fortex_print_code:n #1 {
   \prop_get:NVN \g__fortex_ref_cache_prop
               { \tex_mdfivesum:D { \exp_not:n { #1 } } }
                 \l__fortex_cached_code_tl
-  \quark_if_no_value:NTF \l__fortex_cached_code_tl {
+  \bool_lazy_or:nnTF { \quark_if_no_value_p:N \l__fortex_cached_code_tl }
+                     { \g__fortex_draft_bool } {
     \__fortex_multiline_verb:n { #1 }
   } {
     \str_if_eq:NNTF { \g__fortex_printend_tl } { mint }
@@ -582,6 +597,7 @@
                     { \__fortex_multiline_listings:oV }
     { \l__fortex_cached_code_tl } \g__fortex_code_delim_str
   }
+  \int_gset_eq:NN \fortexcurlineno \g__fortex_tmp_lineno_int
 }
 \cs_generate_variant:Nn \__fortex_print_code:n { o }
 \group_begin:
@@ -602,7 +618,7 @@
 !cs_generate_variant:Nn !__fortex_multiline_mint_aux:nnn < xxn >
 !cs_gset:Npn !__fortex_multiline_listings_aux:nn #1#2 <
   !scantokens<%
-    \begin{lstlisting}[{#1}]
+    \begin{lstlisting}[{{#1}}]
     #2
     \end{lstlisting}
     !noexpand%
@@ -623,6 +639,12 @@
   \str_if_eq:NNF \l__fortex_lang_tl { text } {
     \seq_push:Nx \g__fortex_print_keystore_seq { language={\l__fortex_lang_tl} }
   }
+  \bool_if:NT \g__fortex_firstnumber_last_bool {
+    \seq_push:Nx \g__fortex_print_keystore_seq {
+      firstnumber={ \int_use:N \fortexcurlineno }
+    }
+  }
+
   \tl_set_eq:NN \l__fortex_lst@DefEC_orig_tl \lst@DefEC
   \str_case_e:nnT { \c_sys_engine_str } {
     { ptex  } {}
@@ -649,10 +671,9 @@
   \seq_push:Nn \g__fortex_print_keystore_seq { escapeinside={#2#2} }
   \bool_if:NT \g__fortex_firstnumber_last_bool {
     \seq_push:Nx \g__fortex_print_keystore_seq {
-      firstnumber={ \int_use:N \g__fortex_block_lineno_int }
+      firstnumber={ \int_use:N \fortexcurlineno }
     }
   }
-  \int_gset_eq:NN \g__fortex_block_lineno_int \g__fortex_cur_lineno_int
   \bool_if:NT \g__fortex_verbose_bool {
     \iow_term:x { Arguments~passed~to~minted:~
                   \seq_use:Nn \g__fortex_print_keystore_seq {,~} }
@@ -667,14 +688,15 @@
   \iow_now:Nn \g__fortex_outfile_iow { #2 }
   \seq_gput_right:Nn #1 { #2 }
   \bool_if:NT \g__fortex_verbose_bool {
-    \iow_term:V { \g__fortex_cur_lineno_int|~ #2 }
+    \iow_term:V { \g__fortex_tmp_lineno_int|~ #2 }
   }
-  \int_gincr:N \g__fortex_cur_lineno_int
+  \int_gincr:N \g__fortex_tmp_lineno_int
 }
 \NewDocumentEnvironment { code } {} {
   \VerbatimEnvironment
   \group_begin:
   \seq_clear_new:N \l__fortex_curcode_seq
+  \int_gset_eq:NN \g__fortex_tmp_lineno_int \fortexcurlineno
   \@bsphack
   \begin{g__fortex_env_to_cmd}
     [ codes={ \__fortex_reset_active_catcodes: } ]

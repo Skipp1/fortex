@@ -25,51 +25,134 @@
 \usepackage[UKenglish]{babel}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{microtype}
+\usepackage[skins, breakable]{tcolorbox}
 \usepackage{tikz}
 \usepackage{listings}
 \usepackage{bookmark}
 \usepackage[pass]{geometry}
+\usetikzlibrary{decorations.pathmorphing}
 \EnableCrossrefs
 \lstset {
-  gobble=3,
-  language=[LaTeX]TeX,
-  basicstyle=\small\ttfamily,
-  numbers=left,
-  firstnumber=1,
-  numberfirstline=true, 
-  tabsize=2,
-  showstringspaces=false,
+  , gobble=3
+  , language=[LaTeX]TeX
+  , basicstyle=\small\ttfamily
+  , numbers=left
+  , firstnumber=1
+  , numberfirstline=true
+  , tabsize=2
+  , showstringspaces=false
+  , commentstyle=\color[gray]{0.4}
+  , stringstyle=\color{Rhodamine}
+  , keywordstyle=\color{orange}
+  , backgroundcolor = \color{lightgray!10}
 }
-\NewDocumentEnvironment{examplefile}{v}{
-  \noindent
-  \begin{tikzpicture}[overlay]
-    \draw[rounded corners=1mm] (-1, -1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, -1.5);
-    \node[draw=black, fill=white, rounded corners=1mm] at (13.525/2, 0) {\texttt{#1}};
-  \end{tikzpicture} 
-  \vspace{0.5ex}
+
+\NewDocumentEnvironment{examplefile}{ O{} v m } {
+  \begin{tcolorbox}[{
+    , title={#2} 
+    , fonttitle=\large\ttfamily
+    , enhanced
+    , attach boxed title to top left={yshift=-2mm}
+    , pad at break = 1mm
+    , underlay boxed title = { 
+      \node[yshift=-10pt, xshift=-3pt] at (frame.north east) { \resizebox{30pt}{!}{\usebox{#3}} }; }
+    , overlay first={
+      \begin{scope}[decoration={zigzag,amplitude=0.5mm}]
+        \path[fill=gray!10] decorate {([xshift=1.5pt]frame.south west) -- ([xshift=-1.5pt]frame.south east)} --++ (0,  0.5ex) -| cycle;
+        \path[fill=white  ] decorate {([xshift=1.5pt]frame.south west) -- ([xshift=-1.5pt]frame.south east)} --++ (0, -0.5ex) -| cycle;
+        \draw[thick, gray, decorate]  ([xshift=1.5pt]frame.south west) -- ([xshift=-1.5pt]frame.south east); 
+      \end{scope}}
+    , overlay last={
+      \begin{scope}[decoration={zigzag,amplitude=0.5mm}]
+        \path[fill=white  ] decorate {([xshift=1.5pt]frame.north west) -- ([xshift=-1.5pt]frame.north east)} --++ (0,  0.5ex) -| cycle;
+        \path[fill=gray!10] decorate {([xshift=1.5pt]frame.north west) -- ([xshift=-1.5pt]frame.north east)} --++ (0, -0.5ex) -| cycle;
+        \draw[thick, gray, decorate]  ([xshift=1.5pt]frame.north west) -- ([xshift=-1.5pt]frame.north east); 
+      \end{scope}}
+    , #1
+  }]
 } {
+  \end{tcolorbox}
+}
+
+\ExplSyntaxOn
+\cs_set_eq:NN \DescribeOption_aux:n \DescribeOption
+\RenewDocumentCommand { \DescribeOption } { v m O{} } {
+  \label { doc/function//#1 }
+  \DescribeOption_aux:n { #1 } \textsf{ (~#2~) } \hfill \tl_if_empty:NF { #3 } {Default:~\texttt{#3}}
+  \newline \indent \use:n % gobble the stray space that appears?
+}
+
+\NewDocumentCommand { \DescribeOptionIndent } { v m O{} } {
+  \vspace{\baselineskip}
   \noindent
-  \begin{tikzpicture}[overlay]
-    \draw[rounded corners=1mm] (-1, 1.5) -- (-1,  0) -- (14.525, 0) -- (14.525, 1.5);
-  \end{tikzpicture} 
+  \begin{tabular*}{\textwidth}{@{}p{1.3cm}l@{\extracolsep{\fill}}r@{}}
+  \texttt{#1} & \textsf { (~#2~) } &  \tl_if_empty:NF { #3 } { Default:~\texttt { #3 } }
+  \end{tabular*} 
+  \newline \indent \use:n
 }
 
-\let\DescribeOptionOld=\DescribeOption
-\RenewDocumentCommand{\DescribeOption}{vmo}{
-  \label{doc/function//#1}
-  \DescribeOptionOld{#1} \textsf{( #2 )} \hfill
-  \IfNoValueF{#3}{Default: \texttt{#3}}
-  \newline
-}
+\NewDocumentCommand { \optref }{ m }{ \hyperref [ doc/function//#1  ] { \texttt { #1 } } }
+\NewDocumentCommand { \cbref  }{ m }{ \hyperref [ code:codeblock/#1 ] { \texttt { #1 } } }
 
-\let\environmentOld=\environment
+\cs_set_eq:NN \environment_aux:n \environment
 \RenewDocumentCommand{\environment}{v}{ 
   \label{doc/function//#1}
-  \environmentOld{#1}
+  \environment_aux:n {#1}
 }
+\ExplSyntaxOff
 
 \setlength\parfillskip{0pt plus .75\linewidth}
 % \setlength\IndexMin{100pt}
+
+\newsavebox\clogo
+\sbox{\clogo}{
+  \begin{tikzpicture}[very thick]
+    \draw[fill=CornflowerBlue!50] (0,0) -- (1-.3,0) -- (1,-.3)[rounded corners=1pt] -- (1, -1.3) -- (0, -1.3) -- cycle;
+    \draw[rounded corners=1pt, fill=CornflowerBlue!25] (1-.3,0) -- (1-0.3,-.3)[rounded corners=0.2pt] -- (1, -.3) -- cycle ;
+    \node at (0.49, -0.7) {\usefont{T1}{phv}{m}{n}\fontsize{16}{16}\selectfont C};
+  \end{tikzpicture}
+}
+\newsavebox\flogo
+\sbox{\flogo}{
+  \begin{tikzpicture}[very thick]
+    \draw[fill=blue!30] (0,0) -- (1-.3,0) -- (1,-.3)[rounded corners=1pt] -- (1, -1.3) -- (0, -1.3) -- cycle;
+    \draw[rounded corners=1pt, fill=blue!12] (1-.3,0) -- (1-0.3,-.3)[rounded corners=0.2pt] -- (1, -.3) -- cycle ;
+    \node at (0.52, -0.7) {\bfseries\large{F\small{\raisebox{2.7pt}{90}}}};
+  \end{tikzpicture}
+}
+\newsavebox\pylogo
+\sbox{\pylogo}{
+  \begin{tikzpicture}[very thick]
+    \draw[fill=LimeGreen!35] (0,0) -- (1-.3,0) -- (1,-.3)[rounded corners=1pt] -- (1, -1.3) -- (0, -1.3) -- cycle;
+    \draw[rounded corners=1pt, fill=LimeGreen!12] (1-.3,0) -- (1-0.3,-.3)[rounded corners=0.2pt] -- (1, -.3) -- cycle ;
+    \node at (0.5, -0.7) {\usefont{T1}{iwona}{m}{n}\fontsize{15}{15}\selectfont py};
+  \end{tikzpicture}
+}
+\newsavebox\texlogo
+\sbox{\texlogo}{
+  \begin{tikzpicture}[very thick]
+    \draw[fill=Mulberry!30] (0,0) -- (1-.3,0) -- (1,-.3)[rounded corners=1pt] -- (1, -1.3) -- (0, -1.3) -- cycle;
+    \draw[rounded corners=1pt, fill=Mulberry!15] (1-.3,0) -- (1-0.3,-.3)[rounded corners=0.2pt] -- (1, -.3) -- cycle ;
+    \node at (0.5, -0.7) {\bfseries\TeX};
+  \end{tikzpicture}
+}
+
+\newsavebox\pdflogo
+\sbox{\pdflogo}{
+  \begin{tikzpicture}[very thick]
+    \fill[red!30] (0,0) -- (1-.3,0) -- (1,-.3)[rounded corners=1pt] -- (1, -1.3) -- (0, -1.3) -- cycle;
+    % I don't know how Adobe trademark system works so lets just use MIT licenced fontawesome.
+    \node at (0.5, -0.7) {\usefont{U}{fontawesomethree}{m}{n}\fontsize{30}{30}\selectfont\raisebox{9pt}{\symbol{64}}};
+    \path[fill=red!30, rounded corners=1pt] (0,0) rectangle (0.7,-0.3);
+    \path[fill=red!30, rounded corners=1pt] (0,0) rectangle (0.15,-1.3);
+    \path[fill=red!30, rounded corners=1pt] (0,-1.3) rectangle (1,-1);
+    \path[fill=red!30, rounded corners=1pt] (1,-1.3) rectangle (0.85,-0.3);
+    \path[fill=red!30, rounded corners=1pt] (0.55,-0.5) rectangle (0.9,-0.2);
+    \draw[rounded corners=1pt, fill=red!15] (1-.3,0) -- (1-0.3,-.3)[rounded corners=0.2pt] -- (1, -.3) -- cycle;
+    \pgfresetboundingbox
+    \draw[use as bounding box] (0,0) -- (1-.3,0) -- (1,-.3)[rounded corners=1pt] -- (1, -1.3) -- (0, -1.3) -- cycle;
+  \end{tikzpicture}
+}
 
 \begin{document}
   \DocInput{\jobname.dtx}
@@ -78,9 +161,9 @@
 % \fi
 %
 % ^^A Misc changes
-% \changes{0.0.12$\alpha$}{2023/02/08}{Remove |\@@_inctmpname:| }
-% \changes{0.0.12$\alpha$}{2023/02/08}{Remove |\@@_mktmpdir:| }
-% \changes{0.0.12$\alpha$}{2023/02/08}{Remove |\@@_concat_files:nn| }
+% \changes{0.0.12$\alpha$}{2023/02/08}{Remove \texttt{\char`\\@@\char`\_inctmpname:} }
+% \changes{0.0.12$\alpha$}{2023/02/08}{Remove \texttt{\char`\\@@\char`\_mktmpdir:} }
+% \changes{0.0.12$\alpha$}{2023/02/08}{Remove \texttt{\char`\\@@\char`\_concat\char`\_files:nn} }
 % \changes{0.0.10$\alpha$}{2022/12/12}{Allow temporary directory to be customisable}
 % \changes{0.0.7$\alpha$}{2022/06/09}{Shuffle functions around to make more logical sense}
 % \changes{0.0.5$\alpha$}{2022/03/29}{Rename \texttt{writeoutput} to \texttt{concat\_files}}
@@ -124,20 +207,21 @@
 % \setcounter{page}{1}
 % \pagenumbering{arabic}
 % \changes{0.0.10$\alpha$}{2022/12/08}{Documentation}
+% \changes{0.0.12$\alpha$}{2022/03/17}{Documentation}
 % \section{Introduction}
 % \pkg{fortex} is a language agnostic way of coding other languages in a literate way in \LaTeX{}.
 % Previous Literate programming tools each have their own strengths and weaknesses. 
 % \pkg{CWEB}/\pkg{noweb} for example while very powerful and cool, also very complex and quite difficult to learn.
 % On the other side of the coin you have notebooks -- Jupyter and Mathmatica for example.
-% These whilst simple to learn, the notebook has problems with opening in plain text editors and have issues with ``run each cell in tern'' and have no easy language agnosticism. 
-% The notebook interface is also annoying and neither Jupyter or Mathmatica provide a good editing experience.
+% These whilst simple to learn, the notebook has problems with opening in plain text editors and have issues with ``run each cell in tern'' and have no easy language agnosticism (and are especially problematic with compiled languages).
+% The notebook user interface is also annoying and neither Jupyter or Mathmatica provide a great editing experience.
 %
 % \pkg{fortex} aims to bridge the gap between the two by providing the plain text editing experience and two-way compile from \pkg{WEB}/\pkg{noweb} and combine with the easy to use notebook.
 % The end result I anticipate will be similar to \LaTeX{}'s \pkg{doc} package, but without the commenting syntax or the \LaTeX{} specificness.
 %
 % \section{Usage}
 %
-% \changes{0.0.7$\alpha$}{{24th June 2022}}{Start writing usage docs}
+% \changes{0.0.7$\alpha$}{2022/06/24}{Start writing usage docs}
 % 
 % \subsection{Environments}
 % 
@@ -149,9 +233,14 @@
 % \end{syntax} \vspace{1ex}
 %
 % This is the main environment that does all of the work (and is the reason that I wrote the \pkg{fortex} package).
-% Any text contained within a \env{code} environment get simultaneously output to the \LaTeX{} generated |.pdf|, as well as a separate file for all the source code. 
+% Any text contained within a \env{code} environment undergoes two processes. 
+% Firstly, it gets typeset using either the \pkg{listings} or \pkg{minted} package, and wil appear neatly formatted in the final pdf. 
+% However, the text placed within the code environment also gets written to an output plain text file. 
 %
-% \begin{examplefile}{file.tex}
+% In this way, source code can be placed into a \LaTeX{} file, and both nicely typeset with typeset equations and diagrams to accompany the code. 
+% However, because the code is also output to a plain text file it can be easily passed off to a compiler without any extra hassle.
+%
+% \begin{examplefile}[left=1cm, breakable]{file.tex}{\texlogo}
 % \begin{lstlisting}
 %  \documentclass[10pt, a4paper]{article}
 %  \usepackage[lang=C]{fortex}
@@ -173,7 +262,7 @@
 %
 %   This is summation can be approximated for 20 terms
 %    \begin{code}
-%     double calculate_pi(void) {
+%     static double calculate_pi(void) {
 %       double retval = 0;
 %       for (int i=0; i < 20; i++) {
 %         retval += pow(-1, i) / (2 * (double)i + 1);
@@ -193,12 +282,12 @@
 % \end{lstlisting}
 % \end{examplefile}
 %
-% \begin{examplefile}{file.pdf}
+% \begin{examplefile}[colback=gray!5]{file.pdf}{\pdflogo}
 % \vspace{1em}
 %
 % \noindent Let us first import the libraries needed for maths printing to stdout.
 %
-% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  #include <stdio.h>
 %  #include <math.h>
@@ -206,14 +295,14 @@
 %   
 % \noindent Did you know that $\pi\simeq3.14$? 
 % \noindent We can calculate this in C using the formula
-%   \begin{equation}
+%   \begin{equation}\tag{1}
 %    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
 %   \end{equation}
 %
 % \noindent This is summation can be approximated for 20 terms
-% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
-%  double calculate_pi(void) {
+%  static double calculate_pi(void) {
 %    double retval = 0;
 %    for (int i=0; i < 20; i++) {
 %      retval += pow(-1, i) / (2 * (double)i + 1);
@@ -223,7 +312,7 @@
 % \end{lstlisting}
 % 
 % \noindent finally we print the results.
-% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  int main(void) { 
 %    printf("%g\n", calculate_pi());
@@ -232,22 +321,17 @@
 % \end{lstlisting}
 % \end{examplefile}
 % 
-% But importantly, the |.pdf| file is not the only file generated.
-% When |file.tex| file is compiled, it will also generate |file.c| containing the C source code.
-%
-% \begin{examplefile}{file.c}
+% \begin{examplefile}[left=1cm]{file.c}{\clogo}
 % \begin{lstlisting}[language=C]
 %  #include <stdio.h>
 %  #include <math.h>
-%
-%  double calculate_pi(void) {
+%  static double calculate_pi(void) {
 %    double retval = 0;
 %    for (int i=0; i < 20; i++) {
 %      retval += pow(-1, i) / (2 * (double)i + 1);
 %    }
 %    return 4 * retval;
 %  }
-%
 %  int main(void) { 
 %    printf("%g\n", calculate_pi());
 %    return 0;
@@ -255,34 +339,61 @@
 % \end{lstlisting}
 % \end{examplefile}
 %
-% In this way the source code is able to be fully commented and explained with the assistance of figures, diagrams and equations.
-%
 % \end{environment}
 %
 % \begin{environment}{codeblock}
 % \begin{syntax}
-% |\begin{codeblock}[|\meta{noindex}, \meta{noref}|]|\Arg{block name}
+% |\begin{codeblock}|\oarg{codeblock args}\Arg{block name}
 % \qquad \meta{block definition}
 % |\end{codeblock}|
 % \end{syntax} \vspace{1ex}
 % 
 % This environment is supposed to be a helper environment to the above \env{code} environment.
-% One of the nice things you can do with regular text editors/IDE's is you can jump to a definition.
+% One of the nice things you can do with regular text editors/IDE's is you can jump from a function call to the definition.
+% We can do the same thing in pdf files by optionally making use of the hyperref package. 
 % 
 % By creating a \env{codeblock} environment, the usage of \meta{blockname} will be tracked thoughout the code and hyperref links will be inserted allowing jumping back to the definition.
 % Moreover if indexing is enabled it will insert the name of the function with it's definition in \textit{italics} and usages in \textrm{roman} (can be customised)
 %
-% The optional flag \meta{noindex} prevents a codeblock from appearing in the index.
-% The flag \meta{noref} prevents the tracking of the usages and the insertion of hyperlinks.
-%
 % This is not a new idea in \LaTeX{} and it is done in the \pkg{pgf/tikz} and \pkg{pgfplots} manuals.
 % However they seem to be using a very different implementation to what I have done here (and probably one that makes far more sense, however I have yet to look at their implementation)
+%
+% \DescribeOptionIndent{noref}{\meta{boolean}}[false]
+% Do not scan and highlight \env{code} environments for usages of the \meta{blockname}. 
+%
+% As the scanning is the slowest part of the entire \pkg{fortex} code, using \texttt{noref} will speed up compilation.
+%
+% \DescribeOptionIndent{noindex}{\meta{boolean}}[false]
+% Do not add \meta{blockname} to the index. 
+%
+% This option only does anything when there is an \tn{index} macro defined.
+% This option does not affect the speed of compilation, but can be used to tidy the index of unnecessary usages.
+%
+% \DescribeOptionIndent{scope}{\meta{path}}
+% Only scan and highlight the usages of \meta{blockname} within a specified scope.
+% Classes may have associated methods with the same private name. 
+% This can be problematic when you want to highlight a method within a class, but don't want the highlighting to hit something in an unrelated class.
+%
+% If a scope \meta{path} is provided, then it will only highlight usages within the specified codeblock, and children of the codeblock.
+% For example, if there is codeblocks nested as:
+% \begin{center}
+% \begin{minipage}{0.5\linewidth}
+% \begin{lstlisting}[commentstyle={}, stringstyle={}, keywordstyle={}, backgroundcolor={}, numbers=none]
+%  \begin{codeblock}{path}
+%    \begin{codeblock}{to}
+%      \begin{codeblock}{myblock}
+% \end{lstlisting}
+% \end{minipage}
+% \end{center}
+%
+% To target the innermost nested codeblock `\texttt{myblock}', then the \meta{path} should be given as |path/to/myblock|.
+% Note that there is no need for a leading |/|.
 %
 % \end{environment}
 %
 % \begin{environment}{codevar}
 % \begin{syntax}
-% |\begin{codevar}[|\meta{noindex}, \meta{noref}|]|\Arg{comma separated variable names}
+% |\begin{codevar}|\oarg{codeblock args}\Arg{comma separated variable names}
 % \qquad \meta{variable definitions}
 % |\end{codevar}|
 % \end{syntax} \vspace{1ex}
@@ -292,17 +403,141 @@
 % Firstly, \texttt{codevar} allows the definition of multiple variable names separated by commas. 
 % This is designed to allow quick and easy settings of parameter-style constants.
 % 
-% \begin{lstlisting}
+% \begin{center}
+% \begin{minipage}{0.4\linewidth}
+% \begin{lstlisting}[commentstyle={}, stringstyle={}, keywordstyle={}, backgroundcolor={}]
 %  \begin{codevar}{a, b, c}
 %  \begin{code}
 %    a=1; b=2; c=3  
 %  \end{code}
 %  \end{codevar}
 % \end{lstlisting}
+% \end{minipage}
+% \end{center}
 %
 % The second difference is a consequence of the first. 
 % Unlike \texttt{codeblock}, nesting further \texttt{codeblock}/\texttt{codevar} inside a  \texttt{codevar} environment is not allowed. 
 % This is because it is ambiguous as to how to construct a nesting tree when there are multiple variables that could act as a parent.
+%
+% \begin{examplefile}[left=1cm, breakable]{file.tex}{\texlogo}
+% \begin{lstlisting}
+%  \documentclass[10pt, a4paper]{article}
+%  \usepackage[lang=C]{fortex}
+%  \begin{document}
+%  
+%    \begin{code}
+%    #include <stdio.h>
+%    #include <math.h>
+%    \end{code}
+%  
+%    Did you know that $\pi\simeq3.14$?
+%    We can calculate this in C using the formula
+%    \begin{equation}
+%    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+%    \end{equation}
+%  
+%    This is summation can be approximated for 20 terms
+%  
+%    \begin{codeblock}{calculate_pi}
+%    \begin{codevar}[scope=calculate_pi]{retval, i}
+%    \begin{code}
+%    static double calculate_pi(void) {
+%      double retval = 0;
+%      for (int i=0; i < 20; i++) {
+%        retval += pow(-1, i) / (2 * (double)i + 1);
+%      }
+%      return 4 * retval;
+%    }
+%    \end{code}
+%    \end{codevar}
+%  
+%    Some Deeper nesting.
+%    Note that \texttt{retval} is hyperlinked here due to
+%    being a nested scope.
+%  
+%    \begin{codeblock}{test_pi}
+%    \begin{code}
+%    double test_pi(double calcpi) {
+%      retval = ( calcpi - M_PI < 0.1 ) ? 0 : 1
+%      return retval;
+%    }
+%    \end{code}
+%    \end{codeblock}
+%    \end{codeblock}
+%  
+%    finally we print the results.
+%    Note that \texttt{retval} is not hyperlinked it is out 
+%    of scope.
+%
+%    \begin{code}
+%    int main(void) { 
+%      printf("%g\n", calculate_pi());
+%      int retval = test_pi(calculate_pi());
+%      return retval;
+%    }
+%    \end{code}
+%   \end{document}
+%   \end{lstlisting}
+% \end{examplefile}
+%
+% \begin{examplefile}[breakable, colback=gray!5]{file.pdf}{\pdflogo}
+%    \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
+%    #include <stdio.h>
+%    #include <math.h>
+%    \end{lstlisting}
+%  
+%    Did you know that $\pi\simeq3.14$?
+%    We can calculate this in C using the formula
+%    \begin{equation}
+%    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+%    \end{equation}
+%  
+%    This is summation can be approximated for 20 terms
+%  
+%    \label{code:codeblock/calculate_pi}
+%    \label{code:codeblock/retval}
+%    \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia},
+%                    escapechar=@]
+%    static double @\cbref{calculate_pi}@(void) {
+%      double @\cbref{retval}@ = 0;
+%      for (int i=0; i < 20; i++) {
+%        @\cbref{retval}@ += pow(-1, i) / (2 * (double)i + 1);
+%      }
+%      return 4 * @\cbref{retval}@;
+%    }
+%    \end{lstlisting}
+%  
+%    Some Deeper nesting.
+%    Note that \texttt{retval} is hyperlinked here due to
+%    being a nested scope.
+%  
+%    \label{code:codeblock/test_pi}
+%    \label{code:codeblock/calcpi}
+%    \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}, 
+%                    escapechar=@]
+%    double @\cbref{test_pi}@(double @\cbref{calcpi}@) {
+%      @\cbref{retval}@ = ( @\cbref{calcpi}@ - M_PI < 0.1 ) ? 0 : 1
+%      return @\cbref{retval}@;
+%    }
+%    \end{lstlisting}
+%  
+%    finally we print the results.
+%    Note that \texttt{retval} is not hyperlinked it is out 
+%    of scope.
+%
+%    \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
+%                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia},
+%                    escapechar=@]
+%    int main(void) { 
+%      printf("%g\n", @\cbref{calculate_pi}@());
+%      int retval = @\cbref{test_pi}@(@\cbref{calculate_pi}@());
+%      return retval;
+%    }
+%    \end{lstlisting}
+%   \end{examplefile}
 %
 % \begin{environment}{subfile}
 % \begin{syntax}
@@ -317,7 +552,7 @@
 %
 % The behaviour is demonstrated in the following example. 
 %
-% \begin{examplefile}{mainfile.tex}
+% \begin{examplefile}[left=1cm, breakable]{mainfile.tex}{\texlogo}
 % \begin{lstlisting}
 %  \documentclass[10pt, a4paper]{article}
 %  \usepackage[lang=C]{fortex}
@@ -366,14 +601,14 @@
 % \end{lstlisting}
 % \end{examplefile}
 %
-% When compiled this |.tex| file will display in the output pdf.
+% When compiled this |.tex| file will display in the output pdf, and outputted code files.
 %
-% \begin{examplefile}{mainfile.pdf}
+% \begin{examplefile}[colback=gray!5]{mainfile.pdf}{\pdflogo}
 % \vspace{1em}
 %
 % \noindent This is some C code that will go to \texttt{mainfile.c}
 %
-% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{lstlisting}[language=C, numbers=none,  backgroundcolor=\color{gray!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  #include <stdio.h>
 %  int main(void) { 
@@ -385,7 +620,7 @@
 % \noindent But we can also put code into a subfile (of a different language even)
 % 
 %
-% \begin{lstlisting}[language=fortran, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{lstlisting}[language=fortran, numbers=none,  backgroundcolor=\color{gray!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  program subfile
 %    print *, "Hello from subfile1.f90"
@@ -394,22 +629,20 @@
 %
 % \noindent How about nesting some subfile environments? 
 %
-% \begin{lstlisting}[language=python, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{lstlisting}[language=python, numbers=none, backgroundcolor=\color{gray!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  print("Hello from subfile2.py")
 % \end{lstlisting}
 % 
 % \noindent Let us pick up where we left off.
 % 
-% \begin{lstlisting}[language=python, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{lstlisting}[language=python, numbers=none, backgroundcolor=\color{gray!10}, 
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  print("Well, Hello yet again")
 % \end{lstlisting}
 % \end{examplefile}
 %
-% Importantly, the output source code files will contain:
-%
-% \begin{examplefile}{mainfile.c}
+% \begin{examplefile}[left=1cm]{mainfile.c}{\clogo}
 % \begin{lstlisting}[language=C]
 %  #include <stdio.h>
 %  int main(void) { 
@@ -419,7 +652,7 @@
 % \end{lstlisting}
 % \end{examplefile}
 %
-% \begin{examplefile}{subfile1.f90}
+% \begin{examplefile}[left=1cm]{subfile1.f90}{\flogo}
 % \begin{lstlisting}[language=fortran]
 %  program subfile
 %    print *, "Hello from subfile1.f90"
@@ -427,8 +660,8 @@
 % \end{lstlisting}
 % \end{examplefile}
 %
-% \begin{examplefile}{subfile2.py}
-% \begin{lstlisting} [language=python]
+% \begin{examplefile}[left=1cm]{subfile2.py}{\pylogo}
+% \begin{lstlisting}[language=python]
 %  print("Hello from subfile2.py")
 %  print("Well, Hello yet again")
 % \end{lstlisting}
@@ -441,55 +674,113 @@
 % \end{environment}
 % 
 % \subsection{Package Options}
+% \label{sec:pkgopt}
 % \begingroup
 % \parindent=0pt\relax
 % \parskip=\baselineskip\relax
 %
-% \DescribeOption{codedef idxnum font}{string}[textit]
+% \DescribeOption{after codeblock}{\meta{control sequence}}[\char`\\hfill \char`\\itshape End of codeblock: \char`\\texttt\char`\{\char`\#1\char`\}.]
+% At the end of each codeblock environment, it is nice to print that the definition is finished. 
+% However, this message is configurable (Even ignorable if you want)
+% The control sequence should take one argument that is the hyperreffed name of the code block.
+%
+% \DescribeOption{after codevar}{\meta{control sequence}}[\it{Ignore Input}]
+% This is the same as \optref{after codeblock}, but appearing on \env{codevar} environments.
+% The control sequence takes one argument that is a comma separated list of all the variables, each one a hyperref link. 
+%
+% \DescribeOption{codedef idxnum fmt}{\meta{single control sequence}}[\char`\\textit]
 % How should page numbers in the index be formatted for definitions in code
+% Note that only a single control sequence may be used. 
 %
-% \DescribeOption{codecall idxnum font}{string}[textrm]
+% \DescribeOption{codecall idxnum fmt}{\meta{single control sequence}}[\char`\\textrm]
 % How should page numbers in the index be formatted for function calls
+% Note that only a single control sequence may be used. 
 %
-% \DescribeOption{delim}{string}
-% \noindent What delimiters 
+% \DescribeOption{delim}{\meta{string}}[\it{Engine Specific}]
+% \noindent \pkg{fortex} uses the \pkg{minted} option \texttt{escapeinside}, and the \pkg{listings} option \texttt{escapechar} in order to insert hyperlinks into code.
+% By default, \pkg{fortex} tried to work with every language, and so uses delimiters in non-printing Unicode.\\
+% \textbf{Important:} Make sure to delete the \texttt{.aux} cache if you change the delimiters, as the cache is no longer valid. 
 %
-% \DescribeOption{ext}{string}[txt]
-% \noindent The file extension for the outputted sourcecode. 
-% By default \pkg{fortex} will try to guess the file extension from the sourcecode language selected.
+% \DescribeOption{draft}{\meta{boolean}}[false]
+% \noindent Speed up processing of the pdf by disabling syntax highlighting, and disabling hyperlink scanning. 
+% This option overrides \optref{print} and \optref{intext}. \\
+% Note that the outputted source code is still generated.
+%
+% \DescribeOption{escapechar}{\meta{string}}
+% \noindent A compatibility shortcut for the \optref{delim} option.
+%
+% \DescribeOption{escapeinside}{\meta{string}}
+% \noindent A compatibility shortcut for the \optref{delim} option.
+% For compatibility reasons, escapeinside may accept 2 tokens.
+% However, only the first token is actually used.
+%
+% \DescribeOption{ext}{\meta{string}}[txt]
+% \noindent The file extension for the outputted source code. 
+% By default \pkg{fortex} will try to guess the file extension from the source code language selected.
 % However, guessing the file extensions of all languages is silly, and the same source language may have multiple file extensions (e.g. |.c| and |.h| for C source files).
 % As such, \texttt{ext=\meta{file extension}} allows a manual method of overriding the automatic detection in case it fails.
 %
-% \DescribeOption{ignore active}{string}
+% \DescribeOption{filename}{\meta{string}}[\meta{jobname}.\meta{ext}]
+% \noindent Source code output filename, overrides \optref{ext}.
+%
+% \DescribeOption{firstnumber}{ ``last'', ``auto'', \meta{integer}}[last]
+% \noindent Sets the first line number for the following code. 
+% \textsf{last} means the numbering continues from the previous block.
+% \textsf{auto} Starts each new block with the number 1.
+% This is indentical to the \pkg{minted}/\pkg{listings} option of the same name, and is just a \pkg{minted} bug patch.
+%
+% \DescribeOption{hyperlink fmt}{\meta{control sequence}}[\char`\\ ttfamily]
+% \noindent Text formatting of in-code hyperlinks. 
+% Note that the control sequence should accept 1 argument that is the text to be formatted.
+%
+% \DescribeOption{ignore active}{\meta{active token}}
 % \noindent \pkg{fortex} can make use of some \LaTeX{} features to approximate namespaces for languages that so not support them. 
 %
-% \begin{examplefile}{file.tex}
+% \begin{examplefile}[left=1cm, breakable]{file.tex}{\texlogo}
 % \begin{lstlisting}
 %  \documentclass{article}
 %  \usepackage[lang=C]{fortex}
 %  
 %  \begin{document}
 %
-%   \catcode`\@=\active 
-%   \def@{mynamespace}
-%   
-%   \begin{code}
-%     double @_calculate_pi(void) {
-%       double retval = 0;
-%       for (int i=0; i < 20; i++) {
-%         retval += pow(-1, i) / (2 * (double)i + 1);
-%       }
-%     return 4 * retval;
-%     }
+%    \catcode`\@=\active 
+%    \def@{mynamespace}
+%
+%    Did you know that $\pi\simeq3.14$? 
+%    We can calculate this in C using the formula
+%
+%    \begin{equation}
+%     \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+%    \end{equation}
+%
+%    This is summation can be approximated for 20 terms   
+%
+%    \begin{code}
+%      double @_calculate_pi(void) {
+%        double retval = 0;
+%        for (int i=0; i < 20; i++) {
+%          retval += pow(-1, i) / (2 * (double)i + 1);
+%        }
+%      return 4 * retval;
+%      }
 %    \end{code}
+%  \end{document}
 % \end{lstlisting}
-% \vspace{-0.6cm}
 % \end{examplefile}
 %
-% This will reveal in the |.pdf| file:
+% When this is compiled, every instance of \texttt{@} in the code will be replaced by the text ``\texttt{mynamespace}''.
+% This happens for both the |.pdf| and the outputted code file.
 %
-% \begin{examplefile}{file.pdf}
-% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{Tan!10}, 
+% \begin{examplefile}[colback=gray!5]{file.pdf}{\pdflogo}
+%    Did you know that $\pi\simeq3.14$? 
+%    We can calculate this in C using the formula
+%
+%   \begin{equation}\tag{1}
+%    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+%   \end{equation}
+%
+%   This is summation can be approximated for 20 terms  
+% \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{gray!10},
 %                    keywordstyle=\color{YellowGreen}, stringstyle=\color{Fuchsia}]
 %  double mynamespace_calculate_pi(void) {
 %    double retval = 0;
@@ -499,12 +790,11 @@
 %    return 4 * retval;
 %  }
 % \end{lstlisting}
-% \vspace{-0.6cm}
 % \end{examplefile}
-% 
-% And in the outputted C file 
 %
-% \begin{examplefile}{file.C}
+% ^^A \vspace{-\baselineskip}
+%
+% \begin{examplefile}[left=1cm]{file.c}{\clogo}
 % \begin{lstlisting}[language=C]
 %  double mynamespace_calculate_pi(void) {
 %    double retval = 0;
@@ -514,41 +804,40 @@
 %    return 4 * retval;
 %  }
 % \end{lstlisting}
-% \vspace{-0.6cm}
 % \end{examplefile}
 %
-% It should be noted that the definition of |@| is only expanded \emph{once}.
-% This means that non-expandable, or definitions that need multiple expansions will not work. 
-% 
+% It should be noted that the definition of |@| is only expanded \emph{once}. ^^A TODO check.
+% This means that non-expandable, or definitions that need multiple expansions will not work. \\
 % However sometimes this behaviour of replacing active characters with their definition not desired.
-% This can be the case when something like |"| is set as active, but all quotes in the code should not be affected. 
+% This can be the case when something like "|" is set as active, but all quotes in the code should not be affected. \\
+% Moreover, the \pkg{inputenc} package defines most non-\textsc{ascii} characters as active. 
+% As such, if you are using \pkg{inputenc} with non-English languages then you will need to specify the letters. 
+% (Although I \emph{highly} recommend using a Unicode native engine (like \LuaTeX{}) if you want to use non-\textsc{ascii}.)
 % 
-% As such we provide a way to tell \pkg{fortex}, that the active character in question should be ignored. 
-%
-% \DescribeOption{no ignore active}{string}
+% \DescribeOption{no ignore active}{\meta{active token}}
 % \noindent The opposite of the \texttt{ignore active}.
 % This option should only be needed if \texttt{ignore active} has already been used, but you want to undo the effects. 
 % 
-% \DescribeOption{intext}{boolean}[true]
+% \DescribeOption{intext}{\meta{boolean}}[true]
 % \noindent Making use of \env{codeblock}, \env{codevar}, and regular expressions, \pkg{hyperref} links can be inserted into the code sections in the resulting |.pdf| file. 
 % The hyperlinks will then jump back the resulting \env{codeblock}/\env{codevar} definition.
-% This is the slowest part of the \pkg{fortex} package and turning it of can significantly speed up compilation.
-%
+% This is the slowest part of the \pkg{fortex} package and turning it of can significantly speed up compilation. \\
 % Note that even though this option defaults to true, if \tn{hyperref}\texttt{\oarg{label}\Arg{name}} is not defined (e.g. the \pkg{hyperref} package is not loaded) then hyperlinks will not be inserted. 
 % i.e. \pkg{hyperref} \emph{must} be separately loaded for in-text links to work.
 %
-% \DescribeOption{lang}{string}[text]
+% \DescribeOption{lang}{\meta{string}}[text]
 % \noindent The source code language. Setting this option will tell \pkg{minted}/\pkg{listings} what language to use when applying syntax highlighting. 
-% There are also a section of default file extensions (that may be overridden with the \texttt{ext} package option) for the resultant outputted file. 
+% This also sets the default output file extension (may be overridden with the \optref{ext} package option). 
 % e.g. setting |lang=bash| will cause the output file to by default be called \texttt{\meta{jobname}.sh}
 %
-% \DescribeOption{outdir}{string}
-% \noindent Output directories
+% \DescribeOption{outdir}{\meta{string}}
+% \noindent Output directory where the source code file will be placed.
+% By default this will be same directory as where the |.aux| file will generate.
+% 
 %
-% \DescribeOption{print}{string}[listings]
+% \DescribeOption{print}{\meta{string}}[listings]
 % What backend package is being used to syntax highlight the source code in the generated |.pdf| file.
-% At the moment the only two supported backends are \pkg{minted} or \pkg{listings}.
-%
+% At the moment the only two supported backends are \pkg{minted} or \pkg{listings}. \\
 % There are a bunch of aliases that can be used in \texttt{print=\meta{backend}} select these two backends listed in the following table
 %
 % \begin{center}
@@ -565,30 +854,25 @@
 %
 % I don't expect a huge amount of all these variants to be used, but it certainly saves me from remembering the exact spelling of the print backend. 
 % 
-% \DescribeOption{tmpdir}{string}[\_fortex-\meta{jobname}]
-% \noindent The folder that temporary files get written into.
-% This folder also acts as a cache for the the files with intext hyperlinks already inserted. 
-%
-% Due to the limitations of \TeX{}, we cannot create folders, without invoking |-shell-esc|. 
-% Thus, to \emph{avoid} a hard dependency on requiring |-shell-esc|, either the folder can be created manually, or \texttt{tmpdir=\meta{folder}} can be pointed to a folder that already exists.
-%
-% \DescribeOption{verbose}{boolean}[false]
+% \DescribeOption{verbose}{\meta{boolean}}[false]
 % Make the package output extra debugging info to stdout. 
 % This includes the code being output to the file, the automatically detected output directory, engine specific delimiters, and arguments getting forwarded to \pkg{minted}/\pkg{listings}.
 %
-% \DescribeOption{vindex idxnum font}{string}[textrm]
-% How should vindex entries be formatted
+% \DescribeOption{vindex idxnum fmt}{\meta{single control sequence}}[\char`\\ textrm]
+% How should the index page numbers be formatted when using \tn{vindex}.
+% Note that only a single control sequence may be used. 
 %
 % \endgroup
 % \subsection{Supplemental functions}
 %
 % \begin{function}{\setfortex}
 % \begin{syntax}
-% \cs{setfortex}\Arg{\pkg{minted}/\pkg{listings} options}
+% \cs{setfortex}\char`\{\meta{fortex key}=\meta{value}, \meta{\pkg{minted}/\pkg{listings} key}=\meta{value}\char`\}
 % \end{syntax}
-%
-% None of the highlighting here is done by \pkg{fortex}
-%
+% Options may be placed here to control both \pkg{fortex} and \pkg{minted}/\pkg{listings}.
+% For a list of \pkg{fortex} options see Section \ref{sec:pkgopt}. 
+% See the \pkg{minted}/\pkg{listings} manuals for a list of the relevant highlighting options. 
+% 
 % \end{function}
 %
 % \begin{function}{\MakeShortFortex}
@@ -607,38 +891,6 @@
 % This is equivalent to the \pkg{listings} command \tn{lstDeleteShortInline}, but will work with the \pkg{minted} backend too.
 % \end{function}
 %
-%
-% \begin{function}{\aftercodeblock}
-% \begin{syntax}
-% \cs{aftercodeblock}\Arg{Codeblock name}\oarg{Codeblock link}
-% \end{syntax}
-% 
-% The default implementation is:
-%
-% \begin{lstlisting}[numbers=none]
-%  \NewDocumentCommand{\aftercodeblock}{mO{}}{
-%    \noindent\textit\small{
-%      End of code block
-%      \IfNoValueF{#2}{\hyperref[#2]}{\texttt{\detokenize{#1}}}.\\
-%    }
-%  }
-% \end{lstlisting}
-%
-% \end{function}
-%
-% \begin{function}{\aftercodevar}
-% \begin{syntax}
-% \cs{aftercodeblock}\Arg{codeblock name}\oarg{codeblock link}
-% \end{syntax}
-% 
-% The default implementation is:
-%
-% \begin{lstlisting}[numbers=none]
-%  \NewDocumentCommand{\aftercodeblock}{mO{}}{\relax}
-% \end{lstlisting}
-%
-% \end{function}
-%
 % \begin{function}{\vindex}
 % \begin{syntax}
 % \cs{vindex}\Arg{index entry}
@@ -648,22 +900,69 @@
 % This makes sure that \tn{index} prints the argument verbatim, and things like underscores and \& do not get mangled. 
 %
 % \end{function}
+% 
+% \subsection{Troubleshooting, Tips and Tricks}
+% \subsubsection*{I am using \pTeX{} or \upTeX{} with \pkg{minted}}
+% The delimiters used for code highlighting cannot be printed to the temporary file written to by \pkg{minted}.
+% Either change the \optref{delim} option, or add the |-8bit| command line argument.
 %
-% \begin{function}{\fortexhypercodelinkfmt}
-% \end{function}
+% \subsubsection*{{\ttfamily \bfseries \^{}\^{}I} in Output}
+% \pTeX{} \upTeX{} and \XeTeX{} cannot print tabs.
+% This is a Engine limitation, and there is nothing I can do on my end.
+% This problem is however extensively documented in the stack exchange articles.
+%
+% \begin{tabular}{l}
+% \url{https://tex.stackexchange.com/questions/14771} \\
+% \url{https://tex.stackexchange.com/questions/58732} \\
+% \url{https://tex.stackexchange.com/questions/264461}\\
+% \end{tabular}
+%
+% \noindent The solution is to rerun \LaTeX{} with the |-8bit| option to enable printing of all characters.
+%
+% \subsubsection*{Changing Engines/Printing Backends}
+% If change the \TeX{} engine, then it is very likely that you will need to delete the \texttt{.aux} file. 
+% This is because the default delimiters, are not the same between the engines. 
+% As such the \texttt{.aux} cache will no longer be valid, and will likely cause crashes. 
+%
+% \subsubsection*{Escapeinside}
+% \subsubsection*{Windows and MacOS}
+% Dunno what to tell you, I don't own a machine with Windows or MacOS, and so cannot test them.
+% I will happily accept any bugs, though you may have to help test and verify things work. 
+%
+% \subsubsection*{I Want to Wrap the \texttt{\large code} Environment}
+% As \texttt{code} is a \pkg{fancyvrb} environment, wrap it like you would any other \pkg{fancyvrb}.
+% \begin{center}
+% \begin{minipage}{0.7\linewidth}
+% \begin{lstlisting}[numbers=none, commentstyle={}, stringstyle={}, keywordstyle={}, backgroundcolor={}]
+%  \NewDocumentEnvironment{ myenv } {} {
+%    \VerbatimEnvironment
+%    \begin{code}%
+%  }{
+%    \end{code}
+%  }
+% \end{lstlisting}
+% \end{minipage}
+% \end{center}
+%
+% \noindent Do this by placing \tn{VerbatimEnvironment} as the first line, and a Comment \texttt{\char`\%} at the end of the code environment.
+%
+% \subsubsection{Getting the Current Line Number}
+% The current line number can be accessed with the integer register \tn{fortexcurlineno}
+%
 %
 % \section {Things left to do}
 %
 % \begin{enumerate}
 % \item Finish of |.dtx| by adding Usage instructions
-% \item \rule[0.5ex]{6cm}{0.5pt}\hspace{-6cm}Get line numbering working in \pkg{minted}
 % \item Expose line number to user in case they want to continue from a specified point
-% \item \rule[0.5ex]{8cm}{0.5pt}\hspace{-8cm}Add \texttt{scope=\meta{scope}} options to \env{codevar}/\env{codeblock} 
-% \item allow customisation of the full filename, not just the extension
+% \item \rule[0.5ex]{10cm}{0.5pt}\hspace{-10cm}allow customisation of the full filename, not just the extension
 % \item Changelog interface (just a wrapper for glossaries)?
 % \item fix the buggy |\aftercodevar| mess
 % \item intext and noref should be constant, (in general, we need more consistency)
-% \item Draft mode that disables intext and \pkg{minted}/\pkg{listings}
+% \item \rule[0.5ex]{8cm}{0.5pt}\hspace{-8cm}Draft mode that disables intext and \pkg{minted}/\pkg{listings}
+% \item begin/end multichar escapeinside 
+% \item Cache invalidation when code delimiter changes 
+% \item Allow customisation of makeindex level and style indicators (autodetect?)
 % \item Editing spelling and grammar 
 % \end{enumerate}
 %
@@ -672,6 +971,13 @@
 % \clearpage
 % \begin{implementation}
 % \section{\pkg{fortex} Implementation}
+% \lstset {
+%  , gobble=3
+%  , commentstyle={}
+%  , stringstyle={}
+%  , keywordstyle={}
+%  , backgroundcolor={}
+% }
 %
 % \pkg{DocStrip} guards.
 %    \begin{macrocode}
@@ -692,19 +998,19 @@
 \ProvidesExplPackage {fortex} {2023-01-31} {0.0.12$\alpha$}
                      {like noweb without external tooling}
 \RequirePackage{ l3benchmark }
-%    \end{macrocode}
-%
-%    \begin{macrocode}
 \RequirePackage { l3keys2e }
 %    \end{macrocode}
 %
 % The package \pkg{fancyvrb} is required to write stuff to file and to define custom-named verbatim environments.
-% \pkg{minted} loads this package (I haven't checked \pkg{listings}, but it would not surprise me if they loaded this package too). 
-% As far as I am aware, this is only used in \env{code}, with \tn{VerbatimEnvironment} and \tn{VerbatimOut}.
+% \pkg{minted} already loads this package and it is an optional dependency of \pkg{listings}, so it is not an unreasonable ask.
+% This package is used to do two things, firstly it splits the verbatim content to be both highlighted, and written to a file.
+% But it is also used to provide a verbatim hashmap implementation to allow code caching.
 %
 %    \begin{macrocode}
 \RequirePackage { fancyvrb }
 %    \end{macrocode}
+%
+% These are all \pkg{expl3} standard functions, but I use these specific varients a few times, and so figured I would define their variants.
 %
 %    \begin{macrocode}
 \cs_generate_variant:Nn \iow_term:n { V }
@@ -715,18 +1021,27 @@
 %    \end{macrocode}
 % \subsection{Package options}
 %
-% As of now this is the initial package level settings.
-% I do plan to expand this and/or move some of it next to the \env{code} environment itself.
-% Doing that would allow one |.tex| file to make both |.c| and |.h| files.
-% However, I still need to give some thought into how that is all going to work (interweaving |.c| and |.h| is probably going to get confusing).
+% First let us define a sequence list that is going to hold off of the options that are not explicitly marked in the keys.
+% This way any unknown key is assumed to be passed to \pkg{minted}/\pkg{listings}.
 %
 %    \begin{macrocode}
 \seq_new:N \g_@@_print_keystore_seq
-\seq_new:N \g_@@_ignoreactive_charcodes_seq
-\int_new:N \g_@@_cur_lineno_int
-\int_new:N \g_@@_block_lineno_int
-\int_gincr:N \g_@@_cur_lineno_int 
-\int_gset_eq:NN \g_@@_block_lineno_int \g_@@_cur_lineno_int 
+%    \end{macrocode}
+% Let us now define a few more global variables. 
+% This is not really the place to explain them, but they need to defined this early in the file as the keyval is immediately processed when loading the package. 
+% As such, we need to define a few variables to keep everything happy. 
+%
+%    \begin{macrocode}
+\seq_new:N   \g_@@_ignoreactive_charcodes_seq
+\int_new:N   \fortexcurlineno
+\int_gincr:N \fortexcurlineno
+%    \end{macrocode}
+% Let us thus get to the keyvals. 
+% In its current state, every keyval can be set both in the package loading, and with \tn{setfortex}.
+% This is not \emph{super} ideal as not every keyval is useful in the package loading, and not every keyval is relevant called in the document body.
+% But whatever, I am not super fussed, its going to error in both cases.
+% 
+%    \begin{macrocode}
 \keys_define:nn { fortex } {
 %    \end{macrocode}
 % 
@@ -797,7 +1112,6 @@
 %
 %    \begin{macrocode}
   , ext .tl_gset:N = \g_@@_ext_tl
-  , ext .default:n = {}
   , ext .initial:n = {}
 %    \end{macrocode}
 % \end{variable}
@@ -814,14 +1128,14 @@
 % 
 %    \begin{macrocode}
   , intext .bool_gset:N = \g_@@_intext_bool
-  , intext .default:n   = { false }
+  , intext .default:n   = { true }
   , intext .initial:n   = { true }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 %
 % \changes{0.0.9$\alpha$}{2022/09/27}{Fix delimiters for all engines}
-% \begin{macro}{delim}
+% \begin{macro}{delim, escapechar, escapeinside}
 % \begin{variable}{\g_@@_code_delim_str}
 % 
 % The delimiters used here are used to escape from the \pkg{minted}/\pkg{listings} environments, and insert hyperreffed links.
@@ -842,10 +1156,15 @@
 % \end{tabular}
 % \end{center}
 % 
+% For compatibility with \pkg{minted} and \pkg{listings}, we also define \texttt{escapechar} and \texttt{escapeinside}.
+%
 %    \begin{macrocode}
   , delim .str_gset:N  = \g_@@_code_delim_str
-  , delim .default:n   = {}
   , delim .initial:n   = {}
+  , escapechar .meta:n = { delim = {#1} }
+  , escapeinside .code:n  = { 
+     \exp_args:Nno \keys_set:nn { fortex } { \use_i:nn #1 }
+    }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -861,23 +1180,36 @@
 %    \begin{macrocode}
   , outdir .tl_gset:N = \g_@@_outputdir_tl
   , outdir .initial:n = {}
-  , outdir .default:n = {}
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 %
 % \begin{macro}{filename}
 % \begin{variable}{\l_@@_out_filename_tl}
-% 
-% The directory where we are going to output the code and temporary files. 
-% This should be automatically detected, but in the case that it is not, or we want to change the defaults, it can be overwritten.
 %
-% Default: `|.|' or `|-output-directory=|'
+% What is the output filename of the non-subfile code?
+% Note that this option overrides the |ext| option.
+%
+% Default \texttt{\meta{jobname}.\meta{ext}}
 %
 %    \begin{macrocode}
   , filename .tl_gset:N = \l_@@_out_filename_tl
   , filename .initial:n = {}
-  , filename .default:n = {}
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \changes{0.0.12$\alpha$}{2022/02/20}{Add draft mode}
+% \begin{macro}{draft}
+% \begin{variable}{\g_@@_draft_bool}
+% 
+% Highlighting the code and inserting the hyperlinks can take a long time.
+% To allow people to not be bothered by long compilation times, a draft mode is provided that will still output the source code, but will not do any syntax highlighting or hyperreffing.
+% 
+%    \begin{macrocode}
+  , draft .bool_gset:N = \g_@@_draft_bool
+  , draft .default:n   = { true }
+  , draft .initial:n   = { false }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
@@ -892,7 +1224,7 @@
 % As such rather than trying to ensure that all characters are not active, we just provide an interface to disable unwanted behaviours. 
 %
 %    \begin{macrocode}
-  , ignore active .code:n = {
+  , ignore~active .code:n = {
       \seq_gpush:Nx \g_@@_ignoreactive_charcodes_seq { \cs_to_str:N #1 }
     }
 %    \end{macrocode}
@@ -903,52 +1235,77 @@
 % This argument is unlikely to get used, but may a well put it here anyway.
 %
 %    \begin{macrocode}
-  , no ignore active .code:n = {
+  , no~ignore~active .code:n = {
       \exp_args:Nne \seq_gremove_all:Nn \g_@@_ignoreactive_charcodes_seq
                                       { \cs_to_str:N #1 }
     }
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{0.0.7$\alpha$}{2022/06/09}{Allow hyperrefed code to not be monospaced}
+% \changes{0.0.12$\alpha$}{2023/02/20}{Hyperref formatting is now part of setfortex}
+% \begin{macro}{\@@_hyperlink_fmt:n, hyperlink fmt}
+% Because the code may not always be monospace. 
+% Some weird people don't like monospace code. 
+% However The real reason is that because listings isn't monospace by default (although everyone makes it as the first step).
+% So we just abstract this function out that can easily be redefined by the user if they so please. 
+%
+%    \begin{macrocode}
+  , hyperlink~fmt .tl_gset:N  = \@@_hyperlink_fmt:
+  , hyperlink~fmt .initial:n  = \ttfamily
+%    \end{macrocode}
+% \end{macro}
+%
 % \changes{0.0.7$\alpha$}{2022/06/05}{Format index different for definitions and calls}
 % \changes{0.0.10$\alpha$}{2022/12/13}{Move vindex format definitions into package options}
-% \begin{macro}{vindex idxnum font}
+% \begin{macro}{vindex idxnum fmt}
 % \begin{variable}{\g_@@_vindex_fmt_str}
+% The numbers in the index can be formatted. 
+% Because I don't want to lock anyone into ``my way of styling things'', give some simple customisation.
 % 
+% One interesting thing of note is that makeindex doesnt take a control sequence, but rather the csname. 
+% As such, we need to first get the csname, before assing it further down the line.
+%
 %    \begin{macrocode}
-  , vindex idxnum font .str_gset:N  = \g_@@_vindex_fmt_str
-  , vindex idxnum font .default:n   = { textrm }
-  , vindex idxnum font .initial:n   = { textrm }
+  , vindex~idxnum~fmt .code:n = { 
+      \str_gset:Nx \g_@@_vindex_fmt_str { 
+        \exp_last_unbraced:Ne \use_i:nnn { \cs_split_function:N #1 }
+      }
+    }
+  , vindex~idxnum~fmt .initial:n = { \textrm }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 %
 % \changes{0.0.10$\alpha$}{2022/12/13}{Move vindex format definitions into package options}
-% \begin{macro}{codedef idxnum font}
-% \begin{variable}{\g_@@_idxfmt_codedef_str}
-% 
-%    \begin{macrocode}
-  , codedef idxnum font .str_gset:N  = \g_@@_idxfmt_codedef_str
-  , codedef idxnum font .default:n   = { textit }
-  , codedef idxnum font .initial:n   = { textit }
-%    \end{macrocode}
-% \end{variable}
-% \end{macro}
+% \begin{macro}{codedef idxnum fmt, codecall idxnum fmt}
+% \begin{variable}{\g_@@_idxfmt_codedef_str, \g_@@_idxfmt_codecall_str}
+% Again this is just formatting of the index numbering, but for the automatic hyperlink insertion.
+% The way I have it set up by default is that definitions are in italics, and calls in roman.
+% Though this again can all be changed. 
 %
-% \changes{0.0.10$\alpha$}{2022/12/13}{Move vindex format definitions into package options}
-% \begin{macro}{codecall idxnum font}
-% \begin{variable}{\g_@@_idxfmt_codecall_str}
-% 
 %    \begin{macrocode}
-  , codecall~idxnum~font .str_gset:N  = \g_@@_idxfmt_codecall_str
-  , codecall~idxnum~font .default:n   = { textrm }
-  , codecall~idxnum~font .initial:n   = { textrm }
+  , codedef~idxnum~fmt .code:n = { 
+      \str_gset:Nx \g_@@_idxfmt_codedef_str { 
+        \exp_last_unbraced:Ne \use_i:nnn { \cs_split_function:N #1 }
+      }
+    }
+  , codedef~idxnum~fmt .initial:n = { \textit }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+  , codecall~idxnum~fmt .code:n   = { 
+      \str_gset:Nx \g_@@_idxfmt_codecall_str { 
+        \exp_last_unbraced:Ne \use_i:nnn { \cs_split_function:N #1 }
+      }
+    }
+  , codecall~idxnum~fmt .initial:n = { \textrm }
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
 % \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
 % \begin{macro}{firstnumber}
-% \begin{variable}{\g_@@_firstnumber_last_bool, \g_@@_cur_lineno_int, \g_@@_block_lineno_int}
+% \begin{variable}{\g_@@_firstnumber_last_bool, \fortexcurlineno}
 %
 % I do not know why, but line numbering where \texttt{firstnumber=last} with minted is completely and utterly broken. 
 % It will start at a random line number in every single code environment.
@@ -968,15 +1325,51 @@
         { last } { \bool_gset_true:N  \g_@@_firstnumber_last_bool }
         { auto } { \bool_gset_false:N \g_@@_firstnumber_last_bool }
       } {
-        \int_gset:Nn  \g_@@_cur_lineno_int { #1 }
-        \int_gset_eq:NN \g_@@_block_lineno_int \g_@@_cur_lineno_int 
+        \int_gset:Nn  \fortexcurlineno { #1 }
       }
     }
   , firstnumber .initial:n = { last }
-
-  
 %    \end{macrocode}
 % \end{variable}
+% \end{macro}
+%
+% \changes{0.0.10$\alpha$}{2022/12/13}{Move codeblock end text to own macro}
+% \changes{0.0.12$\alpha$}{2023/03/16}{Move \texttt{\char`\\ aftercodeblock} into keyvals }
+% \begin{macro}{after codeblock, \@@_after_codeblock:n}
+%
+% We print a little message saying ``End of codeblock: \texttt{\meta{codeblock}}.'' at the end of every \env{codeblock} environment.
+% However, it is possible some might deem this messy, or might want to change the language.
+% As such, we make it easy to customise the message. 
+%
+% Note that as the name suggests \cs{@@_after_codeblock:n} is a control sequence that accepts one argument. 
+% However, in the calling implementation, we make sure that an empty \cs{@@_after_codeblock:n} means that the message is not printed. 
+% The default implementation is defined down by the \env{codeblock} environment, 
+%
+% One interesting thing of note is that this option does not work on package loading.
+% I don't know why nad would like to fix it at some point.
+%
+%    \begin{macrocode}
+  , after~codeblock .tl_gset:N = \@@_after_codeblock:n
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.8$\alpha$}{2022/07/23}{Create \env{codevar} environment}
+% \changes{0.0.10$\alpha$}{2022/12/13}{Allow customising codevar message}
+% \changes{0.0.12$\alpha$}{2023/03/16}{Move \texttt{\char`\\ aftercodevar} into keyvals }
+% \begin{macro}{after codevar, \@@_after_codevar:n}
+%
+% Like \optref{after codeblock}, we do the same with the \env{codevar} environment.
+% However, this is a more subtle implementation as even though it only accepts one argument, that argument is a comma separated list of all the variables. 
+% 
+% Given the main envisioned usecase of \env{codevar} is to define a bunch of globals, we do not print the message by default.
+% However, this can be easily overwritten.
+% 
+% One interesting thing of note is that this option does not work on package loading.
+%
+%    \begin{macrocode}
+  , after~codevar .tl_gset:N = \@@_after_codevar:n
+  , after~codevar .initial:n = {}
+%    \end{macrocode}
 % \end{macro}
 %
 % \changes{0.0.11$\alpha$}{2022/12/29}{Make \texttt{setfortex} less silly}
@@ -989,8 +1382,7 @@
 % Rather than doing the silly thing and keeping a list of all \pkg{minted}/\pkg{listings} arguments up to date and making a filter for that, we define an |unknown| key.
 % This has the effect that when a key is passed to \pkg{fortex}, that it doesn't know, then instead of emitting a package warning, it will pass that key onto \pkg{minted}/\pkg{listings} for it to deal with.
 %
-% To implement this we save each \texttt{\meta{key} or }\texttt{\meta{key}=\meta{value}} into a sequence that then gets passed to the relevant package.
-% 
+% To implement this we save each \texttt{\meta{key}} or \texttt{\meta{key}=\meta{value}} into a sequence that then gets passed to the relevant package.
 % 
 %    \begin{macrocode}
   , unknown .code:n = {
@@ -1008,10 +1400,10 @@
 % \end{variable}
 % \subsection{Engine specific warnings}
 %
-% Unfortunately we have a few issues using  \XeTeX{} \pTeX{} and \upTeX{} due to these engines not using real tab characters when printing to files. 
-% As far as I am aware there is no easy way to directly solve this from within latex, and we just need to warn the user that tab characters may become |\^^I| when using these engines. 
-% 
-% On \XeTeX{} this seems to be resolved by using |-8bit|, however I am not sure about \pTeX{} and \upTeX{}.
+% Unfortunately we have a few issues using \XeTeX{} \pTeX{} and \upTeX{} due to these engines not using real tab characters when printing to files. 
+% As far as I am aware there is no easy way to directly solve this from within \TeX{}, and we just need to warn the user that tab characters may become |\^^I| when using these engines. 
+%
+% This seems to be resolved by using |-8bit|.
 % 
 % This problem is known about and it affected \pkg{minted} independent of what we are doing over here in \pkg{fortex}.
 %
@@ -1021,8 +1413,15 @@
 % \url{https://tex.stackexchange.com/questions/264461}\\
 % \end{tabular}
 %
+% \pTeX{} and \upTeX{} have an even more serious problem.
+% \pTeX{} and \upTeX{} will only let characters with a codepoint $\leq 127$ be marked as active. 
+% This has the effect of escapeinside only working with these loew-codepoint characters.
+% Couple that with the fact that these engines will not print any character $\leq 31$ to a file without it revering to its |^^X| sequence. 
+% This has the effect that we cannot safely use any of the printable characters as a default delimiter for these engines. 
+% As such, I have made the executive decision that \pTeX{} and \upTeX{} must be executed with  |-8bit|.
+%
 % Note: We only warn the user if they have enabled the |verbose| settings.
-% This is at the moment not super optimal as they may not think to do this, However I also don't want to spam them with messages if they are using spaces instead. 
+% This is at the moment not super optimal as they may not think to do this, However I also don't want to spam them with messages if they are using spaces or already have |-8bit|.
 %
 % Maybe a better way to fix this problem is to detect the string ``|^^I|'' in the file we read back and then only warn if we see it?
 %
@@ -1063,7 +1462,6 @@
 % 
 % If an invalid key is found, we default to \pkg{listings} mainly because it is the older/more established package. 
 % \pkg{listings} also has the advantage of not requiring |-shell-esc| and I would like to avoid as much |-shell-esc| as possible.
-%
 % 
 %    \begin{macrocode}
 \msg_new:nnn { fortex } { printend } {
@@ -1090,15 +1488,14 @@
 %
 % \changes{0.0.6$\alpha$}{2022/04/01}{Fix minted caching}
 %
-% We now laod the required highlighting/formatting package.
+% We now load the required highlighting/formatting package.
 % I wanted to avoid only relying on one backend. 
-% (Mainly because I prefer minted, but requiring |-shell-esc| should not be a hard requirement).
+% (Mainly because I don't quite know if I prefer \pkg{minted} or \pkg{listings}, but requiring |-shell-esc| should not be a hard requirement).
 %
 % Note: we set the \pkg{minted} cache to the current folder ``\file{.}'' to prevent it from making any new folders. 
 % At the first call of the \env{document} environment, we calculate the output directory we will be using and update the cache location. 
 %
 % Note: This now introduces a new bug where any calls to minted before the code environment will cause the minted cache to appear in the \file{jobdir/} folder.
-% This should be solvable with a hook at the start of the \env{document} environment, but I need to figure out some stuff with the output dir calculations. 
 %
 %    \begin{macrocode}
 \str_if_eq:NNTF { \g_@@_printend_tl } { mint } {
@@ -1114,8 +1511,8 @@
 % \changes{0.0.11$\alpha$}{2022/12/29}{Make \texttt{setfortex} less silly}
 % \begin{macro}{\setfortex}
 %
-% Keep fortex options separate from global \pkg{minted}/\pkg{listings} options.
-% (this just gets passed though. But is separate to allow separate calls (e.g. inline code examples) to \pkg{minted}/\pkg{listings} to behave differently to the \env{code} environment ).
+% Keep \pkg{fortex} options separate from global \pkg{minted}/\pkg{listings} options.
+% (This just gets passed though. But is separate to allow separate calls (e.g. inline code examples) to \pkg{minted}/\pkg{listings} to behave differently to the \env{code} environment).
 % 
 % This function also has the ability to override the \pkg{fortex} specific package options (like file extension and printing backend).
 %
@@ -1127,7 +1524,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsection{Setting up filenames}
+% \subsection{File extension detection}
 %
 % \changes{0.0.2$\alpha$}{2022/03/04}{Add extension detection}
 % \changes{0.0.6$\alpha$}{2022/04/02}{Be more structured}
@@ -1181,9 +1578,9 @@
 % \changes{0.0.8$\alpha$}{2022/08/17}{Make regex group non-capturing in \LuaTeX{} specific code}
 % \changes{0.0.9$\alpha$}{2022/09/23}{Use kpsewhich for detecting output directory}
 %
-% If \LaTeX{} is used with |-output-directory|, \cs{sys_shell_now:x} |{mkdir ...}| will ignore it and make its directory in the .tex directory.
-% However, \tn{VerbatimOut} will write to the file indicated by |-output-directory|.
-% This causes problems if \tn{VerbatimOut} tries to write into our newly made directory.
+% If \LaTeX{} is used with |-output-directory|, \cs{iow_now:Nn} will write to the file indicated by |-output-directory|.
+% However, \cs{file_get:nnN} will not check |-output-directory|, and instead only check the directory the |.tex| file is in, and the texmf tree.
+% As one might imagine, this leads to issues where we can write, but not read files.
 %
 % I encountered this issue when using the \LaTeX{} editor \pkg{kile} as it uses |-output-directory| to build in the |/tmp/kile-livepreview.abcde/| directory.
 % This was causing issues, as I was not longer able to use my favourite \LaTeX{} editor with \pkg{fortex}. 
@@ -1199,19 +1596,19 @@
 %  \item[2.5]{Command lines args are accessible via Lua extensions (\LuaTeX{} specific) }
 % \end{enumerate}
 %
-% Initially option 1 was chosen due to not knowing an better, however it was found that the regex engine in \pkg{expl3} is not the fastest in the world. 
-% Moreover because of token limitations in the \XeTeX engine, it would crash if the log file was too big. 
+% Initially option 1 was chosen (due to not knowing an better), however it was found that the regex engine in \pkg{expl3} is not the fastest in the world. 
+% Moreover because of token limitations in the \XeTeX{} engine, it would crash if the log file was too big. 
 %
 % Option 2 however is much more sensible, more portable and more faster.
-% However it suffers from the problem of needing |TEXINPUTS| to be set accordingly.
-% This is automatically the case for latexmk and the kile editor, however, I dont know about other usecases. 
+% Both however suffer from the problem of needing |TEXINPUTS| to be set accordingly.
+% This is automatically the case for latexmk and the kile editor, however, I don't know about others. 
 % As at the moment I am the only one using this package (and I use kile and latexmk, this is fine.)
 %
 % For anyone else, |TEXINPUTS| is an environment variable, and so \LaTeX{} can be executed like:
 % \begin{center}
 % \begin{tabular}{rl}
-% |$ | & |export TEXINPUTS=outdir:|\\
-% |$ | & |pdflatex file.tex|
+% |$| & |export TEXINPUTS=outdir:|\\
+% |$| & |pdflatex file.tex|
 % \end{tabular}
 % \end{center}
 %
@@ -1244,10 +1641,10 @@
 %
 % \begin{macro}{\@@_outputdir_lua_aux:}
 %
-% This is the LuaTeX{} specific function to get the |-output-dir|. 
-% This is a lot easier to get compared to the other engines as \LuaTeX{} directly exposes what arguments it was called with inside its lua extensions.
+% This is the \LuaTeX{} specific function to get the |-output-dir|. 
+% This is a lot easier to get compared to the other engines as \LuaTeX{} directly exposes what arguments it was called with inside its Lua extensions.
 %
-% Here we only use a little lua as I have never used lua before and its just easier for me to keep it in \TeX{}.
+% Here we only use a little Lua as I have never used Lua before and its just easier for me to keep it in \TeX{}.
 % The important part however, is that we can use |tex.print(arg)| to insert into the input stream the arguments that \LuaTeX{} was called.
 %
 % \begin{verbatim}
@@ -1261,11 +1658,11 @@
 % as a token list.
 %
 % Finally, we use some regex to extract the |-output-dir| value.
-% Ideally we would use lua here and in some guides on the internet one is able to index by name: e.g. |arg["output dir"]|. 
+% Ideally we would use Lua here and in some guides on the internet one is able to index by name: e.g. |arg["output dir"]|. 
 % However, at least on my installation of \LuaTeX{} I was only given the option to index by argument number. 
 % As there is no way for us to make sure |-output-dir| will always have the same index we resort to regex.
 %
-% Note that as I said I do not know any lua, and there may very well be an easy way that I am just missing.
+% Note that as I said I do not know any Lua, and there may very well be an easy way that I am just missing.
 %
 %    \begin{macrocode}
 \cs_set:Nn \@@_outputdir_lua_aux: {
@@ -1314,7 +1711,7 @@
 % Annoyingly \cs{file_parse_full_name:VNNN} will freeze execution if the ``file name'' is not actually a file name. 
 % This (as far as I can tell) only happens when |kpsewhich| is unable to find the log file, and will return \tn{par}. 
 %
-% As such we do a quick chack to make sure it has not returned an ``empty'' string (aka, only a \tn{par}).
+% As such we do a quick check to make sure it has not returned an ``empty'' string (aka, only a \tn{par}).
 %
 %    \begin{macrocode}
   \str_if_eq:VnF \l_@@_outputdir_tl \par { 
@@ -1351,6 +1748,7 @@
 \cs_set:Npn \@@_hyperref:nn #1#2 { 
   \cs_if_exist_use:NTF \hyperref { [ #1 ] { #2 } } { #2 } 
 }
+\cs_generate_variant:Nn \@@_hyperref:nn { xn }
 %    \end{macrocode}
 % \end{macro}
 % \subsubsection{ Delimiters }
@@ -1385,7 +1783,6 @@
 % \upTeX{} (and \pTeX{}), restrict catcode 13 (active) to chars $\leq 255$. 
 % However, coupling the limitation of $< 20$ being unprintable because too low, and $ >127$ being invalid UTF-8, this seriously restricts the allowed range of delimiters.
 % As I don't really feel like having the letter `\emph{A}' be a code delimiter, \upTeX{} will also \emph{have} to be executed with |-8-bit|, to allow printing the the low-control ASCII.
-%
 %
 % As we have to use low Unicode for \pTeX{}/\upTeX{}, we need to have these characters in the \file{fortex.sty} file.
 % However, \XeTeX{} and \LuaTeX{} have |^^1e| defined with catcode 15 (invalid) by default. 
@@ -1544,21 +1941,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-%
-% \changes{0.0.7$\alpha$}{2022/06/09}{Allow hyperrefed code to not be monospaced}
-% \begin{macro}{\fortexhypercodelinkfmt}
-% Because the code may not always be monospace. 
-% Some weird people don't like monospace code. 
-% However The real reason is that because listings isn't monospace by default (although everyone makes it as the first step).
-% So we just abstract this function out that can easily be redefined by the user if they so please. 
-%
-%    \begin{macrocode}
-\NewDocumentCommand \fortexhypercodelinkfmt { m } {
-  \texttt { #1 }
-}
-%    \end{macrocode}
-% \end{macro}
-%
 % \subsubsection{Formatted hyperref for code}
 %
 % \changes{0.0.7$\alpha$}{2022/06/05}{Add calls of a function to the index.}
@@ -1593,7 +1975,7 @@
     \@@_vindex_aux:xx { \l_tmpa_tl } { \g_@@_idxfmt_codecall_str }
   }
   \@@_hyperref:nn { code: #3 } {
-    \fortexhypercodelinkfmt{ \detokenize { #2 } } 
+    \@@_hyperlink_fmt: \detokenize { #2 } 
   }
 }
 %    \end{macrocode}
@@ -1602,6 +1984,7 @@
 %
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
 % \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \changes{0.0.12$\alpha$}{2022/02/20}{Add draft mode}
 % \begin{macro}{\@@_reference_code:nn}
 % \begin{arguments}
 % \item{md5 sum of the code}
@@ -1610,7 +1993,7 @@
 %
 % The actual call to the regex function, is in \cs{@@_reference_code_aux:Nn} and is the slowest bit.
 % Whereas this function is to mostly deal with caching the code and to avoid calling the slow function twice.
-% Whats not contained in this function is the regex itself. That is contained in \env{codeblock}.
+% What's not contained in this function is the regex itself, that is contained in \env{codeblock} as there is no need to access to code itself. 
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_reference_code:nn #1#2 {
@@ -1622,8 +2005,9 @@
 %    \begin{macrocode}  
   \prop_get:NnN \g_@@_ref_cache_toaux_prop { #2 } \l_@@_ref_tl  
 
-  \bool_lazy_and:nnT { \quark_if_no_value_p:N \l_@@_ref_tl }
-                     { \tl_if_exist_p:N \fortex@codeblock@unscoped@regex } {
+  \bool_lazy_all:nT { { \quark_if_no_value_p:N \l_@@_ref_tl }
+                      { \tl_if_exist_p:N \fortex@codeblock@unscoped@regex }
+                      { \bool_not_p:n \g_@@_draft_bool } } {
     \@@_reference_code_aux:Nn \l_@@_ref_tl { #1 }
 %    \end{macrocode}
 % Here we add the referenced code to two property lists, the list going to the aux file, and the list that gets read out from the aux file. 
@@ -1718,12 +2102,11 @@
       \tl_set:NV \l_tmpa_tl { \l_tmpa_tl / ##1 }
       \tl_set:Nn \l_tmpb_tl { g_@@_codeblock_ \l_tmpa_tl _scope_tl }
       \tl_set:Nf \l_tmpa_regex {
-        \tl_if_exist:cTF \l_tmpb_tl {
+        \tl_if_exist:cT \l_tmpb_tl {
           \tl_use:c \l_tmpb_tl
-        } { }
+        }
       }
-      \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl
-                                         \l_tmpa_regex
+      \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl \l_tmpa_regex
     }
 %    \end{macrocode}
 % Finally, we also need to include the unscoped regexes.
@@ -1735,7 +2118,7 @@
 %    \end{macrocode}
 % Behold the slowest part in the code. 
 % As mentioned elsewhere in this document I have tried a few different methods to speed this up including \cs{seq_map_indexed_inline:Nn}, but that just made things slower. 
-% This dos mean that we are locked to \TeX{}Live 2022 as a minimum version though. 
+% This does mean that we are locked to \TeX{}Live 2022 as a minimum version though. 
 % 
 %    \begin{macrocode}
     \tl_set:Nn \l_@@_data_tl { #2 }
@@ -1777,7 +2160,7 @@
 % 
 % This was resolved by getting \cs{@@_reference_code_aux:Nn} to only search the direct scope branch by using dynamic variable naming. 
 %
-% note that we need to run this at |begin{document}|, as the |.aux| file needs to be read in for \tn{fortex@codeblock@scoped@regex} to exist.
+% Note that we need to run this at |begin{document}|, as the |.aux| file needs to be read in for \tn{fortex@codeblock@scoped@regex} to exist.
 %
 %    \begin{macrocode}
 \hook_gput_code:nnn { begindocument/end } { fortex } {
@@ -1831,7 +2214,7 @@
 % This was originally all extracted using the clist commands. 
 % However, this is more robust and flexible. 
 %
-% \begin{variable}{l_@@_codeblock_noref_bool}
+% \begin{variable}{\l_@@_codeblock_noref_bool}
 % \noindent\texttt{noref} \hspace{2em} \textsf{(bool)} \hfill Default: \texttt{True}\linebreak
 % Should hyperlinks be inserted into the code, for all uses of this \env{codeblock}?
 % This option was added as the insertion of the hyperrefs is very slow, but also because sometimes the regex goes a bit silly and can accidentally match things it is not supposed to.
@@ -1844,7 +2227,7 @@
 %    \end{macrocode}
 % \end{variable}
 %
-% \begin{variable}{l_@@_codeblock_noidx_bool}
+% \begin{variable}{\l_@@_codeblock_noidx_bool}
 % \texttt{noidx} \hspace{2em} \textsf{(bool)} \hfill Default: \texttt{True}\linebreak
 % Should the codeblock be added to the index?
 % This option was added as not all instances of a \env{codeblock} are meaningful enough to warrent an entry into the index. 
@@ -1858,7 +2241,7 @@
 %    \end{macrocode}
 % \end{variable}
 %
-% \begin{variable}{l_@@_codeblock_scope_str}
+% \begin{variable}{\l_@@_codeblock_scope_str}
 % \texttt{scope} \hspace{2em} \textsf{(string)}\hfill~\linebreak
 % Scoping allows the hyperreffing to only search in the specified scope. 
 % This is an important option as sometimes two classes have a private function with the same name. 
@@ -1868,7 +2251,6 @@
 %
 %    \begin{macrocode}
   scope .str_set:N = \l_@@_codeblock_scope_str,
-  scope .default:n = { },
   scope .initial:n = { },
 }
 %    \end{macrocode}
@@ -1954,7 +2336,7 @@
 % This for me doesn't work as I need to be able to detect if we are substituting a substring of a larger word. 
 % This might be a solved problem without capture groups, but I don't know it. 
 %
-% So one might think ``ok, capture groups don't work, lets just change the regex passed to \cs{regex_replace_case_all} to something akin to |(\ur{regex_one})##1(\ur{regex_two})|.
+% So one might think ``ok, capture groups don't work, lets just change the regex passed to \cs{regex_replace_case_all} to something akin to |(\ur{regex|\textsubscript1|})##1(\ur{regex|\textsubscript1|})|.
 % Thus precompiling the bits at the end, but leaving the capture groups out of the precompile. 
 % This also doesn't work as by using \pkg{l3benchmark}, there seems to be no difference in speed, and only gives added complexity.
 %
@@ -2023,6 +2405,7 @@
 % \end{variable}
 %
 % \changes{0.0.8$\alpha$}{2022/07/23}{Move \env{codeblock} implementation into aux macro}
+% \changes{0.0.12$\alpha$}{2023/03/16}{Move \texttt{\char`\\ aftercodeblock} into keyvals }
 %
 % \begin{macro}{codeblock}
 %
@@ -2032,29 +2415,26 @@
 % \end{arguments}
 %
 % This function exists to automatically add hyperlinks from the usage of a function to its definition somewhere else in the code. 
-% At the moment this is not complete and I am still yet to add the * interfaces. 
-%
-% I plan for the * interfaces is to only track within the parent code block.
-% This is mainly used for private functions that you don't want polluting.
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment { codeblock } { O{} v } {
   \group_begin:
 %    \end{macrocode}
-% So one of the first things that we want to do is to is load our optional args clist into a sequence where we have functions to check if an arg is in later on.
-% At the moment the only two options defined are |noindex| and |noref|.
+% So one of the first things that we want to do is to is load our optional args clist into the actual keyval interface that we previously specified. 
 %
-% |noindex| is used to prevent the function from being registered with the index, and |noref| is used to prevent the automatic insertion of hyperlinks. 
+% |noindex| is used to prevent the function from being registered with the index.
+% |noref| is used to prevent the automatic insertion of hyperlinks. 
+% and \texttt{scope=\meta{scope}} is used to limit the highlighting to a specified region in the file.
 %    \begin{macrocode}
   \keys_set:nf { fortex/codeblock } 
                { \bool_if:NTF \g_@@_intext_bool { #1 } { #1, noref } }
 %    \end{macrocode}
-% At the moment this is not fully sanitised and there may be problems if active catcodes come in, but for now it will do. 
-% 
-% Because we want to keep track of the nesting of the code -- two classes can have the same function name -- we add this to a stack, that we then read out of when we go to use the indexing. 
+%
+% Because we want to keep track of the nesting of the code -- two classes can have the same method name -- we add this to a stack, that we then read out of when we go to use the indexing. 
+% This way each index, and hyperref link is unique.
 %
 %    \begin{macrocode}
-  \seq_gput_right:Nx \g_@@_codenest_seq { \tl_to_str:n { #2 } }
+  \seq_gput_right:Nn \g_@@_codenest_seq { #2 }
 %    \end{macrocode}
 % Finally we call the common hyperref regex generating function for both \env{codeblock} and \env{codevar}
 %
@@ -2064,14 +2444,16 @@
                                       \l_@@_codeblock_noidx_bool
 } {
 %    \end{macrocode}
-% This is a bit of an ugly way to call \tn{aftercodeblock}.
-% However, \cs{seq_if_in:NnTF} is not expandable, and so makes any implementation of \tn{aftercodeblock} much more annoying if a user were to modify it.
-% 
+% Finally, we call the function that is going to print a little message at the bottom of the code block. 
+% Because this message is designed to be configurable, we need to make sure that an empty message is interpreted as ``I don't want a message''.
+% Note that argument to this function is not expandable
+%
 %    \begin{macrocode}
-  \bool_if:NTF \l_@@_codeblock_noref_bool { 
-    \aftercodeblock { #2 }
-  } {
-    \aftercodeblock { #2 } [ \seq_use:Nn \g_@@_codenest_seq {:} ]
+  \tl_if_empty:NF \@@_after_codeblock:n { \@@_after_codeblock:n {
+    \bool_if:NF \l_@@_codeblock_noref_bool {
+      \@@_hyperref:xn { code: \seq_use:Nn \g_@@_codenest_seq {:} } 
+    } { #2 }
+  }
   }
 %    \end{macrocode}
 % Finally we move up one level of nesting. 
@@ -2083,29 +2465,25 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \changes{0.0.10$\alpha$}{2022/12/13}{Move codeblock end text to own macro}
-% \begin{macro}{\aftercodeblock}
-% \begin{arguments}
-% \item{Name of the codeblock}
-% \item{Hyperref link name of the code block}
-% \end{arguments}
+% \changes{0.0.12$\alpha$}{2023/03/16}{Move \texttt{\char`\\ aftercodeblock} into keyvals }
+% \begin{macro}{\@@_after_codeblock_aux:n}
+% Here we have the default message that gets printed at the bottom of a codeblock,
+%
+% This function is designed to be overridable by use of the keyval interface. 
+% However, defining the default implementation up there was going to be a little bit tricky, so lets just do it here. 
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_after_codeblock_aux:n #1 {
+  \hfill \itshape End~of~codeblock:~\texttt{ #1 }.
+}
+%    \end{macrocode}
+% \end{macro}
 %
 % Here is the code that writes a message at the end of each code block. 
 % It is in a separate function because it may need to be changed by the user for internationalisation or if they just don't like the message. 
 %
 % The implementation should be simple enough that someone could make it without relying on \pkg{expl3} or having a deep understanding of \LaTeX{}.
 %
-%    \begin{macrocode}
-\NewDocumentCommand { \aftercodeblock } { m O{} } { 
-  \noindent \textit { \small End~of~code~block~
-    \tl_if_empty:NF { #2 } { \@@_hyperref:nn { code: #2 } }
-    { \texttt { \tl_to_str:N { #1 } } } . \\
-  }
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \changes{0.0.8$\alpha$}{2022/07/23}{Create \env{codevar} environment}
 %
 % \begin{macro}{codevar}
 %
@@ -2147,35 +2525,31 @@
     \seq_gpop_right:NN \g_@@_codenest_seq \l_tmpa_tl
   }
 %    \end{macrocode}
-% The variable implementation of the footer is a bit weird.
-% \tn{aftercodeblock} gets the variables names and labels parsed in as a comma list. 
-% However, the handling of this comma list is not written by me, but I imaging if someone does write it, it will be painful to do. 
-% 
-% Unfortunately, I don't know of a super great way to pass the names and labels in a non-\pkg{expl3} specific way.
+% Like the message printed in \cs{@@_after_codeblock:n}, we should allow printing something here too. 
+% However, one complication is that we need to pass in multiple values, instead of just the one. 
+% As such there is a bit off a faff to line up the hyperref functions with the label and the text. 
+%
+% The fallout of this means that the argument that gets passed to \cs{@@_after_codevar:n} is not expandable. 
+% This is a little bit of a shame, but frankly I don't see it as a bit deal. 
+%
+% Again one of problems that I faced making this function was that a simple loop that prints texttt{\meta{item}} followed by a comma, would leave a trailing comma that is annoying to remove. 
+% As such I have decided to place it all back into a sequence, so we can read it out using \cs{seq_use:Nn}, and get all the commas correct.
+%
+% Finally like \cs{@@_after_codeblock:n}, if \cs{@@_after_codevar:n} is empty, then we should interpret that as ``I dont want to print anything at the bottom''
 %
 %    \begin{macrocode}
 } {
-  \bool_if:NTF \l_@@_codeblock_noref_bool {  
-    \aftercodevar { #2 }
-  } {
-    \aftercodevar { #2 } [ \seq_use:Nn \g_@@_codenest_seq {:}  ]
+  \tl_if_empty:NF \@@_after_codevar:n { \@@_after_codevar:n {
+    \seq_set_map:NNn \l_tmpa_seq \l_@@_vars_seq { {
+      \bool_if:NF \l_@@_codeblock_noref_bool {
+        \seq_push:Nn \g_@@_codenest_seq { ##1 }
+        \@@_hyperref:xn { code: \seq_use:Nn \g_@@_codenest_seq {:} } 
+      } { ##1 }
+    } }
+    \seq_use:Nn \l_tmpa_seq {,~}
+  }
   }
 }
-%    \end{macrocode}
-% \end{macro}
-%
-% \changes{0.0.10$\alpha$}{2022/12/13}{Allow customising codevar message}
-% \begin{macro}{\aftercodevar}
-% \begin{arguments}
-% \item{Name of the code variable}
-% \item{Hyperref link name of the code variable}
-% \end{arguments}
-%
-% This macro is fills the same purpose as \tn{aftercodeblock}, however this one is for code variables.
-% The main difference here is by default we do not bother highlighting code variables, though it is easy to change.
-%
-%    \begin{macrocode}
-\NewDocumentCommand { \aftercodevar } { m O{} } { \relax }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2264,7 +2638,7 @@
 % \def\minted@inline@ii##1#1{%
 %   \minted@inline@iii{##1}}%
 % \end{lstlisting}
-% \footnotesize{Minted Sourcecode, v2.6}
+% \footnotesize{Minted Source code, v2.6}
 % \end{minipage}
 % \end{center}
 %
@@ -2284,7 +2658,7 @@
 %
 % The reason that this argument spec was used is twofold. 
 % Firstly, it was found that passing an active character as a \emph{beginning} delimiter directly to minted would often redefine the catcode subsequently with \tn{dospecials}. 
-% As such the catcode for the \emph{ending} delimiter would be different and \TeX would just keep on reading untill an error. 
+% As such the catcode for the \emph{ending} delimiter would be different and \TeX{} would just keep on reading until an error. 
 %
 % Secondly, this specific form of argument spec was chosen because it is similar enough to the original minted version that it \emph{should} not cause any issues. 
 %
@@ -2438,8 +2812,8 @@
   \char_set_catcode_other:N \^^J
   \char_set_catcode_other:N \^^I
 %    \end{macrocode}
-% Finally we need to specify the newline to be used in the sourcecode file. 
-% At the moment I am developing on Linux, with no access to Windows/MacOS, so lets just use $0\times0a$ as the newline.
+% Finally we need to specify the newline to be used in the source code file. 
+% At the moment I am developing on Linux, with no access to Windows/MacOS, so lets just use $0\!\times\!0\rm A$ as the newline.
 % 
 % We need to fallback to 2$\varepsilon$ interface for \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isn't marked as do not use (\textellipsis|:D|)
 %
@@ -2576,7 +2950,7 @@
 %
 % One of the main problems that I encountered when I was writing the first iteration of \pkg{fortex}, was how do I take the contents of an environment and do two different things with it.
 % To me, when I was first beginning to actually write \LaTeX{}, I was surprised that environments don't take their contents as an argument.
-% (Though having more latex experience, this now makes more sense why this is the case). 
+% (Though having more \TeX{} experience, this now makes more sense why this is the case). 
 % There are certain flags you can give to the environment like the \texttt{b} flag in the \tn{NewDocumentEnvironment}. 
 % However, these do not capture the contents verbatim, and as such will fall over when given some source code.
 % 
@@ -2782,6 +3156,8 @@
 %
 % \subsubsection{Print code in \texttt{.pdf}}
 % \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \changes{0.0.12$\alpha$}{2022/02/20}{Add draft mode}
+% \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
 % \begin{macro}{\@@_print_code:n}
 % \begin{arguments}
 % \item The code to print 
@@ -2797,11 +3173,14 @@
 % If the labels shift around too much then \TeX{} will need to recalculate the page numbers, requiring a third rebuild. 
 %
 %    \begin{macrocode}
+\int_new:N   \g_@@_tmp_lineno_int
+\int_gincr:N \g_@@_tmp_lineno_int
 \cs_set:Npn \@@_print_code:n #1 { 
   \prop_get:NVN \g_@@_ref_cache_prop
               { \tex_mdfivesum:D { \exp_not:n { #1 } } }
                 \l_@@_cached_code_tl
-  \quark_if_no_value:NTF \l_@@_cached_code_tl {
+  \bool_lazy_or:nnTF { \quark_if_no_value_p:N \l_@@_cached_code_tl }
+                     { \g_@@_draft_bool } {
     \@@_multiline_verb:n { #1 }
   } {
     \str_if_eq:NNTF { \g_@@_printend_tl } { mint }
@@ -2809,6 +3188,33 @@
                     { \@@_multiline_listings:oV } 
     { \l_@@_cached_code_tl } \g_@@_code_delim_str
   }
+% \end{macrocode}
+% One tripping point for calculating the first line number is that the printing function is called \emph{after} the code has been processed and the line number incremented. 
+%
+% Consider the case where we have already called the code environment $\alpha$ times. 
+% If a code environment has $n$ lines of code then the total lines of code so far is given by
+%
+% \begin{equation*}
+%   N_\alpha = \sum_{i=1}^\alpha n_i  
+% \end{equation*}
+% 
+% Now let us call the $\alpha+1$\textsuperscript{th} code environment.
+% The first thing that happens is \cs{@@_process_code:nn} gets called and our total line number gets updated as
+%
+% \begin{equation*}
+%   N_\alpha \to N_{\alpha+1}
+% \end{equation*}
+%
+% The second thing that happens is that we print our code. 
+% However, this code environment should start at line number $1+N_\alpha$, not $1+N_{\alpha+1}$.
+% 
+% As such we cannot use the \cs{g_@@_tmp_lineno_int} variable directly, as it contains the number $N_{\alpha+1}$.
+% To combat this we use a secondary variable \cs{fortexcurlineno}, that lags behind \cs{g_@@_tmp_lineno_int} by one code environment.
+%
+% This way \cs{fortexcurlineno} should always contain $N_\alpha$ when the code is being printed.
+%
+% \begin{macrocode}
+  \int_gset_eq:NN \fortexcurlineno \g_@@_tmp_lineno_int
 }
 \cs_generate_variant:Nn \@@_print_code:n { o }
 %    \end{macrocode}
@@ -2918,11 +3324,13 @@
 % As we use \texttt{escapechar} to insert code hyperlinks, this is not acceptable, so we end up using scantokens here too. 
 %
 % Note that unlike \pkg{minted}, \pkg{listings} is able to handle an active escapechar without any issues.
-% 
+% However, we need to wrap the formatting argument in 2 layers of braces to prevent matching a closing brace contained in the argument itself.
+% I don't specifically know why 2 braces are needed here, but only 1 brace is fine for \pkg{minted}, and regular optional args, but whatever.
+%
 %    \begin{macrocode}
 !cs_gset:Npn !@@_multiline_listings_aux:nn #1#2 <
   !scantokens<%
-    \begin{lstlisting}[{#1}]
+    \begin{lstlisting}[{{#1}}]
     #2
     \end{lstlisting}
     !noexpand%
@@ -2960,6 +3368,7 @@
 % \changes{0.0.10$\alpha$}{2022/12/22}{Fix listings escape, (again)}
 % \changes{0.0.11$\alpha$}{2022/12/29}{Use sequence to store \pkg{minted}/\pkg{listings} options}
 % \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
+% \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
 % \begin{macro}{\@@_multiline_listings:nn}
 % \begin{arguments}
 % \item Filename to be inserted into the \texttt{.pdf} document  
@@ -2973,7 +3382,20 @@
   \seq_push:Nn \g_@@_print_keystore_seq { escapechar={#2} } 
   \str_if_eq:NNF \l_@@_lang_tl { text } { 
     \seq_push:Nx \g_@@_print_keystore_seq { language={\l_@@_lang_tl} }
-  } 
+  }
+%    \end{macrocode}
+% Strictly \pkg{listings} does not need to have its line numbering implementation overridden, However we do so anyway because of a few reasons. 
+% Firstly, it allows us to offer the user accessible register \tn{fortexcurlineno} to the user in case they want to directly access it or do something else. 
+% Secondly because we have overwritten the \optref{firstnumber} keyval, this means that by default, the options there will not be passed on to \pkg{listings}. 
+% This is now a huge deal and it could be worked around, but it acted as an impetus to implement the \pkg{minted} system in \pkg{listings} too
+%
+%    \begin{macrocode}
+  \bool_if:NT \g_@@_firstnumber_last_bool {
+    \seq_push:Nx \g_@@_print_keystore_seq {
+      firstnumber={ \int_use:N \fortexcurlineno }
+    }
+  }
+
 %    \end{macrocode}
 % A problem arises when using \pkg{listings}, and the delimiters chosen for \pTeX{}, \upTeX{}, and \XeTeX{}. 
 % As listings is a fundamentally 8-bit package, it doesn't play super well with Unicode. 
@@ -3059,37 +3481,18 @@
 \cs_set:Npn \@@_multiline_mint:nn #1#2 {
   \seq_push:Nn \g_@@_print_keystore_seq { escapeinside={#2#2} }
 %    \end{macrocode}
-% One tripping point for calculating the first line number is that the printing function is called \emph{after} the code has been processed and the line number incremented. 
-%
-% Consider the case where we have already called the code environment $\alpha$ times. 
-% If a code environment has $n$ lines of code then the total lines of code so far is given by
-%
-% \begin{equation*}
-%   N_\alpha = \sum_{i=1}^\alpha n_i  
-% \end{equation*}
+% As mentioned the default |firstnumber=last| implementation in \pkg{minted} is completely broken.
+% It prints random number in an order that is ``mostly increasing''.
 % 
-% Now let us call the $\alpha+1$\textsuperscript{th} code environment.
-% The first thing that happens is \cs{@@_process_code:nn} gets called and our total line number gets updated as
-%
-% \begin{equation*}
-%   N_\alpha \to N_{\alpha+1}
-% \end{equation*}
-%
-% The second thing that happens is that we print our code. 
-% However, this code environment should start at line number $1+N_\alpha$, not $1+N_{\alpha+1}$.
+% As such we override their implementation, and make our own one.
+% We are keeping track of how many lines we have processed, and then passing that number into the optargs of minted to say ``start at this number''
 % 
-% As such we cannot use the \cs{g_@@_cur_lineno_int} variable directly, as it contains the number $N_{\alpha+1}$.
-% To combat this we use a secondary variable \cs{g_@@_block_lineno_int}, that lags behind \cs{g_@@_cur_lineno_int} by one code environment.
-%
-% This way \cs{g_@@_block_lineno_int} should always contain $N_\alpha$ when the code is being printed.
-%
 %    \begin{macrocode}
   \bool_if:NT \g_@@_firstnumber_last_bool {
     \seq_push:Nx \g_@@_print_keystore_seq {
-      firstnumber={ \int_use:N \g_@@_block_lineno_int }
+      firstnumber={ \int_use:N \fortexcurlineno }
     }
   }
-  \int_gset_eq:NN \g_@@_block_lineno_int \g_@@_cur_lineno_int
 %    \end{macrocode}
 %    \begin{macrocode}
   \bool_if:NT \g_@@_verbose_bool {
@@ -3126,9 +3529,9 @@
   \iow_now:Nn \g_@@_outfile_iow { #2 }
   \seq_gput_right:Nn #1 { #2 }
   \bool_if:NT \g_@@_verbose_bool {
-    \iow_term:V { \g_@@_cur_lineno_int|~ #2 }
+    \iow_term:V { \g_@@_tmp_lineno_int|~ #2 }
   }
-  \int_gincr:N \g_@@_cur_lineno_int
+  \int_gincr:N \g_@@_tmp_lineno_int
 }
 %    \end{macrocode}
 %
@@ -3148,6 +3551,7 @@
   \VerbatimEnvironment
   \group_begin:
   \seq_clear_new:N \l_@@_curcode_seq
+  \int_gset_eq:NN \g_@@_tmp_lineno_int \fortexcurlineno
   \@bsphack
 %    \end{macrocode}
 % One interesting thing about the fancyvrb environment is that it will expand any active characters.
