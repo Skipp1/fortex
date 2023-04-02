@@ -1,0 +1,1449 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+(_minted-codeblocks_m/default.pygstyle)
+(_minted-codeblocks_m/FE589749D6BBF8EF6C88A9C1813DDA3C8D4BF2794BCA1931B883CD97CDB601C4.pygtex
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+)
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line ....
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line ....
+(_minted-codeblocks_m/8FA229BB89C932737E69E69BF2BA3A2E8D4BF2794BCA1931B883CD97CDB601C4.pygtex
+LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <9> not available
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line ....
+LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <9> not available
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line ....
+LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <9> not available
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line ....
+)
+(_minted-codeblocks_m/8D483B7D7C41F656A5EE299D349AD4DC8D4BF2794BCA1931B883CD97CDB601C4.pygtex)
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+(codeblocks_m.ind
+Completed box being shipped out [1]
+\vbox(682.0+0.0)x398.0
+.\hbox(0.0+0.0)x0.0
+..\special{! systemdict /pdfmark known{userdict /?pdfmark systemdict /exec get p\ETC.}
+..\special{ps:SDict begin [/Producer (dvips + Distiller)/Title ()/Subject ()/Cre\ETC.}
+..\special{! /DvipsToPDF{72.27 mul Resolution div} def/PDFToDvips{72.27 div Reso\ETC.}
+.\special{ps:SDict begin /product where{pop product(Distiller)search{pop pop po\ETC.}
+.\vbox(0.0+0.0)x0.0, glue set - 15.99626fil
+..\kern 0.0
+..\kern 17.0
+..\kern -1.00374
+..\hbox(0.0+0.0)x0.0, glue set - 51.99626fil
+...\kern 0.0
+...\kern 53.0
+...\kern -1.00374
+...\special{ps:SDict begin H.S end}
+...\special{ps:SDict begin H.R end}
+...\special{ps:SDict begin [/View [/XYZ H.V]/Dest (page.1) cvn /DEST pdfmark end}
+...\penalty 10000
+...\glue 0.0 plus 1.0fil minus 1.0fil
+..\glue 0.0 plus 1.0fil minus 1.0fil
+.\glue(\lineskip) 0.0
+.\vbox(682.0+0.0)x398.0
+..\glue 17.0
+..\vbox(665.0+0.0)x345.0, shifted 53.0
+...\vbox(12.0+0.0)x345.0, glue set 12.0fil
+....\glue 0.0 plus 1.0fil
+....\hbox(0.0+0.0)x345.0
+.....\special{color push gray 0}
+.....\hbox(0.0+0.0)x345.0
+.....\special{color pop}
+...\glue 25.0
+...\glue(\lineskip) 0.0
+...\vbox(598.0+0.0)x345.0, glue set 288.7677fil
+....\write-{}
+....\special{color push gray 0}
+....\special{ps:SDict begin [/PageMode /UseOutlines/Page 1/View [/Fit] /DOCVIEW pd\ETC.}
+....\special{ps:SDict begin [ {Catalog}<<>> /PUT pdfmark end}
+....\special{ps:SDict begin H.S end}
+....\special{ps:SDict begin 12 H.A end}
+....\special{ps:SDict begin [/View [/XYZ H.V]/Dest (Doc-Start) cvn /DEST pdfmark e\ETC.}
+....\glue(\topskip) 3.05556
+....\hbox(6.94444+1.94444)x345.0, glue set 60.30507fil
+.....\hbox(0.0+0.0)x15.0
+.....\OT1/cmr/m/n/10 L
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 t
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 u
+.....\OT1/cmr/m/n/10 s
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 ^^L (ligature fi)
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 s
+.....\OT1/cmr/m/n/10 t
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 m
+.....\OT1/cmr/m/n/10 p
+.....\kern0.27779
+.....\OT1/cmr/m/n/10 o
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 t
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 h
+.....\OT1/cmr/m/n/10 e
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 l
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 b
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 s
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 n
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 d
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 d
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 f
+.....\OT1/cmr/m/n/10 o
+.....\OT1/cmr/m/n/10 r
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 p
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 n
+.....\kern-0.27779
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 n
+.....\OT1/cmr/m/n/10 g
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 o
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 s
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 d
+.....\OT1/cmr/m/n/10 o
+.....\OT1/cmr/m/n/10 u
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 .
+.....\penalty 10000
+.....\glue(\parfillskip) 0.0 plus 1.0fil
+.....\glue(\rightskip) 0.0
+....\penalty -51
+....\glue 10.0 plus 4.0 minus 5.0
+....\glue(\baselineskip) 3.55556
+....\hbox(5.5+0.0)x345.0
+.....\hbox(5.5+0.0)x345.0
+......\kern 0.0
+......\hbox(5.5+0.0)x345.0, glue set 245.81334fil
+.......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\OT1/cmr/m/n/5 1
+........\kern 12.0
+.......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+.......\special{color push rgb 0.74 0.48 0.00}
+.......\OT1/cmtt/m/it/9 #
+.......\kern 1.5625
+.......\special{color pop}
+.......\special{color push rgb 0.74 0.48 0.00}
+.......\OT1/cmtt/m/it/9 i
+.......\OT1/cmtt/m/it/9 n
+.......\OT1/cmtt/m/it/9 c
+.......\OT1/cmtt/m/it/9 l
+.......\OT1/cmtt/m/it/9 u
+.......\OT1/cmtt/m/it/9 d
+.......\OT1/cmtt/m/it/9 e
+.......\kern 1.5625
+.......\special{color pop}
+.......\glue 4.72495
+.......\special{color push rgb 0.25 0.50 0.50}
+.......\OT1/cmtt/m/it/9 <
+.......\OT1/cmtt/m/it/9 s
+.......\OT1/cmtt/m/it/9 t
+.......\OT1/cmtt/m/it/9 d
+.......\OT1/cmtt/m/it/9 i
+.......\OT1/cmtt/m/it/9 o
+.......\OT1/cmtt/m/it/9 .
+.......\OT1/cmtt/m/it/9 h
+.......\OT1/cmtt/m/it/9 >
+.......\kern 1.5625
+.......\special{color pop}
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 300
+....\glue(\baselineskip) 5.5
+....\hbox(5.5+0.0)x345.0
+.....\kern 0.0
+.....\hbox(5.5+0.0)x345.0, glue set 250.5383fil
+......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 2
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\special{color push rgb 0.74 0.48 0.00}
+......\OT1/cmtt/m/it/9 #
+......\kern 1.5625
+......\special{color pop}
+......\special{color push rgb 0.74 0.48 0.00}
+......\OT1/cmtt/m/it/9 i
+......\OT1/cmtt/m/it/9 n
+......\OT1/cmtt/m/it/9 c
+......\OT1/cmtt/m/it/9 l
+......\OT1/cmtt/m/it/9 u
+......\OT1/cmtt/m/it/9 d
+......\OT1/cmtt/m/it/9 e
+......\kern 1.5625
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.25 0.50 0.50}
+......\OT1/cmtt/m/it/9 <
+......\OT1/cmtt/m/it/9 m
+......\OT1/cmtt/m/it/9 a
+......\OT1/cmtt/m/it/9 t
+......\OT1/cmtt/m/it/9 h
+......\OT1/cmtt/m/it/9 .
+......\OT1/cmtt/m/it/9 h
+......\OT1/cmtt/m/it/9 >
+......\kern 1.5625
+......\special{color pop}
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty -51
+....\glue 10.0 plus 3.0 minus 5.0
+....\glue(\parskip) 0.0 plus 1.0
+....\glue(\parskip) 0.0
+....\glue(\baselineskip) 5.05556
+....\hbox(6.94444+1.94444)x345.0, glue set 1.99606fil
+.....\hbox(0.0+0.0)x15.0
+.....\OT1/cmr/m/n/10 D
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 d
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 y
+.....\kern-0.27779
+.....\OT1/cmr/m/n/10 o
+.....\OT1/cmr/m/n/10 u
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 k
+.....\OT1/cmr/m/n/10 n
+.....\OT1/cmr/m/n/10 o
+.....\kern-0.27779
+.....\OT1/cmr/m/n/10 w
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 h
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 t
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\mathon
+.....\OML/cmm/m/it/10 ^^Y
+.....\kern0.35878
+.....\glue(\thickmuskip) 2.77771 plus 2.77771
+.....\OMS/cmsy/m/n/10 '
+.....\penalty 500
+.....\glue(\thickmuskip) 2.77771 plus 2.77771
+.....\OT1/cmr/m/n/10 3
+.....\OML/cmm/m/it/10 :
+.....\OT1/cmr/m/n/10 1
+.....\OT1/cmr/m/n/10 4
+.....\mathoff
+.....\OT1/cmr/m/n/10 ?
+.....\glue 4.44444 plus 4.99997 minus 0.37036
+.....\OT1/cmr/m/n/10 W
+.....\kern-0.83334
+.....\OT1/cmr/m/n/10 e
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 c
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 n
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 c
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 l
+.....\OT1/cmr/m/n/10 c
+.....\OT1/cmr/m/n/10 u
+.....\OT1/cmr/m/n/10 l
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 e
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 h
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 s
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 n
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 C
+.....\glue 3.33333 plus 1.66498 minus 1.11221
+.....\OT1/cmr/m/n/10 u
+.....\OT1/cmr/m/n/10 s
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 n
+.....\OT1/cmr/m/n/10 g
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 h
+.....\OT1/cmr/m/n/10 e
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 f
+.....\OT1/cmr/m/n/10 o
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 m
+.....\kern-0.27779
+.....\OT1/cmr/m/n/10 u
+.....\OT1/cmr/m/n/10 l
+.....\OT1/cmr/m/n/10 a
+.....\penalty 10000
+.....\glue(\parfillskip) 0.0 plus 1.0fil
+.....\glue(\rightskip) 0.0
+....\penalty 10000
+....\glue(\abovedisplayskip) 10.0 plus 2.0 minus 5.0
+....\glue(\lineskip) 1.0
+....\hbox(16.51393+12.79865)x205.48532, shifted 139.51468
+.....\hbox(16.51393+12.79865)x65.97066, display
+......\hbox(0.0+0.0)x0.0
+.......\special{ps:SDict begin H.S end}
+......\hbox(11.07062+6.85951)x8.45905
+.......\hbox(11.07062+6.85951)x8.45905
+........\hbox(0.0+0.0)x1.2, shifted -2.5
+........\vbox(11.07062+6.85951)x6.05905
+.........\hbox(4.30554+0.0)x6.05905
+..........\OML/cmm/m/it/10 ^^Y
+.........\kern4.06508
+.........\rule(0.39998+0.0)x*
+.........\kern2.71507
+.........\hbox(6.44444+0.0)x6.05905, glue set 0.52953fil
+..........\glue 0.0 plus 1.0fil minus 1.0fil
+..........\OT1/cmr/m/n/10 4
+..........\glue 0.0 plus 1.0fil minus 1.0fil
+........\hbox(0.0+0.0)x1.2, shifted -2.5
+......\glue(\thickmuskip) 2.77771 plus 2.77771
+......\OT1/cmr/m/n/10 =
+......\glue(\thickmuskip) 2.77771 plus 2.77771
+......\vbox(16.51393+12.79865)x14.44447
+.......\kern1.0
+.......\hbox(3.01389+0.0)x14.44447, glue set 3.23611fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\OMS/cmsy/m/n/7 1
+........\glue 0.0 plus 1.0fil minus 1.0fil
+.......\kern1.99998
+.......\hbox(10.50006+5.50006)x14.44447
+........\hbox(1.0+15.00012)x14.44447, shifted -9.50006
+.........\OMX/cmex/m/n/5 X
+.......\kern1.66666
+.......\hbox(4.63193+0.0)x14.44447, glue set 0.74507fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\OML/cmm/m/it/7 i
+........\OT1/cmr/m/n/7 =
+........\OT1/cmr/m/n/7 0
+........\glue 0.0 plus 1.0fil minus 1.0fil
+.......\kern1.0
+......\glue(\thinmuskip) 1.66663
+......\hbox(15.02592+7.69284)x28.06729
+.......\hbox(15.02592+7.69284)x28.06729
+........\hbox(0.0+0.0)x1.2, shifted -2.5
+........\vbox(15.02592+7.69284)x25.6673
+.........\hbox(8.26085+2.5)x25.6673, glue set 0.8912fil
+..........\glue 0.0 plus 1.0fil minus 1.0fil
+..........\OT1/cmr/m/n/10 (
+..........\OMS/cmsy/m/n/10 ^^@
+..........\OT1/cmr/m/n/10 1
+..........\OT1/cmr/m/n/10 )
+..........\hbox(4.63193+0.0)x3.32928, shifted -3.62892
+...........\OML/cmm/m/it/7 i
+..........\glue 0.0 plus 1.0fil minus 1.0fil
+.........\kern1.56508
+.........\rule(0.39998+0.0)x*
+.........\kern2.56427
+.........\hbox(6.59525+0.83333)x25.6673
+..........\OT1/cmr/m/n/10 2
+..........\OML/cmm/m/it/10 i
+..........\glue(\medmuskip) 2.22217 plus 1.11108 minus 2.22217
+..........\OT1/cmr/m/n/10 +
+..........\glue(\medmuskip) 2.22217 plus 1.11108 minus 2.22217
+..........\OT1/cmr/m/n/10 1
+........\hbox(0.0+0.0)x1.2, shifted -2.5
+......\special{ps:SDict begin 12 H.A end}
+......\special{ps:SDict begin [/View [/XYZ H.V]/Dest (equation.0.1) cvn /DEST pdfmar\ETC.}
+......\penalty 10000
+.....\kern126.73685
+.....\hbox(7.5+2.5)x12.77782, display
+......\hbox(7.5+2.5)x12.77782
+.......\special{color push gray 0}
+.......\OT1/cmr/m/n/10 (
+.......\OT1/cmr/m/n/10 1
+.......\OT1/cmr/m/n/10 )
+.......\special{color pop}
+....\penalty 0
+....\glue(\belowdisplayskip) 10.0 plus 2.0 minus 5.0
+....\glue(\parskip) 0.0 plus 1.0
+....\glue(\parskip) 0.0
+....\glue(\lineskip) 1.0
+....\hbox(6.94444+1.94444)x345.0, glue set 90.24956fil
+.....\hbox(0.0+0.0)x15.0
+.....\OT1/cmr/m/n/10 T
+.....\OT1/cmr/m/n/10 h
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 s
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 s
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 s
+.....\OT1/cmr/m/n/10 u
+.....\OT1/cmr/m/n/10 m
+.....\OT1/cmr/m/n/10 m
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 o
+.....\OT1/cmr/m/n/10 n
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 c
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 n
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 b
+.....\kern0.27779
+.....\OT1/cmr/m/n/10 e
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 p
+.....\OT1/cmr/m/n/10 p
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 o
+.....\kern-0.27779
+.....\OT1/cmr/m/n/10 x
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 m
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 d
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 f
+.....\OT1/cmr/m/n/10 o
+.....\OT1/cmr/m/n/10 r
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 2
+.....\OT1/cmr/m/n/10 0
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 m
+.....\OT1/cmr/m/n/10 s
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\write1{\newlabel{code:calculate_pi}{{}{\thepage }{}{equation.0.1}{}}}
+.....\penalty 10000
+.....\glue 0.0
+.....\write5{\indexentry{\verb^^^calculate_pi^^^|hyperindexformat{\textit}}{\thepage }}
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\write1{\newlabel{code:calculate_pi:retval}{{}{\thepage }{}{equation.0.1}{}}}
+.....\penalty 10000
+.....\glue 0.0
+.....\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^retval^^^|hyperindexformat{\texti\ETC.}
+.....\write1{\newlabel{code:calculate_pi:i}{{}{\thepage }{}{equation.0.1}{}}}
+.....\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^i^^^|hyperindexformat{\textit}}{\thepage \ETC.}
+.....\penalty 10000
+.....\glue(\parfillskip) 0.0 plus 1.0fil
+.....\glue(\rightskip) 0.0
+....\penalty -51
+....\glue 10.0 plus 4.0 minus 5.0
+....\glue(\baselineskip) 2.80556
+....\hbox(6.25+2.0)x345.0
+.....\hbox(6.25+2.0)x345.0
+......\kern 0.0
+......\hbox(6.25+2.0)x345.0, glue set 174.90198fil
+.......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\OT1/cmr/m/n/5 3
+........\kern 12.0
+.......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+.......\special{color push rgb 0.00 0.50 0.00}
+.......\OT1/cmtt/m/n/9 s
+.......\OT1/cmtt/m/n/9 t
+.......\OT1/cmtt/m/n/9 a
+.......\OT1/cmtt/m/n/9 t
+.......\OT1/cmtt/m/n/9 i
+.......\OT1/cmtt/m/n/9 c
+.......\kern 0.0
+.......\special{color pop}
+.......\glue 4.72495
+.......\special{color push rgb 0.69 0.00 0.25}
+.......\OT1/cmtt/m/n/9 d
+.......\OT1/cmtt/m/n/9 o
+.......\OT1/cmtt/m/n/9 u
+.......\OT1/cmtt/m/n/9 b
+.......\OT1/cmtt/m/n/9 l
+.......\OT1/cmtt/m/n/9 e
+.......\kern 0.0
+.......\special{color pop}
+.......\glue 4.72495
+.......\write5{\indexentry{\verb^^^calculate_pi^^^|hyperindexformat{\textrm}}{\thepage }}
+.......\penalty 10000
+.......\glue 0.0
+.......\hbox(0.0+0.0)x0.0, shifted 2.0
+........\special{ps:SDict begin H.S end}
+.......\hbox(5.49998+2.0)x56.69934
+........\special{color push gray 0}
+........\OT1/cmtt/m/n/9 c
+........\OT1/cmtt/m/n/9 a
+........\OT1/cmtt/m/n/9 l
+........\OT1/cmtt/m/n/9 c
+........\OT1/cmtt/m/n/9 u
+........\OT1/cmtt/m/n/9 l
+........\OT1/cmtt/m/n/9 a
+........\OT1/cmtt/m/n/9 t
+........\OT1/cmtt/m/n/9 e
+........\OT1/cmtt/m/n/9 _
+........\OT1/cmtt/m/n/9 p
+........\OT1/cmtt/m/n/9 i
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -5.49998
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\OT1/cmtt/m/n/9 (
+.......\special{color push rgb 0.69 0.00 0.25}
+.......\OT1/cmtt/m/n/9 v
+.......\OT1/cmtt/m/n/9 o
+.......\OT1/cmtt/m/n/9 i
+.......\OT1/cmtt/m/n/9 d
+.......\kern 0.0
+.......\special{color pop}
+.......\OT1/cmtt/m/n/9 )
+.......\glue 4.72495
+.......\OT1/cmtt/m/n/9 {
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 150
+....\glue(\baselineskip) 3.50002
+....\hbox(5.49998+1.25)x345.0
+.....\kern 0.0
+.....\hbox(5.49998+1.25)x345.0, glue set 241.05121fil
+......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 4
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\special{color push rgb 0.69 0.00 0.25}
+......\OT1/cmtt/m/n/9 d
+......\OT1/cmtt/m/n/9 o
+......\OT1/cmtt/m/n/9 u
+......\OT1/cmtt/m/n/9 b
+......\OT1/cmtt/m/n/9 l
+......\OT1/cmtt/m/n/9 e
+......\kern 0.0
+......\special{color pop}
+......\glue 4.72495
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^retval^^^|hyperindexformat{\textr\ETC.}
+......\penalty 10000
+......\glue 0.0
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x28.34967
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 r
+.......\OT1/cmtt/m/n/9 e
+.......\OT1/cmtt/m/n/9 t
+.......\OT1/cmtt/m/n/9 v
+.......\OT1/cmtt/m/n/9 a
+.......\OT1/cmtt/m/n/9 l
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 =
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 0
+......\special{color pop}
+......\OT1/cmtt/m/n/9 ;
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 0
+....\glue(\baselineskip) 3.5
+....\hbox(6.25+1.25)x345.0
+.....\kern 0.0
+.....\hbox(6.25+1.25)x345.0, glue set 193.80176fil
+......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 5
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\special{color push rgb 0.00 0.50 0.00}
+......\OT1/cmtt/m/n/9 f
+......\OT1/cmtt/m/n/9 o
+......\OT1/cmtt/m/n/9 r
+......\kern 0.0
+......\special{color pop}
+......\glue 4.72495
+......\OT1/cmtt/m/n/9 (
+......\special{color push rgb 0.69 0.00 0.25}
+......\OT1/cmtt/m/n/9 i
+......\OT1/cmtt/m/n/9 n
+......\OT1/cmtt/m/n/9 t
+......\kern 0.0
+......\special{color pop}
+......\glue 4.72495
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^i^^^|hyperindexformat{\textrm}}{\thepage \ETC.}
+......\penalty 10000
+......\glue 0.0
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x4.72495
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 i
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 =
+......\special{color pop}
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 0
+......\special{color pop}
+......\OT1/cmtt/m/n/9 ;
+......\glue 4.72495
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^i^^^|hyperindexformat{\textrm}}{\thepage \ETC.}
+......\penalty 10000
+......\glue 0.0
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x4.72495
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 i
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 <
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 2
+......\OT1/cmtt/m/n/9 0
+......\special{color pop}
+......\OT1/cmtt/m/n/9 ;
+......\glue 4.72495
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^i^^^|hyperindexformat{\textrm}}{\thepage \ETC.}
+......\penalty 10000
+......\glue 0.0
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x4.72495
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 i
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 +
+......\special{color pop}
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 +
+......\special{color pop}
+......\OT1/cmtt/m/n/9 )
+......\glue 4.72495
+......\OT1/cmtt/m/n/9 {
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 0
+....\glue(\baselineskip) 3.5
+....\hbox(6.25+2.0)x345.0
+.....\kern 0.0
+.....\hbox(6.25+2.0)x345.0, glue set 113.47769fil
+......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 6
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^retval^^^|hyperindexformat{\textr\ETC.}
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x28.34967
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 r
+.......\OT1/cmtt/m/n/9 e
+.......\OT1/cmtt/m/n/9 t
+.......\OT1/cmtt/m/n/9 v
+.......\OT1/cmtt/m/n/9 a
+.......\OT1/cmtt/m/n/9 l
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 +
+......\special{color pop}
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 =
+......\special{color pop}
+......\glue 4.72495
+......\OT1/cmtt/m/n/9 p
+......\OT1/cmtt/m/n/9 o
+......\OT1/cmtt/m/n/9 w
+......\OT1/cmtt/m/n/9 (
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 -
+......\special{color pop}
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 1
+......\special{color pop}
+......\vadjust
+......\OT1/cmtt/m/n/9 ,
+......\glue 4.72495
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^i^^^|hyperindexformat{\textrm}}{\thepage \ETC.}
+......\penalty 10000
+......\glue 0.0
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x4.72495
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 i
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\OT1/cmtt/m/n/9 )
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 /
+......\special{color pop}
+......\glue 4.72495
+......\OT1/cmtt/m/n/9 (
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 2
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 *
+......\special{color pop}
+......\glue 4.72495
+......\OT1/cmtt/m/n/9 (
+......\special{color push rgb 0.69 0.00 0.25}
+......\OT1/cmtt/m/n/9 d
+......\OT1/cmtt/m/n/9 o
+......\OT1/cmtt/m/n/9 u
+......\OT1/cmtt/m/n/9 b
+......\OT1/cmtt/m/n/9 l
+......\OT1/cmtt/m/n/9 e
+......\kern 0.0
+......\special{color pop}
+......\OT1/cmtt/m/n/9 )
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^i^^^|hyperindexformat{\textrm}}{\thepage \ETC.}
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x4.72495
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 i
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 +
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 1
+......\special{color pop}
+......\OT1/cmtt/m/n/9 )
+......\OT1/cmtt/m/n/9 ;
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 0
+....\glue(\baselineskip) 2.75
+....\hbox(6.25+0.74998)x345.0
+.....\kern 0.0
+.....\hbox(6.25+0.74998)x345.0, glue set 321.37527fil
+......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 7
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\OT1/cmtt/m/n/9 }
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 0
+....\glue(\baselineskip) 4.75003
+....\hbox(5.49998+1.25)x345.0
+.....\kern 0.0
+.....\hbox(5.49998+1.25)x345.0, glue set 241.05121fil
+......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 8
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\special{color push rgb 0.00 0.50 0.00}
+......\OT1/cmtt/m/n/9 r
+......\OT1/cmtt/m/n/9 e
+......\OT1/cmtt/m/n/9 t
+......\OT1/cmtt/m/n/9 u
+......\OT1/cmtt/m/n/9 r
+......\OT1/cmtt/m/n/9 n
+......\kern 0.0
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 4
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 *
+......\special{color pop}
+......\glue 4.72495
+......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^retval^^^|hyperindexformat{\textr\ETC.}
+......\penalty 10000
+......\glue 0.0
+......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+0.0)x28.34967
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 r
+.......\OT1/cmtt/m/n/9 e
+.......\OT1/cmtt/m/n/9 t
+.......\OT1/cmtt/m/n/9 v
+.......\OT1/cmtt/m/n/9 a
+.......\OT1/cmtt/m/n/9 l
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\OT1/cmtt/m/n/9 ;
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 150
+....\glue(\baselineskip) 3.5
+....\hbox(6.25+0.74998)x345.0
+.....\kern 0.0
+.....\hbox(6.25+0.74998)x345.0, glue set 330.82516fil
+......\hbox(3.22221+0.0)x0.0, glue set - 15.40283fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 9
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\OT1/cmtt/m/n/9 }
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty -51
+....\glue 10.0 plus 3.0 minus 5.0
+....\glue(\parskip) 0.0 plus 1.0
+....\glue(\parskip) 0.0
+....\glue(\baselineskip) 4.30557
+....\hbox(6.94444+1.94444)x345.0, glue set 207.33315fil
+.....\hbox(0.0+0.0)x15.0
+.....\OT1/cmr/m/n/10 ^^L (ligature fi)
+.....\OT1/cmr/m/n/10 n
+.....\OT1/cmr/m/n/10 a
+.....\OT1/cmr/m/n/10 l
+.....\OT1/cmr/m/n/10 l
+.....\OT1/cmr/m/n/10 y
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 w
+.....\kern-0.27779
+.....\OT1/cmr/m/n/10 e
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 p
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 i
+.....\OT1/cmr/m/n/10 n
+.....\kern-0.27779
+.....\OT1/cmr/m/n/10 t
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 h
+.....\OT1/cmr/m/n/10 e
+.....\glue 3.33333 plus 1.66666 minus 1.11111
+.....\OT1/cmr/m/n/10 r
+.....\OT1/cmr/m/n/10 e
+.....\OT1/cmr/m/n/10 s
+.....\OT1/cmr/m/n/10 u
+.....\OT1/cmr/m/n/10 l
+.....\OT1/cmr/m/n/10 t
+.....\OT1/cmr/m/n/10 s
+.....\OT1/cmr/m/n/10 .
+.....\glue 4.44444 plus 4.99997 minus 0.37036
+.....\write1{\newlabel{code:calculate_pi:main}{{}{\thepage }{}{equation.0.1}{}}}
+.....\penalty 10000
+.....\glue 0.0
+.....\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^main^^^|hyperindexformat{\textit}\ETC.}
+.....\penalty 10000
+.....\glue(\parfillskip) 0.0 plus 1.0fil
+.....\glue(\rightskip) 0.0
+....\penalty -51
+....\glue 10.0 plus 4.0 minus 5.0
+....\glue(\baselineskip) 2.80556
+....\hbox(6.25+0.74998)x345.0
+.....\hbox(6.25+0.74998)x345.0
+......\kern 0.0
+......\hbox(6.25+0.74998)x345.0, glue set 259.95099fil
+.......\hbox(3.22221+0.0)x0.0, glue set - 18.80566fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\OT1/cmr/m/n/5 1
+........\OT1/cmr/m/n/5 0
+........\kern 12.0
+.......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+.......\special{color push rgb 0.69 0.00 0.25}
+.......\OT1/cmtt/m/n/9 i
+.......\OT1/cmtt/m/n/9 n
+.......\OT1/cmtt/m/n/9 t
+.......\kern 0.0
+.......\special{color pop}
+.......\glue 4.72495
+.......\write5{\indexentry{\verb^^^calculate_pi^^^!\verb^^^main^^^|hyperindexformat{\textrm}\ETC.}
+.......\penalty 10000
+.......\glue 0.0
+.......\special{ps:SDict begin H.S end}
+.......\hbox(5.49998+0.0)x18.89978
+........\special{color push gray 0}
+........\OT1/cmtt/m/n/9 m
+........\OT1/cmtt/m/n/9 a
+........\OT1/cmtt/m/n/9 i
+........\OT1/cmtt/m/n/9 n
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -5.49998
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\OT1/cmtt/m/n/9 (
+.......\special{color push rgb 0.69 0.00 0.25}
+.......\OT1/cmtt/m/n/9 v
+.......\OT1/cmtt/m/n/9 o
+.......\OT1/cmtt/m/n/9 i
+.......\OT1/cmtt/m/n/9 d
+.......\kern 0.0
+.......\special{color pop}
+.......\OT1/cmtt/m/n/9 )
+.......\glue 4.72495
+.......\OT1/cmtt/m/n/9 {
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 150
+....\glue(\baselineskip) 4.00002
+....\hbox(6.25+2.0)x345.0
+.....\kern 0.0
+.....\hbox(6.25+2.0)x345.0, glue set 179.62692fil
+......\hbox(3.22221+0.0)x0.0, glue set - 18.80566fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 1
+.......\OT1/cmr/m/n/5 1
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\OT1/cmtt/m/n/9 p
+......\OT1/cmtt/m/n/9 r
+......\OT1/cmtt/m/n/9 i
+......\OT1/cmtt/m/n/9 n
+......\OT1/cmtt/m/n/9 t
+......\OT1/cmtt/m/n/9 f
+......\OT1/cmtt/m/n/9 (
+......\special{color push rgb 0.73 0.13 0.13}
+......\OT1/cmtt/m/n/9 "
+......\special{color pop}
+......\special{color push rgb 0.73 0.13 0.13}
+......\OT1/cmtt/m/n/9 %
+......\OT1/cmtt/m/n/9 g
+......\special{color pop}
+......\special{color push rgb 0.73 0.40 0.13}
+......\OT1/cmtt/m/n/9 \
+......\OT1/cmtt/m/n/9 n
+......\kern 0.0
+......\special{color pop}
+......\special{color push rgb 0.73 0.13 0.13}
+......\OT1/cmtt/m/n/9 "
+......\special{color pop}
+......\vadjust
+......\OT1/cmtt/m/n/9 ,
+......\glue 4.72495
+......\write5{\indexentry{\verb^^^calculate_pi^^^|hyperindexformat{\textrm}}{\thepage }}
+......\penalty 10000
+......\glue 0.0
+......\hbox(0.0+0.0)x0.0, shifted 2.0
+.......\special{ps:SDict begin H.S end}
+......\hbox(5.49998+2.0)x56.69934
+.......\special{color push gray 0}
+.......\OT1/cmtt/m/n/9 c
+.......\OT1/cmtt/m/n/9 a
+.......\OT1/cmtt/m/n/9 l
+.......\OT1/cmtt/m/n/9 c
+.......\OT1/cmtt/m/n/9 u
+.......\OT1/cmtt/m/n/9 l
+.......\OT1/cmtt/m/n/9 a
+.......\OT1/cmtt/m/n/9 t
+.......\OT1/cmtt/m/n/9 e
+.......\OT1/cmtt/m/n/9 _
+.......\OT1/cmtt/m/n/9 p
+.......\OT1/cmtt/m/n/9 i
+.......\special{color pop}
+......\hbox(0.0+0.0)x0.0, shifted -5.49998
+.......\special{ps:SDict begin H.R end}
+......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+......\OT1/cmtt/m/n/9 (
+......\OT1/cmtt/m/n/9 )
+......\OT1/cmtt/m/n/9 )
+......\OT1/cmtt/m/n/9 ;
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 0
+....\glue(\baselineskip) 3.50002
+....\hbox(5.49998+1.25)x345.0
+.....\kern 0.0
+.....\hbox(5.49998+1.25)x345.0, glue set 283.57571fil
+......\hbox(3.22221+0.0)x0.0, glue set - 18.80566fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 1
+.......\OT1/cmr/m/n/5 2
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\special{color push rgb 0.00 0.50 0.00}
+......\OT1/cmtt/m/n/9 r
+......\OT1/cmtt/m/n/9 e
+......\OT1/cmtt/m/n/9 t
+......\OT1/cmtt/m/n/9 u
+......\OT1/cmtt/m/n/9 r
+......\OT1/cmtt/m/n/9 n
+......\kern 0.0
+......\special{color pop}
+......\glue 4.72495
+......\special{color push rgb 0.40 0.40 0.40}
+......\OT1/cmtt/m/n/9 0
+......\special{color pop}
+......\OT1/cmtt/m/n/9 ;
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty 150
+....\glue(\baselineskip) 3.5
+....\hbox(6.25+0.74998)x345.0
+.....\kern 0.0
+.....\hbox(6.25+0.74998)x345.0, glue set 330.82516fil
+......\hbox(3.22221+0.0)x0.0, glue set - 18.80566fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/m/n/5 1
+.......\OT1/cmr/m/n/5 3
+.......\kern 12.0
+......\hbox(0.0+0.0)x9.44989, glue set 9.44989fil
+.......\glue 0.0 plus 1.0fil minus 1.0fil
+......\OT1/cmtt/m/n/9 }
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+....\penalty -51
+....\glue 10.0 plus 3.0 minus 5.0
+....\glue(\parskip) 0.0 plus 1.0
+....\glue(\parskip) 0.0
+....\glue(\baselineskip) 4.30557
+....\hbox(6.94444+2.22223)x345.0, glue set 45.33989fill
+.....\glue 0.0 plus 1.0fill
+.....\OT1/cmr/m/it/10 E
+.....\OT1/cmr/m/it/10 n
+.....\OT1/cmr/m/it/10 d
+.....\glue 3.57774 plus 1.53333 minus 1.0222
+.....\OT1/cmr/m/it/10 o
+.....\OT1/cmr/m/it/10 f
+.....\glue 3.57774 plus 1.53333 minus 1.0222
+.....\OT1/cmr/m/it/10 c
+.....\kern-0.51112
+.....\OT1/cmr/m/it/10 o
+.....\kern-0.51112
+.....\OT1/cmr/m/it/10 d
+.....\OT1/cmr/m/it/10 e
+.....\OT1/cmr/m/it/10 b
+.....\OT1/cmr/m/it/10 l
+.....\OT1/cmr/m/it/10 o
+.....\kern-0.51112
+.....\OT1/cmr/m/it/10 c
+.....\OT1/cmr/m/it/10 k
+.....\OT1/cmr/m/it/10 :
+.....\glue 4.59995 plus 3.06665 minus 0.5111
+.....\special{ps:SDict begin H.S end}
+.....\hbox(6.11111+0.0)x20.99982
+......\special{color push gray 0}
+......\OT1/cmtt/m/it/10 m
+......\OT1/cmtt/m/it/10 a
+......\OT1/cmtt/m/it/10 i
+......\OT1/cmtt/m/it/10 n
+......\special{color pop}
+.....\hbox(0.0+0.0)x0.0, shifted -6.11111
+......\special{ps:SDict begin H.R end}
+.....\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.....\OT1/cmr/m/it/10 .
+.....\glue 4.44444 plus 4.99997 minus 0.37036
+.....\glue 0.0 plus 1.0fill
+.....\OT1/cmr/m/it/10 E
+.....\OT1/cmr/m/it/10 n
+.....\OT1/cmr/m/it/10 d
+.....\glue 3.57774 plus 1.53333 minus 1.0222
+.....\OT1/cmr/m/it/10 o
+.....\OT1/cmr/m/it/10 f
+.....\glue 3.57774 plus 1.53333 minus 1.0222
+.....\OT1/cmr/m/it/10 c
+.....\kern-0.51112
+.....\OT1/cmr/m/it/10 o
+.....\kern-0.51112
+.....\OT1/cmr/m/it/10 d
+.....\OT1/cmr/m/it/10 e
+.....\OT1/cmr/m/it/10 b
+.....\OT1/cmr/m/it/10 l
+.....\OT1/cmr/m/it/10 o
+.....\kern-0.51112
+.....\OT1/cmr/m/it/10 c
+.....\OT1/cmr/m/it/10 k
+.....\OT1/cmr/m/it/10 :
+.....\glue 4.59995 plus 3.06665 minus 0.5111
+.....\hbox(0.0+0.0)x0.0, shifted 2.22223
+......\special{ps:SDict begin H.S end}
+.....\hbox(6.11111+2.22223)x62.99945
+......\special{color push gray 0}
+......\OT1/cmtt/m/it/10 c
+......\OT1/cmtt/m/it/10 a
+......\OT1/cmtt/m/it/10 l
+......\OT1/cmtt/m/it/10 c
+......\OT1/cmtt/m/it/10 u
+......\OT1/cmtt/m/it/10 l
+......\OT1/cmtt/m/it/10 a
+......\OT1/cmtt/m/it/10 t
+......\OT1/cmtt/m/it/10 e
+......\OT1/cmtt/m/it/10 _
+......\OT1/cmtt/m/it/10 p
+......\OT1/cmtt/m/it/10 i
+......\special{color pop}
+.....\hbox(0.0+0.0)x0.0, shifted -6.11111
+......\special{ps:SDict begin H.R end}
+.....\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.....\OT1/cmr/m/it/10 .
+.....\penalty 10000
+.....\glue(\parfillskip) 0.0 plus 1.0fil
+.....\glue(\rightskip) 0.0
+....\glue -2.22223
+....\glue 0.0 plus 1.0fil
+....\glue 0.0
+....\glue 0.0 plus 0.0001fil
+...\glue(\baselineskip) 23.55556
+...\hbox(6.44444+0.0)x345.0
+....\special{color push gray 0}
+....\hbox(6.44444+0.0)x345.0, glue set 170.0fil
+.....\glue 0.0 plus 1.0fil
+.....\OT1/cmr/m/n/10 1
+.....\glue 0.0 plus 1.0fil
+....\special{color pop}
+.\kern 0.0
+LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <14.4> not available
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line ....
+LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <14.4> not available
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
+(Font)              No change on input line ....
+\BKM@file=\write...
+Completed box being shipped out [2]
+\vbox(682.0+0.0)x398.0
+.\special{ps:SDict begin /product where{pop product(Distiller)search{pop pop po\ETC.}
+.\vbox(0.0+0.0)x0.0, glue set - 15.99626fil
+..\kern 0.0
+..\kern 17.0
+..\kern -1.00374
+..\hbox(0.0+0.0)x0.0, glue set - 52.99626fil
+...\kern 0.0
+...\kern 54.0
+...\kern -1.00374
+...\special{ps:SDict begin H.S end}
+...\special{ps:SDict begin H.R end}
+...\special{ps:SDict begin [/View [/XYZ H.V]/Dest (page.2) cvn /DEST pdfmark end}
+...\penalty 10000
+...\glue 0.0 plus 1.0fil minus 1.0fil
+..\glue 0.0 plus 1.0fil minus 1.0fil
+.\glue(\lineskip) 0.0
+.\vbox(682.0+0.0)x398.0
+..\glue 17.0
+..\vbox(665.0+0.0)x345.0, shifted 53.0
+...\vbox(12.0+0.0)x345.0, glue set 12.0fil
+....\glue 0.0 plus 1.0fil
+....\hbox(0.0+0.0)x345.0
+.....\special{color push gray 0}
+.....\hbox(0.0+0.0)x345.0
+.....\special{color pop}
+...\glue 25.0
+...\glue(\lineskip) 0.0
+...\vbox(598.0+0.0)x345.0
+....\vbox(14.97214+0.0)x345.0
+.....\special{color push gray 0}
+.....\vbox(14.97214+0.0)x345.0
+......\penalty -300
+......\glue 15.0694 plus 4.30554 minus 0.86108
+......\glue(\parskip) 0.0
+......\glue(\parskip) 0.0
+......\hbox(9.99998+0.0)x345.0, glue set 305.02504fil
+.......\hbox(0.0+0.0)x0.0
+........\glue 0.0
+.......\hbox(0.0+0.0)x0.0
+........\kern 0.0
+........\special{ps:SDict begin H.S end}
+........\penalty 10000
+........\glue 0.0
+........\special{ps:SDict begin 18 H.A end}
+........\special{ps:SDict begin [/View [/XYZ H.V]/Dest (section*.1) cvn /DEST pdfmark \ETC.}
+........\penalty 10000
+........\glue 0.0 plus 1.0fil minus 1.0fil
+.......\OT1/cmr/bx/n/14.4 I
+.......\OT1/cmr/bx/n/14.4 n
+.......\OT1/cmr/bx/n/14.4 d
+.......\OT1/cmr/bx/n/14.4 e
+.......\OT1/cmr/bx/n/14.4 x
+.......\penalty 10000
+.......\glue(\parfillskip) 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0
+......\penalty 10000
+......\glue 9.90276 plus 0.86108
+......\glue -20.0 plus -2.0 minus -4.0
+.....\special{color pop}
+....\glue 12.0 plus 2.0 minus 2.0
+....\glue -12.0 plus -2.0 minus -2.0
+....\glue 20.0 plus 2.0 minus 4.0
+....\hbox(563.02786+0.0)x345.0, glue set 5.0fil
+.....\hbox(563.02786+0.0)x167.5
+......\vbox(563.02786+0.0)x167.5
+.......\write1{\@LN@col{1}}
+.......\vbox(563.02786+0.0)x167.5, glue set 516.97264fil
+........\write-{}
+........\glue(\topskip) 3.55556
+........\hbox(6.44444+2.22223)x167.5, glue set 82.16722fil
+.........\hbox(0.0+0.0)x0.0
+.........\setlanguage2 (hyphenmin 2,3)
+.........\OT1/cmtt/m/n/10 c
+.........\OT1/cmtt/m/n/10 a
+.........\OT1/cmtt/m/n/10 l
+.........\OT1/cmtt/m/n/10 c
+.........\OT1/cmtt/m/n/10 u
+.........\OT1/cmtt/m/n/10 l
+.........\OT1/cmtt/m/n/10 a
+.........\OT1/cmtt/m/n/10 t
+.........\OT1/cmtt/m/n/10 e
+.........\OT1/cmtt/m/n/10 _
+.........\OT1/cmtt/m/n/10 p
+.........\OT1/cmtt/m/n/10 i
+.........\setlanguage0 (hyphenmin 2,3)
+.........\OT1/cmr/m/n/10 ,
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.11108
+..........\special{color push gray 0}
+..........\OT1/cmr/m/it/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\OT1/cmr/m/n/10 ,
+.........\kern 0.0
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.00002
+..........\special{color push gray 0}
+..........\OT1/cmr/m/n/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\penalty 10000
+.........\glue(\parfillskip) 0.0 plus 1.0fil
+.........\glue(\rightskip) 0.0
+........\glue(\parskip) 0.0 plus 0.3
+........\glue(\parskip) 0.0
+........\glue(\baselineskip) 3.33333
+........\hbox(6.44444+1.94444)x167.5, glue set 119.91672fil
+.........\hbox(0.0+0.0)x0.0
+.........\rule(*+*)x0.0
+.........\penalty 10000
+.........\glue 20.0
+.........\glue 0.0
+.........\setlanguage2 (hyphenmin 2,3)
+.........\OT1/cmtt/m/n/10 i
+.........\setlanguage0 (hyphenmin 2,3)
+.........\OT1/cmr/m/n/10 ,
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.11108
+..........\special{color push gray 0}
+..........\OT1/cmr/m/it/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\OT1/cmr/m/n/10 ,
+.........\kern 0.0
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.00002
+..........\special{color push gray 0}
+..........\OT1/cmr/m/n/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\penalty 10000
+.........\glue(\parfillskip) 0.0 plus 1.0fil
+.........\glue(\rightskip) 0.0
+........\glue(\parskip) 0.0 plus 0.3
+........\glue(\parskip) 0.0
+........\glue(\baselineskip) 3.61111
+........\hbox(6.44444+1.94444)x167.5, glue set 104.16685fil
+.........\hbox(0.0+0.0)x0.0
+.........\rule(*+*)x0.0
+.........\penalty 10000
+.........\glue 20.0
+.........\glue 0.0
+.........\setlanguage2 (hyphenmin 2,3)
+.........\OT1/cmtt/m/n/10 m
+.........\OT1/cmtt/m/n/10 a
+.........\OT1/cmtt/m/n/10 i
+.........\OT1/cmtt/m/n/10 n
+.........\setlanguage0 (hyphenmin 2,3)
+.........\OT1/cmr/m/n/10 ,
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.11108
+..........\special{color push gray 0}
+..........\OT1/cmr/m/it/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\OT1/cmr/m/n/10 ,
+.........\kern 0.0
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.00002
+..........\special{color push gray 0}
+..........\OT1/cmr/m/n/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\penalty 10000
+.........\glue(\parfillskip) 0.0 plus 1.0fil
+.........\glue(\rightskip) 0.0
+........\glue(\parskip) 0.0 plus 0.3
+........\glue(\parskip) 0.0
+........\glue(\baselineskip) 3.61111
+........\hbox(6.44444+1.94444)x167.5, glue set 93.66695fil
+.........\hbox(0.0+0.0)x0.0
+.........\rule(*+*)x0.0
+.........\penalty 10000
+.........\glue 20.0
+.........\glue 0.0
+.........\setlanguage2 (hyphenmin 2,3)
+.........\OT1/cmtt/m/n/10 r
+.........\OT1/cmtt/m/n/10 e
+.........\OT1/cmtt/m/n/10 t
+.........\OT1/cmtt/m/n/10 v
+.........\OT1/cmtt/m/n/10 a
+.........\OT1/cmtt/m/n/10 l
+.........\setlanguage0 (hyphenmin 2,3)
+.........\OT1/cmr/m/n/10 ,
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.11108
+..........\special{color push gray 0}
+..........\OT1/cmr/m/it/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\OT1/cmr/m/n/10 ,
+.........\kern 0.0
+.........\glue 3.33333 plus 2.08331 minus 0.88889
+.........\special{ps:SDict begin H.S end}
+.........\hbox(6.44444+0.0)x5.00002
+..........\special{color push gray 0}
+..........\OT1/cmr/m/n/10 1
+..........\special{color pop}
+.........\hbox(0.0+0.0)x0.0, shifted -6.44444
+..........\special{ps:SDict begin H.R end}
+.........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.........\penalty 10000
+.........\glue(\parfillskip) 0.0 plus 1.0fil
+.........\glue(\rightskip) 0.0
+........\glue -1.94444
+........\glue 0.0 plus 1.0fil
+........\glue 0.0
+........\glue 0.0 plus 0.0001fil
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\glue 0.0 plus 1.0fil
+.....\special{color push gray 0}
+.....\rule(*+*)x0.0
+.....\special{color pop}
+.....\glue 0.0 plus 1.0fil
+.....\hbox(563.02786+0.0)x167.5, glue set 167.5fil
+......\vbox(563.02786+0.0)x0.0
+.......\write1{\@LN@col{2}}
+.......\vbox(563.02786+0.0)x0.0, glue set 552.9688fil
+........\write-{}
+........\glue(\topskip) 10.0
+........\vbox(0.0+0.0)x0.0
+........\glue 0.0 plus 1.0fil
+........\glue 0.0
+........\glue 0.0 plus 0.0001fil
+......\glue 0.0 plus 1.0fil minus 1.0fil
+...\glue(\baselineskip) 23.55556
+...\hbox(6.44444+0.0)x345.0
+....\special{color push gray 0}
+....\hbox(6.44444+0.0)x345.0, glue set 170.0fil
+.....\glue 0.0 plus 1.0fil
+.....\OT1/cmr/m/n/10 2
+.....\glue 0.0 plus 1.0fil
+....\special{color pop}
+.\kern -682.0
+.\hbox(0.0+0.0)x0.0
+..\special{PSfile=codeblocks_m.out.ps}
+.\kern 682.0
+) (codeblocks_m.aux)
+runsystem(rm .//codeblocks_m.pyg)...executed.

@@ -1,0 +1,79 @@
+\input{regression-test.tex}
+\documentclass[10pt, a4paper]{article}
+\usepackage{makeidx}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[lang=c, print=l]{fortex}
+\usepackage{hyperref}
+
+\makeindex
+
+\setfortex{ basicstyle=\small\ttfamily
+          , tabsize=2
+          , numbers=left
+          , firstnumber=1
+          , numberfirstline=true
+          , commentstyle=\color[gray]{0.4}
+          , stringstyle =\color{Rhodamine}
+          , keywordstyle=\color{orange}
+}
+
+\begin{document}
+
+\START
+\showoutput
+
+ \begin{code}
+ #include <stdio.h>
+ #include <math.h>
+ \end{code}
+
+ Did you know that $\pi\simeq3.14$?
+ We can calculate this in C using the formula
+ \begin{equation}
+ \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+ \end{equation}
+
+ This is summation can be approximated for 20 terms
+
+ \begin{codeblock}{calculate_pi}
+ \begin{codevar}[scope=calculate_pi]{retval, i}
+ \begin{code}
+ static double calculate_pi(void) {
+   double retval = 0;
+   for (int i=0; i < 20; i++) {
+     retval += pow(-1, i) / (2 * (double)i + 1);
+   }
+   return 4 * retval;
+ }
+ \end{code}
+ \end{codevar}
+
+ Some Deeper nesting.
+ Note that \texttt{retval} is hyperlinked here due to
+ being a nested scope.
+
+ \begin{codeblock}{test_pi}
+ \begin{code}
+ double test_pi(double calcpi) {
+   retval = ( calcpi - M_PI < 0.1 ) ? 0 : 1
+   return retval;
+ }
+ \end{code}
+ \end{codeblock}
+ \end{codeblock}
+
+ finally we print the results.
+ Note that \texttt{retval} is not hyperlinked it is out 
+ of scope.
+
+ \begin{code}
+ int main(void) { 
+   printf("%g\n", calculate_pi());
+   int retval = test_pi(calculate_pi());
+   return retval;
+ }
+ \end{code}
+\end{document}
+
+\printindex
+\end{document}

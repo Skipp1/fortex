@@ -101,7 +101,7 @@
 }
 \ExplSyntaxOff
 
-\setlength\parfillskip{0pt plus .75\linewidth}
+% \setlength\parfillskip{0pt plus .75\linewidth}
 % \setlength\IndexMin{100pt}
 
 \newsavebox\clogo
@@ -792,8 +792,6 @@
 % \end{lstlisting}
 % \end{examplefile}
 %
-% ^^A \vspace{-\baselineskip}
-%
 % \begin{examplefile}[left=1cm]{file.c}{\clogo}
 % \begin{lstlisting}[language=C]
 %  double mynamespace_calculate_pi(void) {
@@ -946,7 +944,7 @@
 %
 % \noindent Do this by placing \tn{VerbatimEnvironment} as the first line, and a Comment \texttt{\char`\%} at the end of the code environment.
 %
-% \subsubsection{Getting the Current Line Number}
+% \subsubsection*{Getting the Current Line Number}
 % The current line number can be accessed with the integer register \tn{fortexcurlineno}
 %
 %
@@ -954,12 +952,8 @@
 %
 % \begin{enumerate}
 % \item Finish of |.dtx| by adding Usage instructions
-% \item Expose line number to user in case they want to continue from a specified point
-% \item \rule[0.5ex]{10cm}{0.5pt}\hspace{-10cm}allow customisation of the full filename, not just the extension
 % \item Changelog interface (just a wrapper for glossaries)?
-% \item fix the buggy |\aftercodevar| mess
 % \item intext and noref should be constant, (in general, we need more consistency)
-% \item \rule[0.5ex]{8cm}{0.5pt}\hspace{-8cm}Draft mode that disables intext and \pkg{minted}/\pkg{listings}
 % \item begin/end multichar escapeinside 
 % \item Cache invalidation when code delimiter changes 
 % \item Allow customisation of makeindex level and style indicators (autodetect?)
@@ -995,8 +989,8 @@
 %
 %    \begin{macrocode}
 \RequirePackage{ expl3 }
-\ProvidesExplPackage {fortex} {2023-01-31} {0.0.12$\alpha$}
-                     {like noweb without external tooling}
+\ProvidesExplPackage {fortex} {2023-03-31} {0.0.13$\alpha$}
+                     {A language agnostic way of documenting source code using LaTeX}
 \RequirePackage{ l3benchmark }
 \RequirePackage { l3keys2e }
 %    \end{macrocode}
@@ -1861,6 +1855,7 @@
 %
 % \subsubsection{vindex}
 %
+% \changes{0.0.13$\alpha$}{2023/03/26}{Vindex was not properly sanitising control sequences}
 % \changes{0.0.10$\alpha$}{2022/12/13}{Avoid needless assignments in vindex}
 % \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
 % \changes{0.0.4$\alpha$}{2022/03/21}{Add \cs{vindex}}
@@ -1876,8 +1871,8 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand \vindex { v } {
-  \label { code: #1 }
-  \@@_vindex_aux:nx { #1 } { \g_@@_vindex_fmt_str }
+  \@@_vlabel:n { code: #1 }
+  \@@_vindex_aux:xx { #1 } { \g_@@_vindex_fmt_str }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1938,6 +1933,27 @@
   \exp_args:No \index { \l_@@_idxvar_str }
 }
 \cs_generate_variant:Nn \@@_vindex_aux:nn {nx, xx}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.13$\alpha$}{2023/03/26}{Vindex was not properly sanitising control sequences}
+%
+% \begin{macro}{\@@_vlabel:n}
+% \begin{arguments}
+% \item Label identifier
+% \end{arguments}
+%
+% One complication with using a function name as a label name is that this get written out to the aux file. 
+% This for the most part is not a huge deal except when the label contains a \TeX{} control sequence. 
+% Thus we manually sanitise this case.
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_vlabel:n #1 { 
+  \str_set:Nn \l_tmpa_str { #1 }
+  \exp_args:NnV  \str_remove_all:Nn \l_tmpa_str \c_backslash_str
+  \exp_args:Nx \label { \l_tmpa_str }
+}
+\cs_generate_variant:Nn \@@_vlabel:n { x }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2367,7 +2383,7 @@
 % But for now this is everything.
 % 
 %    \begin{macrocode}
-    \exp_args:Nx \label { code: \seq_use:Nn \g_@@_codenest_seq {:}  }
+    \@@_vlabel:x { code: \seq_use:Nn \g_@@_codenest_seq {:}  }
   }
   \bool_if:NF { #4 } {
     \@@_vindex_aux:xx { \seq_use:Nn \g_@@_codenest_seq {!} }
@@ -2473,7 +2489,7 @@
 % However, defining the default implementation up there was going to be a little bit tricky, so lets just do it here. 
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_after_codeblock_aux:n #1 {
+\cs_set:Npn \@@_after_codeblock:n #1 {
   \hfill \itshape End~of~codeblock:~\texttt{ #1 }.
 }
 %    \end{macrocode}
@@ -2485,6 +2501,7 @@
 % The implementation should be simple enough that someone could make it without relying on \pkg{expl3} or having a deep understanding of \LaTeX{}.
 %
 %
+% \changes{0.0.13$\alpha$}{2023/04/02}{\texttt{\char`\\aftercodevar} now actually works with hyperref}
 % \begin{macro}{codevar}
 %
 % \begin{arguments}
@@ -2515,8 +2532,7 @@
   \seq_map_inline:Nn { \l_@@_vars_seq } { 
 %    \end{macrocode}
 %    \begin{macrocode}
-    \str_set:Nn \l_@@_codename_str { ##1 }
-    \seq_gput_right:Nx \g_@@_codenest_seq \l_@@_codename_str
+    \seq_gput_right:Nx \g_@@_codenest_seq { ##1 }
 %    \end{macrocode}
 %    \begin{macrocode}
     \@@_codeblock_aux:nnnn { ##1 } \l_@@_codeblock_scope_str
@@ -2542,7 +2558,7 @@
   \tl_if_empty:NF \@@_after_codevar:n { \@@_after_codevar:n {
     \seq_set_map:NNn \l_tmpa_seq \l_@@_vars_seq { {
       \bool_if:NF \l_@@_codeblock_noref_bool {
-        \seq_push:Nn \g_@@_codenest_seq { ##1 }
+        \seq_put_right:Nn \g_@@_codenest_seq { ##1 }
         \@@_hyperref:xn { code: \seq_use:Nn \g_@@_codenest_seq {:} } 
       } { ##1 }
     } }
@@ -2799,11 +2815,10 @@
 % We also set the active catcodes that we do not want substituted.
 %
 %    \begin{macrocode}
-  \cs_set_eq:NN \do \char_set_catcode_other:N 
-  \dospecials
+  \seq_map_function:NN \l_char_special_seq \char_set_catcode_other:N 
   \@@_reset_active_catcodes:
 %    \end{macrocode}
-% There are a few other characters that need special attention as they are not specified in \tn{dospecials}. 
+% There are a few other characters that need special attention as they are not specified in \cs{l_char_special_seq}. 
 % Try and protect some whitespace (Currently we have a few stray newlines but whatever)
 %
 % In the below code |^^J| is a newline.
@@ -2811,14 +2826,7 @@
 %    \begin{macrocode}
   \char_set_catcode_other:N \^^J
   \char_set_catcode_other:N \^^I
-%    \end{macrocode}
-% Finally we need to specify the newline to be used in the source code file. 
-% At the moment I am developing on Linux, with no access to Windows/MacOS, so lets just use $0\!\times\!0\rm A$ as the newline.
-% 
-% We need to fallback to 2$\varepsilon$ interface for \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isn't marked as do not use (\textellipsis|:D|)
-%
-%    \begin{macrocode}
-  \endlinechar=`\^^J
+
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2847,11 +2855,12 @@
 % \subsubsection{Subfile}
 %
 % \changes{0.0.8$\alpha$}{2022/07/21}{Add subfiles}
+% \changes{0.0.13$\alpha$}{2023/03/02}{Rework subfiles}
 %
 % The aim of this environment is to provide a means of including header files within the same document (or any other small subfile) without the need to split them off to a separate tex file. 
 %
 % As multiple subfiles are allowed to be nested, it makes sense that we should do a stack based implementation with \cs{g_@@_outfile_stack_seq} and \cs{g_@@_lang_stack_seq}.
-% This function overwrites the global variable \cs{g_@@_out_filename_tl}, between its |\begin| and |\end| calls. 
+% This function overwrites the global variable \cs{l_@@_out_filename_tl}, between its |\begin| and |\end| calls. 
 %
 % One problem that I encountered is that you cannot empty a file on |\begin{subfile}| as you may want to have multiple subfile sections all pointing to the same output file. 
 % The work around I have devised for this is to save every subfile filename into a sequence, and copy the contents into a new file of the same name if we have already seen that subfile before.
@@ -2881,23 +2890,30 @@
 %
 %    \begin{macrocode}
   \iow_close:N \g_@@_outfile_iow
-  {
+  \group_begin:
     \tl_set:Nn \l_@@_out_filename_tl { #2 }
-    \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
     \seq_if_in:NnTF \g_@@_outfile_history_seq { #2 } { 
 %    \end{macrocode}
 % One of the limitations of \TeX{} is that there is no way to \emph{append} to a file. 
 % However, the easy workaround for this is to just copy the previous contents of the file into a new file of the same name. 
 % There is however a cost to doing this, as it adds 2 newlines every time we do this.
 %
+% Note that we need to copy the contents \emph{before} opening the file.
+%
+% Finally we need to specify the newline to be used in the source code file. 
+% At the moment I am developing on Linux, with no access to Windows/MacOS, so lets just use $0\!\times\!0\rm A$ as the newline.
+% 
+% We need to fallback to 2$\varepsilon$ interface for \tn{endlinechar}, as \pkg{expl3} has yet to make an interface that isn't marked as do not use (\textellipsis|:D|)
+%
 %    \begin{macrocode}
       \file_get:nnN { \g_@@_outputdir_tl \l_@@_out_filename_tl }
-                    { \@@_setcatcode: } \l_tmpa_tl
+                    { \@@_setcatcode: \endlinechar=`\^^J } \l_tmpa_tl
+      \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
       \iow_now:NV \g_@@_outfile_iow \l_tmpa_tl
     } {
+      \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
       \seq_gpush:Nn \g_@@_outfile_history_seq { #2 }
     }
-  }
 } {
 %    \end{macrocode}
 % Finally we go back to our previous file pointer. 
@@ -2905,9 +2921,11 @@
 % and again this will cost us two extraneous newlines in the source code file. 
 %
 %    \begin{macrocode}
-  \file_get:nnN { \g_@@_outputdir_tl \l_@@_out_filename_tl }
-                { \@@_setcatcode: } \l_tmpa_tl
+  \group_end:
   \iow_close:N \g_@@_outfile_iow
+  \iow_term:V \l_@@_out_filename_tl
+  \file_get:nnN { \g_@@_outputdir_tl \l_@@_out_filename_tl }
+                { \@@_setcatcode: \endlinechar=`\^^J } \l_tmpa_tl
   \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
   \iow_now:NV  \g_@@_outfile_iow \l_tmpa_tl
 }
@@ -2927,7 +2945,7 @@
 %    \begin{macrocode}
 \hook_gput_code:nnn { begindocument } { fortex } {
   \tl_if_empty:NT \l_@@_out_filename_tl {
-    \tl_set:Nn \l_@@_out_filename_tl { \c_sys_jobname_str.\g_@@_ext_tl }
+    \tl_gset:Nn \l_@@_out_filename_tl { \c_sys_jobname_str.\g_@@_ext_tl }
   }
   \iow_new:N \g_@@_outfile_iow
   \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
@@ -3125,10 +3143,10 @@
 %    \begin{macrocode}
 \hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
 %    \end{macrocode}
+% \begin{macro}{\@@_write_fmt:nn}
 % As we are storing our keyval hashmap data in a property list, we need to make sure that it is written back out to the aux file in our \texttt{\meta{hash}@\meta{code}} format.
 % This requires a small auxiliary function to format the data as needed. 
 %
-% \begin{macro}{\@@_write_fmt:nn}
 %    \begin{macrocode}
   \cs_set:Npn \@@_write_fmt:nn #1#2 {
     \iow_now:cx { @auxout } {
@@ -3188,7 +3206,7 @@
                     { \@@_multiline_listings:oV } 
     { \l_@@_cached_code_tl } \g_@@_code_delim_str
   }
-% \end{macrocode}
+%    \end{macrocode}
 % One tripping point for calculating the first line number is that the printing function is called \emph{after} the code has been processed and the line number incremented. 
 %
 % Consider the case where we have already called the code environment $\alpha$ times. 
@@ -3511,6 +3529,7 @@
 %
 % \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
 % \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
+% \changes{0.0.13$\alpha$}{2023/04/02}{Get active namespaces working again}
 % \begin{macro}{\@@_process_code:nn}
 % \begin{arguments}
 % \item Sequence we are saving every line of code into
@@ -3526,7 +3545,7 @@
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_process_code:nn #1#2 {
-  \iow_now:Nn \g_@@_outfile_iow { #2 }
+  \iow_now:Nx \g_@@_outfile_iow { #2 }
   \seq_gput_right:Nn #1 { #2 }
   \bool_if:NT \g_@@_verbose_bool {
     \iow_term:V { \g_@@_tmp_lineno_int|~ #2 }
@@ -3539,6 +3558,7 @@
 % \subsubsection{Main code environment} 
 % \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
 % \changes{0.0.11$\alpha$}{2022/12/29}{Allow shortvrb characters to be included in code}
+% \changes{0.0.13$\alpha$}{2023/04/02}{Get active namespaces working again}
 % \begin{macro}{code}
 %
 % This is the main code environment that is going to be called the most. 
@@ -3562,7 +3582,7 @@
 %
 %    \begin{macrocode}
   \begin{g_@@_env_to_cmd}
-    [ codes={ \@@_reset_active_catcodes: } ]
+    [ codes={ \@@_setcatcode: } ]
     { \@@_process_code:nn \l_@@_curcode_seq }%
 }{
   \end{g_@@_env_to_cmd}

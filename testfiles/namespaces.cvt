@@ -1,0 +1,44 @@
+\input{regression-test.tex}
+\documentclass[10pt, a4paper]{article}
+\usepackage[lang=C, print=l, noignore]{fortex}
+\begin{document}
+
+\START
+\showoutput
+
+\catcode`\@=\active
+\def@{mynamespace}
+
+Let us first import the libraries needed for 
+printing to stdout.
+
+\begin{code}
+	#include <stdio.h>
+	#include <math.h>
+\end{code}
+
+Did you know that $\pi\simeq3.14$? 
+We can calculate this in C using the formula
+\begin{equation}
+	\frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
+\end{equation}
+
+This is summation can be approximated for 20 terms
+	\begin{code}
+	static double @_calculate_pi(void) {
+		double retval = 0;
+		for (int i=0; i < 20; i++) {
+			retval += pow(-1, i) / (2 * (double)i + 1);
+		}
+		return 4 * retval;
+	}
+\end{code}
+
+finally we print the results.
+\begin{code}
+	int main(void) { 
+		printf("%g\n", @_calculate_pi());
+		return 0;
+	}
+\end{code}
+\end{document}

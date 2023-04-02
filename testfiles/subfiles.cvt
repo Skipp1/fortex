@@ -1,0 +1,45 @@
+\input{regression-test.tex}
+\documentclass[10pt, a4paper]{article}
+\usepackage[lang=C, print=l]{fortex}
+
+\begin{document}
+ 
+ This is some C code that will go to \texttt{mainfile.c}
+ 
+ \begin{code}
+   #include <stdio.h>
+   int main(void) { 
+     printf("Hello From mainfile.c\n");
+     return 0;
+   }
+ \end{code}
+ 
+ But we can also put code into a subfile 
+ (of a different language even)
+ 
+ \begin{subfile}{fortran}{subfiles.c.1}
+   \begin{code}
+     program subfile
+       print *, "Hello from subfile1.f90"
+     end program
+   \end{code}
+   
+   How about nesting some subfile environments? 
+   
+   \begin{subfile}{python}{subfiles.c.2}
+     \begin{code}
+       print("Hello from subfile2.py")
+     \end{code}
+   \end{subfile}
+    
+ \end{subfile}
+ 
+ Let us pick up where we left off.
+ 
+ \begin{subfile}{python}{subfiles.c.2}
+   \begin{code}
+     print("Well, Hello yet again")
+   \end{code}
+ \end{subfile}
+
+\end{document}
