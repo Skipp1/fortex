@@ -1,21 +1,14 @@
-This is a generated file for the l3build validation system.
-Don't change this file in any respect.
-(../lstlang1.sty
-File: lstlang1.sty ....-..-.. 1.8d listings language file
-)
-(../lstmisc.sty
-File: lstmisc.sty ....-..-.. 1.8d (Carsten Heinz)
-)
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line ....
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line ....
-(codeblocks_l.ind
 Completed box being shipped out [1]
 \vbox(682.0+0.0)x398.0
 .\hbox(0.0+0.0)x0.0
-..\special{pdfcolorstackinit 1 page direct (0 g 0 G)}
 ..\special{pdf:docinfo<</Title()/Subject()/Creator(LaTeX with hyperref)/Author()\ETC.}
+.\hbox(0.0+0.0)x0.0
+..\kern -72.26999
+..\vbox(0.0+0.0)x0.0, glue set 72.26999fil
+...\kern -72.26999
+...\hbox(0.0+0.0)x0.0
+....\glue 0.0 plus 1.0fil minus 1.0fil
+...\glue 0.0 plus 1.0fil minus 1.0fil
 .\vbox(0.0+0.0)x0.0, glue set - 15.99626fil
 ..\kern 0.0
 ..\kern 17.0
@@ -77,6 +70,7 @@ Completed box being shipped out [1]
 ....\penalty -50
 ....\glue 6.0 plus 2.0 minus 2.0
 ....\glue 0.0
+....\penalty 0
 ....\special{pdf:dest (lstlisting.-1) [@thispage /XYZ @xpos @ypos null]}
 ....\penalty 10000
 ....\glue(\parskip) 0.0
@@ -355,6 +349,7 @@ Completed box being shipped out [1]
 ......\hbox(0.0+0.0)x0.0
 .......\penalty 10000
 .......\hbox(0.0+0.0)x0.0
+.......\hbox(0.0+0.0)x0.0
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0
 .........\special{pdf:dest (equation.0.1) [@thispage /XYZ @xpos @ypos null]}
@@ -423,6 +418,7 @@ Completed box being shipped out [1]
 ......\hbox(0.0+0.0)x0.0
 .......\penalty 10000
 .......\hbox(0.0+0.0)x0.0
+.......\hbox(0.0+0.0)x0.0
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0
 ........\mathoff
@@ -477,6 +473,7 @@ e \ETC.}
 ....\penalty -50
 ....\glue 6.0 plus 2.0 minus 2.0
 ....\glue 0.0
+....\penalty 0
 ....\special{pdf:dest (lstlisting.-2) [@thispage /XYZ @xpos @ypos null]}
 ....\penalty 10000
 ....\glue(\parskip) 0.0
@@ -1288,6 +1285,7 @@ e \ETC.}
 ....\penalty -50
 ....\glue 6.0 plus 2.0 minus 2.0
 ....\glue 0.0
+....\penalty 0
 ....\special{pdf:dest (lstlisting.-3) [@thispage /XYZ @xpos @ypos null]}
 ....\penalty 10000
 ....\glue(\parskip) 0.0
@@ -1696,8 +1694,16 @@ e \ETC.}
 .....\glue 0.0 plus 1.0fil
 ....\special{color pop}
 .\kern 0.0
+.\kern 0.0
 Completed box being shipped out [2]
 \vbox(682.0+0.0)x398.0
+.\hbox(0.0+0.0)x0.0
+..\kern -72.26999
+..\vbox(0.0+0.0)x0.0, glue set 72.26999fil
+...\kern -72.26999
+...\hbox(0.0+0.0)x0.0
+....\glue 0.0 plus 1.0fil minus 1.0fil
+...\glue 0.0 plus 1.0fil minus 1.0fil
 .\vbox(0.0+0.0)x0.0, glue set - 15.99626fil
 ..\kern 0.0
 ..\kern 17.0
@@ -1885,4 +1891,22 @@ Completed box being shipped out [2]
 .....\TU/lmr/m/n/10 2
 .....\glue 0.0 plus 1.0fil
 ....\special{color pop}
-) (codeblocks_l.aux)
+.\kern 0.0
+)
+============================================================
+-------- codeblocks_l.c (start) ---------
+(codeblocks_l.c)
+^^I#include <stdio.h>^^M
+^^I#include <math.h>^^M
+^^Istatic double calculate_pi(void) {^^M
+^^I^^Idouble retval = 0;^^M
+^^I^^Ifor (int i=0; i < 20; i++) {^^M
+^^I^^I^^Iretval += pow(-1, i) / (2 * (double)i + 1);^^M
+^^I^^I}^^M
+^^I^^Ireturn 4 * retval;^^M
+^^I}^^M
+^^Iint main(void) {^^M
+^^I^^Iprintf("%g\n", calculate_pi());^^M
+^^I^^Ireturn 0;^^M
+^^I}^^M
+-------- codeblocks_l.c (end) -----------

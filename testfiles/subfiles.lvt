@@ -1,9 +1,12 @@
 \input{regression-test.tex}
+\OMIT
 \documentclass[10pt, a4paper]{article}
 \usepackage[lang=C, print=l]{fortex}
 
 \begin{document}
- 
+ \START
+ \showoutput
+ \AddToHook{shipout/background}{\TIMO}
  This is some C code that will go to \texttt{mainfile.c}
  
  \begin{code}
@@ -17,7 +20,7 @@
  But we can also put code into a subfile 
  (of a different language even)
  
- \begin{subfile}{fortran}{subfiles.c.1}
+ \begin{subfile}{fortran}{subfiles.f90}
    \begin{code}
      program subfile
        print *, "Hello from subfile1.f90"
@@ -26,7 +29,7 @@
    
    How about nesting some subfile environments? 
    
-   \begin{subfile}{python}{subfiles.c.2}
+   \begin{subfile}{python}{subfiles.py}
      \begin{code}
        print("Hello from subfile2.py")
      \end{code}
@@ -36,10 +39,13 @@
  
  Let us pick up where we left off.
  
- \begin{subfile}{python}{subfiles.c.2}
+ \begin{subfile}{python}{subfiles.py}
    \begin{code}
      print("Well, Hello yet again")
    \end{code}
  \end{subfile}
+
+ \SEPARATOR
+\AddToHook{enddocument/afterlastpage}{{\catcode`\^^I=12\catcode`\ =12\SHOWFILE{subfiles.c}\SHOWFILE{subfiles.f90}\SHOWFILE{subfiles.py}}\OMIT}
 
 \end{document}

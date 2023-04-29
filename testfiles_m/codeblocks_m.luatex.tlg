@@ -1,16 +1,3 @@
-This is a generated file for the l3build validation system.
-Don't change this file in any respect.
-(_minted-codeblocks_m/default.pygstyle)
-(_minted-codeblocks_m/FE589749D6BBF8EF6C88A9C1813DDA3C8E086D625EB68B7A37B57C475271A2F2.pygtex)
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line ....
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line ....
-(_minted-codeblocks_m/1F0AB2F99FF224ED8C9F352247A9803F8E086D625EB68B7A37B57C475271A2F2.pygtex
-LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <9> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line ....
-)
-(_minted-codeblocks_m/8775E08991814DE465B3C7B1424B8A528E086D625EB68B7A37B57C475271A2F2.pygtex) (codeblocks_m.ind
 Completed box being shipped out [1]
 \vbox(682.0+0.0)x398.0, direction TLT
 .\hbox(0.0+0.0)x0.0, direction TLT
@@ -326,6 +313,7 @@ Completed box being shipped out [1]
 ......\hbox(0.0+0.0)x0.0, direction TLT
 .......\penalty 10000
 .......\hbox(0.0+0.0)x0.0, direction TLT
+.......\hbox(0.0+0.0)x0.0, direction TLT
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0, direction TLT
 .........\pdfdest name{equation.0.1} xyz
@@ -393,6 +381,7 @@ Completed box being shipped out [1]
 ........\hbox(0.0+0.0)x1.2, shifted -2.5, direction TLT
 ......\hbox(0.0+0.0)x0.0, direction TLT
 .......\penalty 10000
+.......\hbox(0.0+0.0)x0.0, direction TLT
 .......\hbox(0.0+0.0)x0.0, direction TLT
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0, direction TLT
@@ -715,7 +704,8 @@ Completed box being shipped out [1]
 ......\TU/lmtt/m/n/9 w
 ......\TU/lmtt/m/n/9 (
 ......\pdfcolorstack 0 push {0.40 0.40 0.40 rg 0.40 0.40 0.40 RG}
-......\TU/lmtt/m/n/9 -
+......\hbox(3.087+0.0)x4.725, direction TLT
+.......\TU/lmtt/m/n/9 -
 ......\pdfcolorstack 0 pop
 ......\pdfcolorstack 0 push {0.40 0.40 0.40 rg 0.40 0.40 0.40 RG}
 ......\TU/lmtt/m/n/9 1
@@ -1400,5 +1390,21 @@ Completed box being shipped out [2]
 .....\glue 0.0 plus 1.0fil
 ....\pdfcolorstack 0 pop
 .\kern0.0
-) (codeblocks_m.aux)
-runsystem(rm codeblocks_m.pyg)...executed
+)
+============================================================
+-------- codeblocks_m.c (start) ---------
+(codeblocks_m.c)
+^^I#include <stdio.h>^^M
+^^I#include <math.h>^^M
+^^Istatic double calculate_pi(void) {^^M
+^^I^^Idouble retval = 0;^^M
+^^I^^Ifor (int i=0; i < 20; i++) {^^M
+^^I^^I^^Iretval += pow(-1, i) / (2 * (double)i + 1);^^M
+^^I^^I}^^M
+^^I^^Ireturn 4 * retval;^^M
+^^I}^^M
+^^Iint main(void) {^^M
+^^I^^Iprintf("%g\n", calculate_pi());^^M
+^^I^^Ireturn 0;^^M
+^^I}^^M
+-------- codeblocks_m.c (end) -----------

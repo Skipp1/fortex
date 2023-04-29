@@ -1,4 +1,5 @@
 \input{regression-test.tex}
+\OMIT
 \documentclass[10pt, a4paper]{article}
 \usepackage{makeidx}
 \usepackage[dvipsnames]{xcolor}
@@ -19,8 +20,9 @@
 
 \begin{document}
 
-\START
-\showoutput
+ \START
+ \showoutput
+ \AddToHook{shipout/background}{\TIMO}
 
  \begin{code}
  #include <stdio.h>
@@ -54,8 +56,8 @@
 
  \begin{codeblock}{test_pi}
  \begin{code}
- double test_pi(double calcpi) {
-   retval = ( calcpi - M_PI < 0.1 ) ? 0 : 1
+ int test_pi(double calcpi) {
+   int retval = ( calcpi - M_PI < 0.1 ) ? 0 : 1;
    return retval;
  }
  \end{code}
@@ -73,7 +75,9 @@
    return retval;
  }
  \end{code}
-\end{document}
 
 \printindex
+\SEPARATOR
+\AddToHook{enddocument/afterlastpage}{{\catcode`\^^I=12\catcode`\ =12\SHOWFILE{scoping.c}}\OMIT}
+
 \end{document}

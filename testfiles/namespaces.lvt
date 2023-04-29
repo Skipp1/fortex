@@ -1,10 +1,12 @@
 \input{regression-test.tex}
+\OMIT
 \documentclass[10pt, a4paper]{article}
-\usepackage[lang=C, print=l, noignore]{fortex}
+\usepackage[lang=C, print=l]{fortex}
 \begin{document}
 
 \START
 \showoutput
+\AddToHook{shipout/background}{\TIMO}
 
 \catcode`\@=\active
 \def@{mynamespace}
@@ -41,4 +43,6 @@ finally we print the results.
 		return 0;
 	}
 \end{code}
+\SEPARATOR
+\AddToHook{enddocument/afterlastpage}{{\catcode`\^^I=12\catcode`\ =12\SHOWFILE{namespaces.c}}\OMIT}
 \end{document}

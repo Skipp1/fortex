@@ -1,0 +1,4 @@
+hard fancyvrb
+hard listings
+soft minted
+soft hyperref

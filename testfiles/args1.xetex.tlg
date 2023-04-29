@@ -1,20 +1,14 @@
-This is a generated file for the l3build validation system.
-Don't change this file in any respect.
-(../lstlang1.sty
-File: lstlang1.sty ....-..-.. 1.8d listings language file
-)
-(../lstlang1.sty
-File: lstlang1.sty ....-..-.. 1.8d listings language file
-)
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line ....
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line ....
 Completed box being shipped out [1]
 \vbox(682.0+0.0)x398.0
 .\hbox(0.0+0.0)x0.0
-..\special{pdfcolorstackinit 1 page direct (0 g 0 G)}
 ..\special{pdf:docinfo<</Title()/Subject()/Creator(LaTeX with hyperref)/Author()\ETC.}
+.\hbox(0.0+0.0)x0.0
+..\kern -72.26999
+..\vbox(0.0+0.0)x0.0, glue set 72.26999fil
+...\kern -72.26999
+...\hbox(0.0+0.0)x0.0
+....\glue 0.0 plus 1.0fil minus 1.0fil
+...\glue 0.0 plus 1.0fil minus 1.0fil
 .\vbox(0.0+0.0)x0.0, glue set - 15.99626fil
 ..\kern 0.0
 ..\kern 17.0
@@ -76,6 +70,7 @@ Completed box being shipped out [1]
 ....\penalty -50
 ....\glue 6.0 plus 2.0 minus 2.0
 ....\glue 0.0
+....\penalty 0
 ....\special{pdf:dest (lstlisting.-1) [@thispage /XYZ @xpos @ypos null]}
 ....\penalty 10000
 ....\glue(\parskip) 0.0
@@ -358,6 +353,7 @@ Completed box being shipped out [1]
 ......\hbox(0.0+0.0)x0.0
 .......\penalty 10000
 .......\hbox(0.0+0.0)x0.0
+.......\hbox(0.0+0.0)x0.0
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0
 .........\special{pdf:dest (equation.0.1) [@thispage /XYZ @xpos @ypos null]}
@@ -426,6 +422,7 @@ Completed box being shipped out [1]
 ......\hbox(0.0+0.0)x0.0
 .......\penalty 10000
 .......\hbox(0.0+0.0)x0.0
+.......\hbox(0.0+0.0)x0.0
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0
 ........\mathoff
@@ -466,6 +463,7 @@ Completed box being shipped out [1]
 ....\penalty -50
 ....\glue 6.0 plus 2.0 minus 2.0
 ....\glue 0.0
+....\penalty 0
 ....\special{pdf:dest (lstlisting.-2) [@thispage /XYZ @xpos @ypos null]}
 ....\penalty 10000
 ....\glue(\parskip) 0.0
@@ -1333,6 +1331,7 @@ Completed box being shipped out [1]
 ....\penalty -50
 ....\glue 6.0 plus 2.0 minus 2.0
 ....\glue 0.0
+....\penalty 0
 ....\special{pdf:dest (lstlisting.-3) [@thispage /XYZ @xpos @ypos null]}
 ....\penalty 10000
 ....\glue(\parskip) 0.0
@@ -1727,7 +1726,7 @@ Completed box being shipped out [1]
 ....\glue(\parskip) 0.0 plus 1.0
 ....\glue(\parskip) 0.0
 ....\glue(\baselineskip) 1.64996
-....\hbox(7.05+2.04999)x345.0, glue set 240.87665fill
+....\hbox(7.05+2.04999)x345.0, glue set 236.43665fill
 .....\glue 0.0 plus 1.0fill
 .....\TU/lmr/m/it/10 End
 .....\glue 3.58 plus 1.79 minus 1.19333
@@ -1737,6 +1736,7 @@ Completed box being shipped out [1]
 .....\glue 4.77333 plus 3.57999 minus 0.59666
 .....\TU/lmtt/m/it/10 main
 .....\TU/lmr/m/it/10 .
+.....\glue 4.44 plus 4.99498 minus 0.37
 .....\penalty 10000
 .....\glue(\parfillskip) 0.0 plus 1.0fil
 .....\glue(\rightskip) 0.0
@@ -1753,6 +1753,20 @@ Completed box being shipped out [1]
 .....\glue 0.0 plus 1.0fil
 ....\special{color pop}
 .\kern 0.0
-(args1.aux)
-Package rerunfilecheck Info: File `args1.out' has not changed.
-(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
+.\kern 0.0
+-------- args1.c (start) ---------
+(args1.c)
+^^I#include <stdio.h>^^M
+^^I#include <math.h>^^M
+^^Istatic double calculate_pi(void) {^^M
+^^I^^Idouble retval = 0;^^M
+^^I^^Ifor (int i=0; i < 20; i++) {^^M
+^^I^^I^^Iretval += pow(-1, i) / (2 * (double)i + 1);^^M
+^^I^^I}^^M
+^^I^^Ireturn 4 * retval;^^M
+^^I}^^M
+^^Iint main(void) {^^M
+^^I^^Iprintf("%g\n", calculate_pi());^^M
+^^I^^Ireturn 0;^^M
+^^I}^^M
+-------- args1.c (end) -----------

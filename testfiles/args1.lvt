@@ -1,8 +1,9 @@
 \input{regression-test.tex}
+\OMIT
 \documentclass[10pt, a4paper]{article}
 \usepackage{makeidx}
 \usepackage[dvipsnames]{xcolor}
-\usepackage[lang=fortran, print=l]{fortex}
+\usepackage[lang=fortran, print=l, verbose]{fortex}
 \usepackage{hyperref}
 
 \setfortex{ basicstyle=\small\ttfamily
@@ -19,9 +20,9 @@
 }
 
 \begin{document}
-
 \START
 \showoutput
+\AddToHook{shipout/background}{\TIMO}
 
 Let us first import the libraries needed for 
 printing to stdout.
@@ -62,4 +63,6 @@ finally we print the results.
 	}
 \end{code}
 \end{codeblock}
+\SEPARATOR
+\AddToHook{enddocument/afterlastpage}{{\catcode`\^^I=12\catcode`\ =12\SHOWFILE{args1.c}}\OMIT}
 \end{document}

@@ -1,21 +1,14 @@
-This is a generated file for the l3build validation system.
-Don't change this file in any respect.
-(_minted-codeblocks_m/default.pygstyle)
-(_minted-codeblocks_m/FE589749D6BBF8EF6C88A9C1813DDA3C2D775A028C17ACE55988394EE82E34C1.pygtex)
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line ....
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line ....
-(_minted-codeblocks_m/80C2194F4333C66A6AD74FC5A80115872D775A028C17ACE55988394EE82E34C1.pygtex
-LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <9> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line ....
-)
-(_minted-codeblocks_m/0C6396F48B23A87C2BE2C38C64B257D12D775A028C17ACE55988394EE82E34C1.pygtex) (codeblocks_m.ind
 Completed box being shipped out [1]
 \vbox(682.0+0.0)x398.0
 .\hbox(0.0+0.0)x0.0
-..\special{pdfcolorstackinit 1 page direct (0 g 0 G)}
 ..\special{pdf:docinfo<</Title()/Subject()/Creator(LaTeX with hyperref)/Author()\ETC.}
+.\hbox(0.0+0.0)x0.0
+..\kern -72.26999
+..\vbox(0.0+0.0)x0.0, glue set 72.26999fil
+...\kern -72.26999
+...\hbox(0.0+0.0)x0.0
+....\glue 0.0 plus 1.0fil minus 1.0fil
+...\glue 0.0 plus 1.0fil minus 1.0fil
 .\vbox(0.0+0.0)x0.0, glue set - 15.99626fil
 ..\kern 0.0
 ..\kern 17.0
@@ -185,6 +178,7 @@ Completed box being shipped out [1]
 ......\hbox(0.0+0.0)x0.0
 .......\penalty 10000
 .......\hbox(0.0+0.0)x0.0
+.......\hbox(0.0+0.0)x0.0
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0
 .........\special{pdf:dest (equation.0.1) [@thispage /XYZ @xpos @ypos null]}
@@ -252,6 +246,7 @@ Completed box being shipped out [1]
 ........\hbox(0.0+0.0)x1.2, shifted -2.5
 ......\hbox(0.0+0.0)x0.0
 .......\penalty 10000
+.......\hbox(0.0+0.0)x0.0
 .......\hbox(0.0+0.0)x0.0
 ........\mathon
 ........\hbox(0.0+0.0)x0.0, shifted -12.0
@@ -484,7 +479,8 @@ age \ETC.}
 ......\glue 4.725
 ......\TU/lmtt/m/n/9 pow(
 ......\special{color push rgb 0.40 0.40 0.40}
-......\TU/lmtt/m/n/9 -
+......\hbox(3.087+0.0)x4.725
+.......\TU/lmtt/m/n/9 -
 ......\special{color pop}
 ......\special{color push rgb 0.40 0.40 0.40}
 ......\TU/lmtt/m/n/9 1
@@ -785,8 +781,16 @@ ge \ETC.}
 .....\glue 0.0 plus 1.0fil
 ....\special{color pop}
 .\kern 0.0
+.\kern 0.0
 Completed box being shipped out [2]
 \vbox(682.0+0.0)x398.0
+.\hbox(0.0+0.0)x0.0
+..\kern -72.26999
+..\vbox(0.0+0.0)x0.0, glue set 72.26999fil
+...\kern -72.26999
+...\hbox(0.0+0.0)x0.0
+....\glue 0.0 plus 1.0fil minus 1.0fil
+...\glue 0.0 plus 1.0fil minus 1.0fil
 .\vbox(0.0+0.0)x0.0, glue set - 15.99626fil
 ..\kern 0.0
 ..\kern 17.0
@@ -978,5 +982,22 @@ Completed box being shipped out [2]
 .....\TU/lmr/m/n/10 2
 .....\glue 0.0 plus 1.0fil
 ....\special{color pop}
-) (codeblocks_m.aux)
-runsystem(rm .//codeblocks_m.pyg)...executed.
+.\kern 0.0
+)
+============================================================
+-------- codeblocks_m.c (start) ---------
+(codeblocks_m.c)
+^^I#include <stdio.h>^^M
+^^I#include <math.h>^^M
+^^Istatic double calculate_pi(void) {^^M
+^^I^^Idouble retval = 0;^^M
+^^I^^Ifor (int i=0; i < 20; i++) {^^M
+^^I^^I^^Iretval += pow(-1, i) / (2 * (double)i + 1);^^M
+^^I^^I}^^M
+^^I^^Ireturn 4 * retval;^^M
+^^I}^^M
+^^Iint main(void) {^^M
+^^I^^Iprintf("%g\n", calculate_pi());^^M
+^^I^^Ireturn 0;^^M
+^^I}^^M
+-------- codeblocks_m.c (end) -----------

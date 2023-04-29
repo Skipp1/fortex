@@ -1,4 +1,5 @@
 \input{regression-test.tex}
+\OMIT
 \documentclass[10pt, a4paper]{article}
 \usepackage{makeidx}
 \usepackage[dvipsnames]{xcolor}
@@ -16,6 +17,7 @@
 
 \START
 \showoutput
+\AddToHook{shipout/background}{\TIMO}
 
 Let us first import the libraries needed for 
 printing to stdout.
@@ -56,4 +58,6 @@ finally we print the results.
 \end{codeblock}
 \end{codeblock}
 \printindex
+\SEPARATOR
+\AddToHook{enddocument/afterlastpage}{{\catcode`\^^I=12\catcode`\ =12\SHOWFILE{codeblocks_m.c}}\OMIT}
 \end{document}
