@@ -1,11 +1,11 @@
 \input{regression-test.tex}
 \OMIT
 \documentclass[10pt, a4paper]{article}
-\usepackage{makeidx}
 \usepackage[dvipsnames]{xcolor}
 \usepackage[lang=fortran, print=l]{fortex}
 \usepackage{hyperref}
 
+\makechanges[columns=3]
 \makeindex
 
 \setfortex{ basicstyle=\small\ttfamily
@@ -17,7 +17,7 @@
           , stringstyle =\color{Rhodamine}
           , keywordstyle=\color{orange}
           , ext=c
-          , lang=c 
+          , lang=python
           , after codeblock = \textsf 
           , after codevar = \texttt
           , filename=args2.c.1 
@@ -25,6 +25,7 @@
           , vindex idxnum fmt = \textsf
           , codedef idxnum fmt = \textbf
           , codecall idxnum fmt = \texttt
+          , changelog idxnum fmt = \textit
 }
 
 \begin{document}
@@ -38,11 +39,13 @@ printing to stdout.
 
 \vindex{c ^^I _ \textsf a }
 
+\changes{0.0.1$\alpha$}{10/11/2012}{Add Changelog to test}
 \begin{code}
 	#include <stdio.h>
 	#include <math.h>
 \end{code}
 
+\changes{0.0.10$\alpha$}{12/12/2010}{Add explanation for Calculation for pi}
 Did you know that $\pi\simeq3.14$? 
 We can calculate this in C using the formula
 \begin{equation}
@@ -50,6 +53,7 @@ We can calculate this in C using the formula
 \end{equation}
 
 This is summation can be approximated for 20 terms
+\changes{0.0.2$\alpha$}{12/11/2010}{Add Calculation for pi}
 	\begin{codeblock}{calculate_pi}
 	\begin{codevar}{retval, i}
 	\begin{code}
@@ -68,6 +72,7 @@ Clear the page to see if the index numbering is working
 
 \clearpage 
 
+\changes{0.0.1$\alpha$}{10/11/2012}{Add Changelog to test}
 \begin{codeblock}[noindex, noref]{main}
 \begin{code}
 	int main(void) { 
@@ -78,6 +83,13 @@ Clear the page to see if the index numbering is working
 \end{codeblock}
 
 \printindex
+
+\RenewDocumentCommand\subitem{}{\par\nobreak\hspace{1em}\hangindent1em}
+\let\hyperindexformatOld\hyperindexformat
+\RenewDocumentCommand\hyperindexformat{}{\dotfill\hyperindexformatOld}
+\raggedcolumns
+
+\printchanges
 
 \SEPARATOR
 \AddToHook{enddocument/afterlastpage}{{\catcode`\^^I=12\catcode`\ =12\SHOWFILE{args2.c.1}}\OMIT}

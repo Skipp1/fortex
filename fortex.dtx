@@ -75,17 +75,17 @@
 
 \ExplSyntaxOn
 \cs_set_eq:NN \DescribeOption_aux:n \DescribeOption
-\RenewDocumentCommand { \DescribeOption } { v m O{} } {
+\RenewDocumentCommand { \DescribeOption } { v m o } {
   \label { doc/function//#1 }
-  \DescribeOption_aux:n { #1 } \textsf{ (~#2~) } \hfill \tl_if_empty:NF { #3 } {Default:~\texttt{#3}}
+  \DescribeOption_aux:n { #1 } \textsf{ (~#2~) } \hfill \tl_if_novalue:nF { #3 } {Default:~\texttt{#3}}
   \newline \indent \use:n % gobble the stray space that appears?
 }
 
-\NewDocumentCommand { \DescribeOptionIndent } { v m O{} } {
-  \vspace{\baselineskip}
+\NewDocumentCommand { \DescribeOptionIndent } { v m o } {
+  \vspace{0.6\baselineskip}
   \noindent
   \begin{tabular*}{\textwidth}{@{}p{1.3cm}l@{\extracolsep{\fill}}r@{}}
-  \texttt{#1} & \textsf { (~#2~) } &  \tl_if_empty:NF { #3 } { Default:~\texttt { #3 } }
+  \texttt{#1} & \textsf { (~#2~) } &  \tl_if_novalue:nF { #3 } { Default:~\texttt { #3 } }
   \end{tabular*} 
   \newline \indent \use:n
 }
@@ -256,9 +256,9 @@
 %   
 %   Did you know that $\pi\simeq3.14$? 
 %   We can calculate this in C using the formula
-%   \begin{equation}
+%   \begin{equation*}
 %    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
-%   \end{equation}
+%   \end{equation*}
 %
 %   This summation can be approximated for 20 terms
 %    \begin{code}
@@ -360,13 +360,10 @@
 %
 % \DescribeOptionIndent{noref}{\meta{boolean}}[false]
 % Do not scan and highlight \env{code} environments for usages of the \meta{blockname}. 
-%
 % As the scanning is the slowest part of the entire \pkg{fortex} code, using \texttt{noref} will speed up compilation.
 %
 % \DescribeOptionIndent{noindex}{\meta{boolean}}[false]
 % Do not add \meta{blockname} to the index. 
-%
-% This option only does anything when there is an \tn{index} macro defined.
 % This option does not affect the speed of compilation, but can be used to tidy the index of unnecessary usages.
 %
 % \DescribeOptionIndent{scope}{\meta{path}}
@@ -432,9 +429,9 @@
 %  
 %    Did you know that $\pi\simeq3.14$?
 %    We can calculate this in C using the formula
-%    \begin{equation}
+%    \begin{equation*}
 %    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
-%    \end{equation}
+%    \end{equation*}
 %  
 %    This summation can be approximated for 20 terms
 %  
@@ -489,9 +486,9 @@
 %  
 %    Did you know that $\pi\simeq3.14$?
 %    We can calculate this in C using the formula
-%    \begin{equation}
+%    \begin{equation*}
 %    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
-%    \end{equation}
+%    \end{equation*}
 %  
 %    This summation can be approximated for 20 terms
 %  
@@ -688,14 +685,7 @@
 % This is the same as \optref{after codeblock}, but appearing on \env{codevar} environments.
 % The control sequence takes one argument that is a comma separated list of all the variables, each one a hyperref link. 
 %
-% \DescribeOption{codedef idxnum fmt}{\meta{single control sequence}}[\char`\\textit]
-% How should page numbers in the index be formatted for definitions in code
-% Note that only a single control sequence may be used. 
-%
-% \DescribeOption{codecall idxnum fmt}{\meta{single control sequence}}[\char`\\textrm]
-% How should page numbers in the index be formatted for function calls
-% Note that only a single control sequence may be used. 
-%
+
 % \DescribeOption{delim}{\meta{string}}[\it{Engine Specific}]
 % \noindent \pkg{fortex} uses the \pkg{minted} option \texttt{escapeinside}, and the \pkg{listings} option \texttt{escapechar} in order to insert hyperlinks into code.
 % By default, \pkg{fortex} tried to work with every language, and so uses delimiters in non-printing Unicode.\\
@@ -749,9 +739,9 @@
 %    Did you know that $\pi\simeq3.14$? 
 %    We can calculate this in C using the formula
 %
-%    \begin{equation}
+%    \begin{equation*}
 %     \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
-%    \end{equation}
+%    \end{equation*}
 %
 %    This summation can be approximated for 20 terms   
 %
@@ -775,9 +765,9 @@
 %    Did you know that $\pi\simeq3.14$? 
 %    We can calculate this in C using the formula
 %
-%   \begin{equation}\tag{1}
+%   \begin{equation*}
 %    \frac\pi4 = \sum_{i=0}^\infty \frac{(-1)^i}{2i+1}
-%   \end{equation}
+%   \end{equation*}
 %
 %   This summation can be approximated for 20 terms  
 % \begin{lstlisting}[language=C, numbers=none, backgroundcolor=\color{gray!10},
@@ -804,9 +794,7 @@
 % \end{lstlisting}
 % \end{examplefile}
 %
-% It should be noted that the definition of |@| is only expanded \emph{once}. ^^A TODO check.
-% ^^A
-% This means that non-expandable, or definitions that need multiple expansions will not work. \\
+% Note however, that the definition of |@| must be fully expandable for this namespacing trick to work. \\
 % However, sometimes this behaviour of replacing active characters with their definition is not desired.
 % This can be the case when something like "|" is set as active, but all quotes in the code should not be affected. \\
 % Moreover, the \pkg{inputenc} package defines most non-\textsc{ascii} characters as active. 
@@ -817,6 +805,12 @@
 % \noindent The opposite of the \texttt{ignore active}.
 % This option should only be needed if \texttt{ignore active} has already been used, but you want to undo the effects. 
 % 
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \DescribeOption{imakeidx}{\meta{boolean}}[true]
+% \noindent \pkg{fortex} uses \pkg{imakeidx} to provide the index and the changelog.
+% If other indexing packages are desired then it is strongly suggested to set this option to \texttt{false} to disable the automatic import of \pkg{imakeidx}. \\
+% Note that due to syntax differing between indexing packages, it is likely you will need to customise the macros \tn{printindex}, \tn{makeindex}, and \tn{@@_index:nn}.
+%
 % \DescribeOption{intext}{\meta{boolean}}[true]
 % \noindent Making use of \env{codeblock}, \env{codevar}, and regular expressions, \pkg{hyperref} links can be inserted into the code sections in the resulting |.pdf| file. 
 % The hyperlinks will then jump back to the resulting \env{codeblock}/\env{codevar} definition.
@@ -854,6 +848,18 @@
 % \DescribeOption{verbose}{\meta{boolean}}[false]
 % Make the package output extra debugging info to stdout. 
 % This includes the code being output to the file, the automatically detected output directory, engine specific delimiters, and arguments getting forwarded to \pkg{minted}/\pkg{listings}.
+%
+% \DescribeOption{changelog idxnum fmt}{\meta{single control sequence}}[\char`\\textrm]
+% How the page numbers in the changelog should be formatted. 
+% Note that only a single control sequence may be used. 
+%
+% \DescribeOption{codedef idxnum fmt}{\meta{single control sequence}}[\char`\\textit]
+% How should page numbers in the index be formatted for definitions in code
+% Note that only a single control sequence may be used. 
+%
+% \DescribeOption{codecall idxnum fmt}{\meta{single control sequence}}[\char`\\textrm]
+% How should page numbers in the index be formatted for function calls
+% Note that only a single control sequence may be used. 
 %
 % \DescribeOption{vindex idxnum fmt}{\meta{single control sequence}}[\char`\\ textrm]
 % How should the index page numbers be formatted when using \tn{vindex}.
@@ -895,6 +901,59 @@
 %
 % Short for Verbatim index.
 % This makes sure that \tn{index} prints the argument verbatim, and things like underscores and \& do not get mangled. 
+%
+% \end{function}
+%
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{function}{\makechanges}
+% \begin{syntax}
+% \cs{makechanges}\oarg{\pkg{imakeidx} options}
+% \end{syntax}
+% This is a thin convenience function over \pkg{imakeidx} that is designed to print a changelog.
+% A list of all the arguments that can be used can be found in the \pkg{imakeidx} manual.
+% However, some common arguments that may be of use are as follows:
+%
+% \DescribeOptionIndent{title}{\meta{string}}[Change History]
+% Sets the title of the changelog index. 
+%
+% \DescribeOptionIndent{program}{``makeindex'', ``xindy'', or ``trueindy''}[makeindex]
+% Sets the program used to process the index file if \pkg{imakeidx} is set to automatically build the index.
+% Note that automatic building is the default behaviour.  
+%
+% \DescribeOptionIndent{columns}{\meta{integer}}[2]
+% Sets the number of columns used for typesetting the index. 
+%
+% \vspace{\baselineskip}
+% \noindent As mentioned, a full list of all the options that may be used here is found in the \pkg{imakeidx} manual.
+%
+% \end{function}
+%
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{function}{\changes}
+% \begin{syntax}
+% \cs{changes}\Arg{version}\Arg{date}\Arg{Description}\oarg{number format}
+% \end{syntax}
+% This is the function used to add an entry to the changelog. 
+% By default the changelog is sorted by date to prevent sorting issues such as |v2| being placed lower than |v10|.  
+% 
+% One thing of note is that the optional number formatting override must be formatted as the csname. 
+% (e.g. |texttt| not |\texttt|).
+% The theming can also be controlled globally with the package argument \optref{changelog idxnum fmt}.
+%
+% \end{function}
+%
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{function}{\printchanges}
+% \begin{syntax}
+% \cs{printchanges}
+% \end{syntax}
+% Again this is a thin wrapper over \pkg{imakeidx}.
+% This function prints the changelog sorted by date, with the heading given in \optref{makechanges}.
+%
+% Note that for the change log to be printed, it has to be processed by an indexing program (examples are |makeindex| and |xindy|).
+% Under normal circumstances \pkg{imakeidx} should handle this automatically.
+% One case where this will fail is when using |-output-directory|, as |makeindex| still gets run in the original folder, hence cannot find the files. 
+% In this situation, one will need to manually run |$ makeindex changelog| to get the changelog to print. 
 %
 % \end{function}
 % 
@@ -946,21 +1005,24 @@
 % \subsubsection*{Getting the Current Line Number}
 % The current line number can be accessed with the integer register \tn{fortexcurlineno}
 %
+% \subsection*{I don't want to use \pkg{imakeidx}}
+% 
+%
+%
+% \subsection*{Changing the index markers}
 %
 % \section {Things left to do}
 %
 % \begin{enumerate}
 % \item Finish off |.dtx| by adding Usage instructions
-% \item Changelog interface (just a wrapper for glossaries)?
+% \item Sanitise regex
 % \item intext and noref should be constant, (in general, we need more consistency)
 % \item begin/end multichar escapeinside 
-% \item Cache invalidation when code delimiter changes 
 % \item Allow customisation of makeindex level and style indicators (autodetect?)
 % \item |^^I| warnings when verbose is disabled 
 % \item Editing spelling and grammar 
 % \end{enumerate}
 %
-% \paragraph{What I will be working on next:}
 % \end{documentation}
 % \clearpage
 % \begin{implementation}
@@ -990,8 +1052,7 @@
 %    \begin{macrocode}
 \RequirePackage{ expl3 }
 \ProvidesExplPackage {fortex} {2023-04-29} {0.0.14$\alpha$}
-                     {A language agnostic way of documenting source code using LaTeX}
-\RequirePackage{ l3benchmark }
+  { A language agnostic way of documenting source code using LaTeX }
 \RequirePackage { l3keys2e }
 %    \end{macrocode}
 %
@@ -1297,6 +1358,48 @@
 %    \end{macrocode}
 % \end{variable}
 % \end{macro}
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{macro}{vindex idxnum fmt}
+% \begin{variable}{\g_@@_vindex_fmt_str}
+% The numbers in the index can be formatted. 
+% Because I don't want to lock anyone into ``my way of styling things'', give some simple customisation.
+% 
+% One interesting thing of note is that makeindex doesn't take a control sequence, but rather the csname. 
+% As such, we need to first get the csname, before passing it further down the line.
+%
+%    \begin{macrocode}
+  , changelog~idxnum~fmt .code:n = { 
+      \str_gset:Nx \g_@@_chnglog_fmt_str { 
+        \exp_last_unbraced:Ne \use_i:nnn { \cs_split_function:N #1 }
+      }
+    }
+  , changelog~idxnum~fmt .initial:n = { \textrm }
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \begin{macro}{imakeidx}
+% We use the multiple index facilities of \pkg{imakeidx} to typeset both the usage index and the changelog. 
+% However, other packages can be used to supply the same facility.
+% Moreover, by looking at the \pkg{imakeidx} documentation, it seems that the different indexing packages are all incompatible with each other (or at least need to be loaded in a specific order). 
+%
+% Because I don't want to deal with trying to untangle that mess, I am providing an option to prevent the automatic loading of \pkg{imakeidx}. 
+% Note however, that as different indexing packages have slightly different syntax when it comes to multiple indices.
+% Any user that does decide to substitute \pkg{imakeidx}, will likely need to change the definition of the \tn{makechanges} family of commands. 
+% The \tn{vindex} family should be safe as it just uses the default indexing.
+%
+%    \begin{macrocode}
+  , imakeidx .choice:
+  , imakeidx .default:n = { true }
+  , imakeidx / true  .code:n = { \RequirePackage { imakeidx } }
+  , imakeidx / false .code:n = { }
+  , imakeidx / unknown .code:n = {
+      \__msg_kernel_error:nnx { kernel } { boolean-values-only } { #1 }
+    }
+  , imakeidx .initial:n = { true }
+%    \end{macrocode}
+% \end{macro}
+%
 % \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
 % \begin{macro}{firstnumber}
 % \begin{variable}{\g_@@_firstnumber_last_bool, \fortexcurlineno}
@@ -1879,10 +1982,16 @@
 % As such, we keep track of that the delimiter of the last run was. 
 % If the delimiter changed, then it means that our caches will no longer work, and so we need to invalidate them.
 %
+% Note, that we need to make sure that the variable \tn{fortex@old@code@delim} exists at the start of the run. 
+% This is because on the first run, the variable doesn't exist.
+% So, if we try and check if it is the same as \cs{g_@@_code_delim_str}, we get errors. 
+%
 %    \begin{macrocode}
+\tl_new:N \fortex@old@code@delim
 \hook_gput_code:nnn { begindocument/end } { fortex } {
   \iow_now:cx { @auxout } { 
-    \exp_not:n { \gdef\fortex@old@code@delim } { \exp_not:V \g_@@_code_delim_str }
+    \exp_not:n { \gdef\fortex@old@code@delim }
+    { \exp_not:V \g_@@_code_delim_str }
   }
 }
 %    \end{macrocode}
@@ -1964,9 +2073,31 @@
 % There is no need for a hard requirement on a specific package. 
 %
 %    \begin{macrocode}
-  \exp_args:No \index { \l_@@_idxvar_str }
+  \@@_index:nV {} \l_@@_idxvar_str
 }
 \cs_generate_variant:Nn \@@_vindex_aux:nn {nx, xx}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_index:nn}
+% \begin{arguments}
+% \item Name of index (Blank for default)
+% \item Content to index
+% \end{arguments}
+% Officially, we support the use of \pkg{imakeidx} as the indexing package. 
+% However, I also understand if other solutions want to be used. 
+% 
+% As such, I have made it so the package loading of \pkg{imakeidx} is toggleable with a package option. 
+% The other thing that may change is the syntax of the \tn{index} command when dealing with multiple indices. 
+% So I have abstracted out \tn{index}, so that if the syntax does change, all that is needed is a single \tn{RenewDocumentCommand}, and not a reworking of the \pkg{fortex} internals.
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_index:nn #1#2 {
+  \exp_last_unbraced:Nx \index 
+    { \tl_if_empty:nF { #1 } { [ { #1 } ] } }  
+    { #2 }
+}
+\cs_generate_variant:Nn \@@_index:nn { nV }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1988,6 +2119,89 @@
   \exp_args:Nx \label { \l_tmpa_str }
 }
 \cs_generate_variant:Nn \@@_vlabel:n { x }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{Changelog}
+%
+% Overall this is just a thin convenience wrapper over \pkg{imakeidx}.
+% All of the commands here are designed to be easy to replace if \pkg{imakeidx} is swapped out for an index package that supported different syntax. 
+%
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{macro}{\makechanges}
+% Must be run during the preamble.
+% \pkg{imakeidx}'s implementation of \tn{makeindex} accepts a whole lot of optional arguments as described in the \pkg{imakeidx} manual.
+%
+% One design decision that I made was I wanted to keep the \texttt{title=\Arg{title}} interface for changing the title of the changelog.
+% Initially, I had it as a separate optional argument, but having 2 optionals seemed messy.
+% So what I have devised is to see if our optional arguments have a keyval with key \texttt{title}, and if not, we insert our own.
+% 
+%    \begin{macrocode}
+\NewDocumentCommand { \makechanges } { O{} } {
+  \exp_args:Nnx \tl_set:Nx \l_tmpa_tl {
+    \keyval_parse:NNn \use_none:n \@@_makechanges_if_name:nn { #1 }
+  }
+  \exp_last_unbraced:Nx \makeindex { [ 
+      \tl_if_empty:NT \l_tmpa_tl { title={Change~History} } 
+    , name={changelog}, #1
+  ] }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{macro}{\@@_makechanges_if_name:nn}
+% \begin{arguments}
+% \item key
+% \item value
+% \end{arguments}
+%
+% Here we have a simple aux function to check if \tn{makechanges} has an optional argument with the a key of \texttt{text}
+% If it is, we return true, however the actual value is not important as there is an edge case that I am handling.
+% 
+% Rather it is more important that we return nothing if title is \emph{not} found. 
+% This is because if there are 2 instances of this key: \texttt{title=\Arg{title\textsubscript1}, title=\Arg{title\textsubscript2}}.
+%
+% In this situation, the resulting token stream will contain |\c_true_bool \c_true_bool|.
+% This is going to cause issues, and so to deal with that it is better to detect when the token list is empty.
+% As such, \cs{c_true_bool} is just some random value that I picked.
+% 
+%    \begin{macrocode}
+\cs_set:Npn \@@_makechanges_if_name:nn #1#2 {
+  \str_if_eq:nnT { title } { #1 } { \c_true_bool }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{macro}{\changes}
+% \begin{arguments}
+% \item Version Number
+% \item Date of change 
+% \item Change description
+% \item Formatting override 
+% \end{arguments}
+% 
+% Again, this is just a thin wrapper of \pkg{imakeidx}.
+% One notable thing here is that we are making sure to sort by the date.
+% This avoid the issue of $0.2\alpha$ being lower than $0.10\alpha$.
+%
+%    \begin{macrocode}
+\NewDocumentCommand { \changes } { m m m O{\g_@@_chnglog_fmt_str} } {
+  \@@_index:nn { changelog } { #2 @ #1 ! #3 | #4 }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
+% \begin{macro}{\printchanges}
+% Again this function is designed to be easy to replace in case \pkg{imakeidx} is swapped out.
+% Technically this doesn't \emph{really} need a function at all, but may as well give it a nice name.
+%
+%    \begin{macrocode}
+\NewDocumentCommand { \printchanges } {} {
+  \printindex [ changelog ]
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2056,9 +2270,9 @@
 % Hopefully, this should not occur too often, but we should not get in the way when it does.
 %
 %    \begin{macrocode}  
-	\str_if_eq:NNF \fortex@old@code@delim \g_@@_code_delim_str {
-		\cs_undefine:N \fortex@codeblock@unscoped@regex
-		\cs_undefine:N \fortex@codeblock@scoped@regex
+  \str_if_eq:NNF \fortex@old@code@delim \g_@@_code_delim_str {
+    \cs_undefine:N \fortex@codeblock@unscoped@regex
+    \cs_undefine:N \fortex@codeblock@scoped@regex
   }
 %    \end{macrocode}
 % Here we are going to be using the md5 hash of the code we want to highlight as a simple way to check if we have already done the hard work.
@@ -3203,7 +3417,7 @@
 % This is not ideal, so we make sure that it can never happen by setting \cs{@@_hashmap_split_lines:n} to a no-op.
 %
 %    \begin{macrocode}
-	\cs_set_eq:NN \@@_hashmap_split_lines:n \use_none:n
+  \cs_set_eq:NN \@@_hashmap_split_lines:n \use_none:n
 }
 %    \end{macrocode}
 %
@@ -3659,7 +3873,6 @@
 }
 %    \end{macrocode}
 %  \end{macro}
-%
 % \end{implementation}
 %    \begin{macrocode}
 %</package>
