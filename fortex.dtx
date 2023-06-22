@@ -685,7 +685,6 @@
 % This is the same as \optref{after codeblock}, but appearing on \env{codevar} environments.
 % The control sequence takes one argument that is a comma separated list of all the variables, each one a hyperref link. 
 %
-
 % \DescribeOption{delim}{\meta{string}}[\it{Engine Specific}]
 % \noindent \pkg{fortex} uses the \pkg{minted} option \texttt{escapeinside}, and the \pkg{listings} option \texttt{escapechar} in order to insert hyperlinks into code.
 % By default, \pkg{fortex} tried to work with every language, and so uses delimiters in non-printing Unicode.\\
@@ -1005,11 +1004,15 @@
 % \subsubsection*{Getting the Current Line Number}
 % The current line number can be accessed with the integer register \tn{fortexcurlineno}
 %
-% \subsection*{I don't want to use \pkg{imakeidx}}
-% 
+% \subsubsection*{I don't want to use \pkg{imakeidx}}
+% When choosing a different indexing package, make sure that it has support for multiple indexes if you want to use both the Index and the Changelog at the same time.
 %
+% In order to replace \pkg{imakeidx}, firstly set the package option \texttt{\optref{imakeidx}=false} to disable the automatic loading of \pkg{imakeidx}.
+% It is likely that this new indexing package will have a different syntax for how to choose what Index you want. 
+% As such you will likely need to modify the macro:
+% \cs{@@_index:nn}\Arg{what index}\Arg{index string} so that it uses the syntax appropriate for the package.
 %
-% \subsection*{Changing the index markers}
+% \subsubsection*{Changing the index separators}
 %
 % \section {Things left to do}
 %
@@ -1019,7 +1022,7 @@
 % \item intext and noref should be constant, (in general, we need more consistency)
 % \item begin/end multichar escapeinside 
 % \item Allow customisation of makeindex level and style indicators (autodetect?)
-% \item |^^I| warnings when verbose is disabled 
+% \item Allow customisation of the hyperref regex
 % \item Editing spelling and grammar 
 % \end{enumerate}
 %
@@ -1378,6 +1381,7 @@
 % \end{variable}
 % \end{macro}
 %
+% \changes{0.0.14$\alpha$}{2023/04/30}{Allow \pkg{imakeidx} to be overriden }
 % \begin{macro}{imakeidx}
 % We use the multiple index facilities of \pkg{imakeidx} to typeset both the usage index and the changelog. 
 % However, other packages can be used to supply the same facility.
@@ -1398,6 +1402,27 @@
     }
   , imakeidx .initial:n = { true }
 %    \end{macrocode}
+% \end{macro}
+%
+% \changes{0.0.14$\alpha$}{2023/05/30}{Allow index style files to change meanings of separators}
+% \begin{macro}{idx level, idx actual, idx encap}
+% \begin{variable}{\g_@@_idx_level_str, \g_@@_idx_actual_str, \g_@@_idx_encap_str}
+% Indexes in \LaTeX{} are normally customised by way of a style file. 
+% This is an external |.ist| file that as far as I can tell has no easy interface.
+% This is due to the style file relating to \pkg{makeindex} the program, and has no need for interacting with \TeX{}.
+% 
+% However, this does pose a problem for us as we dont want to hardcode a character that is used as a flag for the style. 
+% As such this is the best thing that I can come up with. 
+%
+%    \begin{macrocode}
+  , idx~level  .str_gset:N = \g_@@_idx_level_str
+  , idx~level  .initial:n  = { ! }
+  , idx~actual .str_gset:N = \g_@@_idx_actual_str
+  , idx~actual .initial:n  = { @ }
+  , idx~encap  .str_gset:N = \g_@@_idx_encap_str
+  , idx~encap  .initial:n  = { | }
+%    \end{macrocode}
+% \end{variable}
 % \end{macro}
 %
 % \changes{0.0.12$\alpha$}{2022/02/17}{Fix \pkg{minted} line numbers}
@@ -1868,6 +1893,7 @@
 % \changes{0.0.6$\alpha$}{2022/03/21}{Better delimiter handling}
 % \changes{0.0.9$\alpha$}{2022/09/27}{Fix delimiters for all engines}
 % \changes{0.0.10$\alpha$}{2022/12/22}{Fix listings escape, (again)}
+% \changes{0.0.14$\alpha$}{2023/06/22}{Clean up delimiters}
 %
 % One of the considerations for escaping code is what delimiters should be used. 
 % Due to limitations with minted, the delimited needs to be one char long. 
@@ -1897,56 +1923,54 @@
 % However, coupling this restriction with the limitation of $< 20$ being unprintable because too low, and $ >127$ being invalid UTF-8, this seriously restricts the allowed range of delimiters.
 % As I don't really feel like having the letter `\emph{A}' be a code delimiter, \upTeX{} will also \emph{have} to be executed with |-8bit|, to allow printing the low-control ASCII.
 %
-% As we have to use low Unicode for \pTeX{}/\upTeX{}, we need to have these characters in the \file{fortex.sty} file.
-% However, \XeTeX{} and \LuaTeX{} have |^^1e| defined with catcode 15 (invalid) by default. 
-% As such we need to temporarily redefine the catcode of |^^1e| to 12 (other), for \LuaTeX{} and \XeTeX{}, and permanently for \pTeX{}/\upTeX{}.
-% 
+%
+% \begin{center}
+% \begin{tabular}{rlrl} \hline
+%  Engine   & Unicode & Decimal & Description       \\\hline 
+% \LuaTeX{} & U+009C  &     156 & String Terminator \\
+% \pdfTeX{} & U+009C\textsuperscript{\textdagger} & 156 & String Terminator \\
+% \pTeX{}   & U+001E  &      30 & Record Separator  \\
+% \upTeX{}  & U+001E  &      30 & Record Separator  \\
+% \XeTeX{}  & U+E000  &   57344 & Private Use       \\\hline
+% \end{tabular}\\\vspace{2pt}
+% { \tiny \textdagger The UTF-8 encoding |^^c2^^9c| is only used with minted, otherwise the latin1 |^^9c| is used }
+% \end{center}
+%
+% As we have to use low Unicode for \pTeX{}/\upTeX{}, we need to have these characters in the \file{fortex.aux} file.
+% However, by default these characters are marked as invlaid.
+% As such we need to redefine the catcode of |^^1e| to 12 (other), for \pTeX{}/\upTeX{}.
+%
 %    \begin{macrocode}
 \str_case_e:nnT { \c_sys_engine_str } {
   { ptex   } {}
   { uptex  } {}
-  { xetex  } {}
-  { luatex } {}
 } {
-  \exp_args:Nx \char_set_catcode:nn { \int_from_hex:n {1e} } {12} 
+  \exp_args:Nx \char_set_catcode:nn { 30 } { 12 } 
 }
 %    \end{macrocode}
 %
+% \changes{0.0.14$\alpha$}{2023/06/22}{Clean up delimiters}
 % \begin{variable}{\g_@@_code_delim_str}
 % Here we now define what specific delimiter should be used for each engine. 
-%
-% \begin{center}
-% \begin{tabular}{ccc} \hline
-% \LuaTeX{} & U+009C & String Terminator \\
-% \pdfTeX{} & U+009C & String Terminator \\
-% \pTeX{}   & U+001E & Record Separator  \\
-% \upTeX{}  & U+001E & Record Separator  \\
-% \XeTeX{}  & U+E000 & Private Use       \\\hline
-% \end{tabular}
-% \end{center}
 %
 % It should be noted however that \pdfTeX{} needs to use full UTF-8 code of |^^c2^^9c| when passing the delimiter to Python. 
 % This is only needed when talking to \pkg{minted}.
 % Otherwise, Python will interpret U+009C as literally 0$\times$9C, which is not a valid UTF-8 character. 
 % On the other hand, \pkg{listings} needs the original |^^9c| as it struggles to handle multi-byte characters. 
 %
-% Note that \tn{Uchar} is used over \tn{char} because any delimiter needs to be fully expandable.
-% Where $57344$ is the decimal equivalent of the hex E000
-%
 % Finally, we do a check to see if the delimiter has been previously defined in the package arguments in case a different delimiter needs to be used for whatever reason.
 %
 %    \begin{macrocode}
 \str_if_empty:NT \g_@@_code_delim_str { 
-  \str_case_e:nn { \c_sys_engine_str } {
-    { luatex } { \str_gset:Nn \g_@@_code_delim_str {     ^^9c    } }
-    { ptex   } { \str_gset:Nn \g_@@_code_delim_str {     ^^1e    } } 
-    { uptex  } { \str_gset:Nn \g_@@_code_delim_str {     ^^1e    } }
-    { xetex  } { \str_gset:Nx \g_@@_code_delim_str { \Uchar57344 } }
-    { pdftex } { \str_if_eq:NNTF \g_@@_printend_tl { mint } { 
-                   \str_gset:Nn \g_@@_code_delim_str { ^^c2^^9c } 
-               } { 
-                   \str_gset:Nn \g_@@_code_delim_str { ^^9c } 
-               }
+  \str_gset:Nx \g_@@_code_delim_str {
+    \str_case_e:nn { \c_sys_engine_str } {
+      { luatex } { \codepoint_str_generate:n {   156 } }
+      { ptex   } { \codepoint_str_generate:n {    30 } }
+      { uptex  } { \codepoint_str_generate:n {    30 } }
+      { xetex  } { \codepoint_str_generate:n { 57344 } }
+      { pdftex } { \str_if_eq:NNTF \g_@@_printend_tl { mint } 
+                   { \codepoint_str_generate:n { 156 } }
+                   { \exp_not:n { ^^9c } } }
     }
   }
 }
@@ -1957,21 +1981,6 @@
 }
 %    \end{macrocode}
 % \end{variable}
-%
-% As previously mentioned, \LuaTeX{} and \XeTeX{} both have |^^1e| have catcode 15 (invalid) by default. 
-% We should put it back to the way it was previously to prevent any unforeseen effects. 
-% 
-% Note that \pTeX{}/\upTeX{} still has |^^1e| with catcode 12 (other) instead of 13 (active).
-% This is by design as we need to read this sequence back later on.
-%
-%    \begin{macrocode}
-\str_case_e:nnT { \c_sys_engine_str } {
-  { xetex  } { }
-  { luatex } { }
-} {
-  \char_set_catcode_invalid:N \^^1e
-}
-%    \end{macrocode}
 %
 % \changes{0.0.14$\alpha$}{2023/03/29}{Invalidate caches when engine changes}
 % \begin{variable}{\fortex@old@code@delim}
@@ -3083,7 +3092,6 @@
 %    \begin{macrocode}
   \char_set_catcode_other:N \^^J
   \char_set_catcode_other:N \^^I
-
 }
 %    \end{macrocode}
 % \end{macro}
