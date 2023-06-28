@@ -2022,9 +2022,11 @@
 % The use of \tn{index} in this function is expected to be defined by \pkg{makeidx}/\pkg{xindy}/etc.
 %
 %    \begin{macrocode}
-\NewDocumentCommand \vindex { v } {
+\NewDocumentCommand \vindex { v O{ \g_@@_idx_encap_str \g_@@_vindex_fmt_str } } {
   \@@_vlabel:n { code: #1 }
-  \@@_vindex_aux:xx { #1 } { \g_@@_vindex_fmt_str }
+  \exp_args:NnV \seq_set_split_keep_spaces:Nnn \l_@@_vindex_seq
+                                               \g_@@_idx_level_str { #1 }
+  \@@_vindex_aux:Nx \l_@@_vindex_seq { #2 }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2041,9 +2043,7 @@
 % I do plan on refactoring this into something more readable.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_vindex_aux:nn #1#2 {
-  \str_set:Nn \l_@@_idxvar_str  { #1 }
-  \tl_set:No  \l_@@_verbstr_str { \c_backslash_str verb }
+\cs_set:Npn \@@_vindex_aux:Nn #1#2 {
 %    \end{macrocode}
 % One of the annoying things specifically about the \pdfTeX{} engine is that \tn{input} assumes a latin1 encoding. 
 % This means that when \tn{printindex} is used, the |.ind| file has to only have latin1 letters.
@@ -2055,36 +2055,26 @@
 %    \begin{macrocode}
   \str_set:Nx \l_@@_verb_delim_str {
     \str_if_eq:VnTF \g_@@_code_delim_str { ^^c2^^9c } 
-                    { \exp_not:n { ^^9c } } 
-                    { \exp_not:V \g_@@_code_delim_str }
-  }
-%    \end{macrocode}
-% The regex here replaces ``|my!str|'' with ``|my¤!\verb¤str|''.
-% Where we are taking |¤| to be the engine-specific escape character.
-%
-%    \begin{macrocode}
-  \exp_args:Nnno \tl_replace_all:Nnn \l_@@_idxvar_str {!} {
-    \l_@@_verb_delim_str!\l_@@_verbstr_str\l_@@_verb_delim_str
+                      { \exp_not:n { ^^9c } } 
+                      { \exp_not:V \g_@@_code_delim_str }
   }
 %    \end{macrocode}
 % This is just a convoluted way of saying ``|\verb¤|\cs{l_@@_idxvar_str}"¤|"\cs{indexfmt}'', but using catcode letter/other. 
 %
 %    \begin{macrocode}
-  \tl_set:Nx \l_@@_idxvar_str { 
-      \exp_not:V { \l_@@_verbstr_str    }
-      \exp_not:V { \l_@@_verb_delim_str }
-      \l_@@_idxvar_str
-      \exp_not:V { \l_@@_verb_delim_str }
-      | #2
+  \@@_index:nx {} { \c_backslash_str verb 
+                    \l_@@_verb_delim_str
+                    \seq_use:Nn #1 {
+                      \l_@@_verb_delim_str
+                      \g_@@_idx_level_str
+                      \c_backslash_str verb 
+                      \l_@@_verb_delim_str
+                    }
+                    \l_@@_verb_delim_str
+                    #2
   }
-%    \end{macrocode}
-% As mentioned, but worth reiterating, \tn{index} is designed to be overwritten by whatever indexing package is being used.
-% There is no need for a hard requirement on a specific package. 
-%
-%    \begin{macrocode}
-  \@@_index:nV {} \l_@@_idxvar_str
 }
-\cs_generate_variant:Nn \@@_vindex_aux:nn {nx, xx}
+\cs_generate_variant:Nn \@@_vindex_aux:Nn { Nx, No }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2106,7 +2096,7 @@
     { \tl_if_empty:nF { #1 } { [ { #1 } ] } }  
     { #2 }
 }
-\cs_generate_variant:Nn \@@_index:nn { nV }
+\cs_generate_variant:Nn \@@_index:nn { nV, nx }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2197,7 +2187,11 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand { \changes } { m m m O{\g_@@_chnglog_fmt_str} } {
-  \@@_index:nn { changelog } { #2 @ #1 ! #3 | #4 }
+  \@@_index:nx { changelog } { \exp_not:n { #2 }
+          \g_@@_idx_actual_str \exp_not:n { #1 }
+          \g_@@_idx_level_str  \exp_not:n { #3 }
+          \g_@@_idx_encap_str  \exp_not:n { #4 }
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2242,12 +2236,12 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand \fortexhyperinsert { s m m } {
-  \tl_set:Nn \l_tmpa_tl { #3 }
-  \str_replace_all:Nnn \l_tmpa_tl {:} {!}
+  \seq_clear_new:N \l_@@_acodenest_seq
+  \tl_map_inline:nn { #3 } { \seq_put_right:Nn \l_@@_acodenest_seq { ##1 } }
   \bool_if:NF { #1 } {
-    \@@_vindex_aux:xx { \l_tmpa_tl } { \g_@@_idxfmt_codecall_str }
+    \@@_vindex_aux:Nx \l_@@_acodenest_seq { \g_@@_idx_encap_str \g_@@_idxfmt_codecall_str }
   }
-  \@@_hyperref:nn { code: #3 } {
+  \@@_hyperref:xn { code: \seq_use:Nn \l_@@_acodenest_seq { : } } {
     \@@_hyperlink_fmt: \detokenize { #2 } 
   }
 }
@@ -2460,8 +2454,6 @@
     \tl_set:Nn \l_tmpa_tl { g_@@_codeblock_ #1 _scope_tl }
     \tl_if_exist:cF \l_tmpa_tl { \tl_new:c \l_tmpa_tl }
     \tl_set:cf \l_tmpa_tl { \tl_use:c \l_tmpa_tl #2 }
-    \iow_term:n { #1 : #2 }
-    \exp_args:Nf \iow_term:n { \tl_use:c \l_tmpa_tl } 
   }
 %    \end{macrocode}
 % property lists could not be used in this case because multiple \texttt{\meta{value}} have the same \texttt{\meta{key}}. 
@@ -2561,15 +2553,7 @@
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_codeblock_aux:nnnn #1#2#3#4 {
-%    \end{macrocode}
-% We need to make a non-command version of the \tn{verb} command to make sure we can safely pass it around and replace into the code.
-% This is probably not the best way to do it.
-% However, if we use \tn{detokenize}, there will be a space after the \tn{verb}.
-% This will then lead to the delimiters being incorrectly defined.  
-%
-%    \begin{macrocode}
   \bool_if:NF { #3 } {
-    \tl_set:No \l_@@_verbstr_str { \c_backslash_str verb }
 %    \end{macrocode}
 % Here we create the matching regex and the replacement text.
 % 
@@ -2610,7 +2594,7 @@
       \g_@@_code_delim_str
       \exp_not:n { \\ }
       fortexhyperinsert \bool_if:NT { #4 } { * }
-                        \{ #1 \} \{ \seq_use:Nn \g_@@_codenest_seq {:} \}
+                        \{ #1 \} \{ \{ \seq_use:Nn \g_@@_codenest_seq { \}\{ } \} \}
       \g_@@_code_delim_str
     }
 %    \end{macrocode}
@@ -2653,11 +2637,11 @@
 % But for now, this is everything.
 % 
 %    \begin{macrocode}
-    \@@_vlabel:x { code: \seq_use:Nn \g_@@_codenest_seq {:}  }
+    \@@_vlabel:x { code: \seq_use:Nn \g_@@_codenest_seq { : } }
   }
   \bool_if:NF { #4 } {
-    \@@_vindex_aux:xx { \seq_use:Nn \g_@@_codenest_seq {!} }
-                                         { \g_@@_idxfmt_codedef_str }
+    \@@_vindex_aux:Nx \g_@@_codenest_seq 
+                          { \g_@@_idx_encap_str \g_@@_idxfmt_codedef_str }
   }
 }
 %    \end{macrocode}
@@ -2736,7 +2720,7 @@
 %    \begin{macrocode}
   \tl_if_empty:NF \@@_after_codeblock:n { \@@_after_codeblock:n {
     \bool_if:NF \l_@@_codeblock_noref_bool {
-      \@@_hyperref:xn { code: \seq_use:Nn \g_@@_codenest_seq {:} } 
+      \@@_hyperref:xn { code: \seq_use:Nn \g_@@_codenest_seq { : } } 
     } { #2 }
   } }
 %    \end{macrocode}
@@ -2826,7 +2810,7 @@
     \seq_set_map:NNn \l_tmpa_seq \l_@@_vars_seq { {
       \bool_if:NF \l_@@_codeblock_noref_bool {
         \seq_put_right:Nn \g_@@_codenest_seq { ##1 }
-        \@@_hyperref:xn { code: \seq_use:Nn \g_@@_codenest_seq {:} } 
+        \@@_hyperref:xn { code: \seq_use:Nn \g_@@_codenest_seq { : } }
       } { ##1 }
     } }
     \seq_use:Nn \l_tmpa_seq {,~}
@@ -3167,7 +3151,6 @@
 %    \begin{macrocode}
   \group_end:
   \iow_close:N \g_@@_outfile_iow
-  \iow_term:V \l_@@_out_filename_tl
   \file_get:nnN { \g_@@_outputdir_tl \l_@@_out_filename_tl }
                 { \@@_setcatcode: \endlinechar=`\^^J } \l_tmpa_tl
   \iow_open:Nn \g_@@_outfile_iow \l_@@_out_filename_tl
@@ -3853,8 +3836,7 @@
 %
 %    \begin{macrocode}
   \tl_set:Nx \l_@@_curcode_tl {
-    \exp_args:NNe \seq_use:Nn \l_@@_curcode_seq 
-                            { \char_generate:nn {13} {12} }  
+    \exp_args:NnV \seq_use:Nn \l_@@_curcode_seq { \char_generate:nn {13} {12} }  
   }
 %    \end{macrocode}
 % Finally, we reference and print the code. 

@@ -53,7 +53,7 @@ We can calculate this in C using the formula
 \end{equation}
 
 This is summation can be approximated for 20 terms
-\changes{0.0.2$\alpha$}{12/11/2010}{Add Calculation for pi}
+\changes{0.0.2$\alpha$}{12/11/2010}{Add Calculation for pi}[textrm]
 	\begin{codeblock}{calculate_pi}
 	\begin{codevar}{retval, i}
 	\begin{code}
