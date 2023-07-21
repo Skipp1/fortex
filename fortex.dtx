@@ -87,13 +87,13 @@
   \begin{tabular*}{\textwidth}{@{}p{1.3cm}l@{\extracolsep{\fill}}r@{}}
   \texttt{#1} & \textsf { (~#2~) } &  \tl_if_novalue:nF { #3 } { Default:~\texttt { #3 } }
   \end{tabular*} 
-	\list{}{
-		\topsep=\parskip
-		\leftmargin=\parindent
-		\rightmargin=\parindent
-	}\item
+  \list{}{
+    \topsep=\parskip
+    \leftmargin=\parindent
+    \rightmargin=\parindent
+  }\item
 }{
-	\endlist
+  \endlist
 }
 
 \NewDocumentCommand { \optref }{ m }{ \hyperref [ doc/function//#1  ] { \texttt { #1 } } }
@@ -1421,14 +1421,10 @@
 % The \tn{vindex} family should be safe as it just uses the default indexing.
 %
 %    \begin{macrocode}
-  , imakeidx .choice:
+  , imakeidx .bool_set:N = \g_@@_imakeidx_load_bool
   , imakeidx .default:n = { true }
-  , imakeidx / true  .code:n = { \RequirePackage { imakeidx } }
-  , imakeidx / false .code:n = { }
-  , imakeidx / unknown .code:n = {
-      \__msg_kernel_error:nnx { kernel } { boolean-values-only } { #1 }
-    }
   , imakeidx .initial:n = { true }
+  , imakeidx .usage:n = { load }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2035,7 +2031,9 @@
 % \end{variable}
 %
 % \subsubsection{vindex}
-%
+%    \begin{macrocode}
+\bool_if:NT \g_@@_imakeidx_load_bool { \RequirePackage { imakeidx } }
+%    \end{macrocode}
 % \changes{0.0.13$\alpha$}{2023/03/26}{Vindex was not properly sanitising control sequences}
 % \changes{0.0.10$\alpha$}{2022/12/13}{Avoid needless assignments in vindex}
 % \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
@@ -2570,24 +2568,8 @@
 % \changes{0.0.11$\alpha$}{2022/12/21}{Update replacement to be less verbose}
 % \changes{0.0.11$\alpha$}{2022/12/21}{Move clist options to keyval}
 % \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
+% \changes{0.0.14$\alpha$}{2023/06/29}{Separate out the regex for customisation}
 %
-% \begin{macro}{\@@_codeblock_aux:nnnn}
-% \begin{arguments}
-% \item{Name we are going to highlight}
-% \item{Scope of the code we want to highlight}
-% \item{bool if we do not want references}
-% \item{bool if we do not want indexing}
-% \end{arguments}
-%
-% This auxiliary macro contains the regex logic and implementation for both \env{codeblock} and \env{codevar}. 
-% This macro mainly is dealing with the creation of the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_reference_code:nn}.
-%
-%    \begin{macrocode}
-\cs_set:Npn \@@_codeblock_aux:nnnn #1#2#3#4 {
-  \bool_if:NF { #3 } {
-%    \end{macrocode}
-% Here we create the matching regex and the replacement text.
-% 
 % Note that we construct the regex here as the number of times \env{codeblock} is called is going to be much less than the number of times we are going to have to search. 
 % Thus we will create the regex and then hand it off to later be processed. 
 %
@@ -2607,8 +2589,33 @@
 % \end{tabular}
 % \end{table}
 %
+% \begin{macro}{\@@_search_regex}
 %    \begin{macrocode}
-    \tl_set:Nn \l_tmpa_regex {([^\w:]|^)#1\b}
+\cs_set:Npn \@@_search_regex:n #1 {
+  ([^\w:]|^)#1\b
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_codeblock_aux:nnnn}
+% \begin{arguments}
+% \item{Name we are going to highlight}
+% \item{Scope of the code we want to highlight}
+% \item{bool if we do not want references}
+% \item{bool if we do not want indexing}
+% \end{arguments}
+%
+% This auxiliary macro contains the regex logic and implementation for both \env{codeblock} and \env{codevar}. 
+% This macro mainly is dealing with the creation of the regex patterns for later matching with \cs{regex_replace_case_all} in the previously defined macro: \cs{@@_reference_code:nn}.
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_codeblock_aux:nnnn #1#2#3#4 {
+  \bool_if:NF { #3 } {
+%    \end{macrocode}
+% Here we create the matching regex and the replacement text.
+% 
+%    \begin{macrocode}
+    \tl_set:No \l_tmpa_regex { \@@_search_regex:n { #1 } }
 %    \end{macrocode}
 % The text that is getting replaced by looks complex, but simplifying is merely
 %

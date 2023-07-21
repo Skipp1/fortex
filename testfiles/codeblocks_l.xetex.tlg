@@ -1695,6 +1695,9 @@ e \ETC.}
 ....\special{color pop}
 .\kern 0.0
 .\kern 0.0
+runsystem(makeindex codeblocks_l.idx)...executed safely (allowed).
+(codeblocks_l.ind)
+============================================================
 Completed box being shipped out [2]
 \vbox(682.0+0.0)x398.0
 .\hbox(0.0+0.0)x0.0
@@ -1728,161 +1731,154 @@ Completed box being shipped out [2]
 .....\special{color pop}
 ...\glue 25.0
 ...\glue(\lineskip) 0.0
-...\vbox(598.0+0.0)x345.0
-....\vbox(15.07796+0.0)x345.0
-.....\special{color push gray 0}
-.....\vbox(15.07796+0.0)x345.0
-......\penalty -300
-......\glue 15.08499 plus 4.31 minus 0.86198
-......\glue(\parskip) 0.0
-......\glue(\parskip) 0.0
-......\hbox(9.99359+0.08638)x345.0, glue set 305.02562fil
-.......\hbox(0.0+0.0)x0.0
-........\glue 0.0
-.......\hbox(0.0+0.0)x0.0
-........\kern 0.0
+...\vbox(598.0+0.0)x345.0, glue set 539.94232fil
+....\write-{}
+....\glue(\topskip) 0.00641
+....\hbox(9.99359+0.08638)x345.0, glue set 305.02562fil
+.....\hbox(0.0+0.0)x0.0
+......\glue 0.0
+.....\hbox(0.0+0.0)x0.0
+......\kern 0.0
+......\penalty 10000
+......\hbox(0.0+0.0)x0.0
+.......\hbox(0.0+0.0)x0.0, shifted -18.0
+........\special{pdf:dest (section*.1) [@thispage /XYZ @xpos @ypos null]}
 ........\penalty 10000
-........\hbox(0.0+0.0)x0.0
-.........\hbox(0.0+0.0)x0.0, shifted -18.0
-..........\special{pdf:dest (section*.1) [@thispage /XYZ @xpos @ypos null]}
-..........\penalty 10000
-........\glue 0.0 plus 1.0fil minus 1.0fil
-.......\TU/lmr/bx/n/14.4 Index
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\TU/lmr/bx/n/14.4 Index
+.....\penalty 10000
+.....\glue(\parfillskip) 0.0 plus 1.0fil
+.....\glue(\rightskip) 0.0
+....\penalty 10000
+....\glue 9.913 plus 0.86198
+....\glue -9.99937 plus -0.86198
+....\penalty 0
+....\glue 0.08638
+....\glue 9.913 plus 0.86198
+....\glue -9.913 plus -0.86198
+....\glue 12.0 plus 4.0 minus 3.0
+....\kern 1.91362
+....\hbox(22.0+1.93999)x345.0, glue set 17.5fil
+.....\vbox(22.0+1.92998)x155.0
+......\glue 0.0 plus -2.0
+......\glue(\splittopskip) 3.34 plus 2.0
+......\hbox(6.66+2.21999)x155.0, glue set 34.835fil
+.......\hbox(0.0+0.0)x0.0
+.......\hbox(0.0+0.0)x0.0
+.......\setlanguage2 (hyphenmin 2,3)
+.......\TU/lmtt/m/n/10 calculate_pi
+.......\setlanguage0 (hyphenmin 2,3)
+.......\TU/lmr/m/n/10 ,
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/it/10 1
+.......\special{pdf:eann}
+.......\TU/lmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/n/10 1
+.......\special{pdf:eann}
 .......\penalty 10000
 .......\glue(\parfillskip) 0.0 plus 1.0fil
-.......\glue(\rightskip) 0.0
-......\penalty 10000
-......\glue 9.913 plus 0.86198
-......\glue -20.0 plus -2.0 minus -4.0
-.....\special{color pop}
-....\glue 12.0 plus 2.0 minus 2.0
-....\glue -12.0 plus -2.0 minus -2.0
-....\glue 20.0 plus 2.0 minus 4.0
-....\hbox(562.92204+0.0)x345.0, glue set 5.0fil
-.....\hbox(562.92204+0.0)x167.5
-......\vbox(562.92204+0.0)x167.5, glue set 516.86684fil
-.......\write-{}
-.......\glue(\topskip) 3.34
-.......\hbox(6.66+2.21999)x167.5, glue set 82.17fil
-........\hbox(0.0+0.0)x0.0
-........\hbox(0.0+0.0)x0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\TU/lmtt/m/n/10 calculate_pi
-........\setlanguage0 (hyphenmin 2,3)
-........\TU/lmr/m/n/10 ,
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/it/10 1
-........\special{pdf:eann}
-........\TU/lmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/n/10 1
-........\special{pdf:eann}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue(\parskip) 0.0 plus 0.3
-.......\glue(\parskip) 0.0
-.......\glue(\baselineskip) 3.12001
-.......\hbox(6.66+1.92998)x167.5, glue set 119.92fil
-........\hbox(0.0+0.0)x0.0
-........\rule(*+*)x0.0
-........\penalty 10000
-........\glue 20.0
-........\glue 0.0
-........\hbox(0.0+0.0)x0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\TU/lmtt/m/n/10 i
-........\setlanguage0 (hyphenmin 2,3)
-........\TU/lmr/m/n/10 ,
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/it/10 1
-........\special{pdf:eann}
-........\TU/lmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/n/10 1
-........\special{pdf:eann}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue(\parskip) 0.0 plus 0.3
-.......\glue(\parskip) 0.0
-.......\glue(\baselineskip) 3.41002
-.......\hbox(6.66+1.92998)x167.5, glue set 104.17fil
-........\hbox(0.0+0.0)x0.0
-........\rule(*+*)x0.0
-........\penalty 10000
-........\glue 20.0
-........\glue 0.0
-........\hbox(0.0+0.0)x0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\TU/lmtt/m/n/10 main
-........\setlanguage0 (hyphenmin 2,3)
-........\TU/lmr/m/n/10 ,
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/it/10 1
-........\special{pdf:eann}
-........\TU/lmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/n/10 1
-........\special{pdf:eann}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue(\parskip) 0.0 plus 0.3
-.......\glue(\parskip) 0.0
-.......\glue(\baselineskip) 3.41002
-.......\hbox(6.66+1.92998)x167.5, glue set 93.67fil
-........\hbox(0.0+0.0)x0.0
-........\rule(*+*)x0.0
-........\penalty 10000
-........\glue 20.0
-........\glue 0.0
-........\hbox(0.0+0.0)x0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\TU/lmtt/m/n/10 retval
-........\setlanguage0 (hyphenmin 2,3)
-........\TU/lmr/m/n/10 ,
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/it/10 1
-........\special{pdf:eann}
-........\TU/lmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33 plus 2.08124 minus 0.888
-........\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
-........\TU/lmr/m/n/10 1
-........\special{pdf:eann}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue -1.92998
-.......\glue 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+......\glue(\parskip) 0.0 plus 0.3
+......\glue(\parskip) 0.0
+......\glue(\baselineskip) 3.12001
+......\hbox(6.66+1.92998)x155.0, glue set 53.71fil
+.......\hbox(0.0+0.0)x0.0
+.......\rule(*+*)x0.0
+.......\penalty 10000
+.......\glue 20.0
 .......\glue 0.0
-.......\glue 0.0 plus 0.0001fil
-......\glue 0.0 plus 1.0fil minus 1.0fil
-.....\glue 0.0 plus 1.0fil
+.......\hbox(0.0+0.0)x0.0
+.......\setlanguage2 (hyphenmin 2,3)
+.......\TU/lmtt/m/n/10 i
+.......\setlanguage0 (hyphenmin 2,3)
+.......\TU/lmr/m/n/10 ,
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/it/10 1
+.......\special{pdf:eann}
+.......\TU/lmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/n/10 1
+.......\special{pdf:eann}
+.......\penalty 10000
+.......\glue(\parfillskip) 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
 .....\special{color push gray 0}
 .....\rule(*+*)x0.0
 .....\special{color pop}
-.....\glue 0.0 plus 1.0fil
-.....\hbox(562.92204+0.0)x167.5, glue set 167.5fil
-......\vbox(562.92204+0.0)x0.0, glue set 552.86299fil
-.......\write-{}
-.......\glue(\topskip) 10.0
-.......\vbox(0.0+0.0)x0.0
-.......\glue 0.0 plus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+.....\vbox(22.0+1.92998)x155.0
+......\glue 0.0 plus -2.0
+......\glue(\splittopskip) 3.34 plus 2.0
+......\hbox(6.66+1.92998)x155.0, glue set 45.835fil
+.......\hbox(0.0+0.0)x0.0
+.......\rule(*+*)x0.0
+.......\penalty 10000
+.......\glue 20.0
 .......\glue 0.0
-.......\glue 0.0 plus 0.0001fil
+.......\hbox(0.0+0.0)x0.0
+.......\setlanguage2 (hyphenmin 2,3)
+.......\TU/lmtt/m/n/10 main
+.......\setlanguage0 (hyphenmin 2,3)
+.......\TU/lmr/m/n/10 ,
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/it/10 1
+.......\special{pdf:eann}
+.......\TU/lmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/n/10 1
+.......\special{pdf:eann}
+.......\penalty 10000
+.......\glue(\parfillskip) 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+......\glue(\parskip) 0.0 plus 0.3
+......\glue(\parskip) 0.0
+......\glue(\baselineskip) 3.41002
+......\hbox(6.66+1.92998)x155.0, glue set 40.585fil
+.......\hbox(0.0+0.0)x0.0
+.......\rule(*+*)x0.0
+.......\penalty 10000
+.......\glue 20.0
+.......\glue 0.0
+.......\hbox(0.0+0.0)x0.0
+.......\setlanguage2 (hyphenmin 2,3)
+.......\TU/lmtt/m/n/10 retval
+.......\setlanguage0 (hyphenmin 2,3)
+.......\TU/lmr/m/n/10 ,
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/it/10 1
+.......\special{pdf:eann}
+.......\TU/lmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33 plus 2.08124 minus 0.888
+.......\special{pdf:bann<</Type/Annot/Subtype/Link/Border[0 0 1]/H/I/C[1 0 0]/A<</S/G\ETC.}
+.......\TU/lmr/m/n/10 1
+.......\special{pdf:eann}
+.......\penalty 10000
+.......\glue(\parfillskip) 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+.....\hbox(4.42+1.93999)x0.0, glue set - 5.56fil
+......\hbox(4.42+1.93999)x5.56
 ......\glue 0.0 plus 1.0fil minus 1.0fil
+....\kern -1.93999
+....\penalty 0
+....\penalty 10000
+....\penalty 0
+....\glue 12.0 plus 4.0 minus 3.0
+....\glue 0.0 plus 1.0fil
+....\glue 0.0
+....\glue 0.0 plus 0.0001fil
 ...\glue(\baselineskip) 23.34
 ...\hbox(6.66+0.0)x345.0
 ....\special{color push gray 0}
@@ -1892,8 +1888,6 @@ Completed box being shipped out [2]
 .....\glue 0.0 plus 1.0fil
 ....\special{color pop}
 .\kern 0.0
-)
-============================================================
 -------- codeblocks_l.c (start) ---------
 (codeblocks_l.c)
 ^^I#include <stdio.h>^^M

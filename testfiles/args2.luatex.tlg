@@ -2607,7 +2607,7 @@ TLT
 .......\glue(\rightskip) 0.0 plus 1.0fil
 ......\penalty 300
 ......\glue(\baselineskip) 4.73
-......\hbox(7.05+1.94)x81.66666, glue set 46.79666fill, shifted 10.0, direction 
+......\hbox(7.05+1.94)x81.66666, glue set 46.90666fill, shifted 10.0, direction 
 TLT
 .......\TU/lmr/m/n/10 f
 .......\TU/lmr/m/n/10 o
@@ -2624,7 +2624,7 @@ TLT
 .........\glue 0.0 plus 1.0fil minus 1.0fil
 .......\kern0.0
 .......\pdfstartlink(*+*)x* attr{/Border[0 0 1]/H/I/C[1 0 0]} action goto name{page.1}
-.......\TU/lmr/m/it/10 1
+.......\TU/lmr/m/n/10 1
 .......\pdfendlink
 .......\penalty 10000
 .......\glue(\parfillskip) 0.0 plus 1.0fil

@@ -1,13 +1,12 @@
 \input{regression-test.tex}
 \OMIT
 \documentclass[10pt, a4paper]{article}
-\usepackage{makeidx}
 \usepackage[dvipsnames]{xcolor}
-\usepackage[lang=c, print=l]{fortex}
+\usepackage[lang=c, print=l, imakeidx=false]{fortex}
+\usepackage{makeidx}
 \usepackage{hyperref}
 
 \makeindex
-
 \setfortex{ basicstyle=\small\ttfamily
           , tabsize=2
           , numbers=left
@@ -17,6 +16,8 @@
           , stringstyle =\color{Rhodamine}
           , keywordstyle=\color{orange}
 }
+\let\makeidxindex=\index
+\RenewDocumentCommand{\index}{O{}m}{\makeidxindex{#2}}
 
 \begin{document}
 

@@ -2356,8 +2356,6 @@ LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
 (Font)              No change on input line ....
 LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
 (Font)              No change on input line ....
-LaTeX Font Info:    Kanji font shape `JY1/mc/m/it' undefined
-(Font)              No change on input line ....
 )
 ============================================================
 Completed box being shipped out [4]
@@ -2569,7 +2567,7 @@ Completed box being shipped out [4]
 .......\glue(\rightskip) 0.0 plus 1.0fil
 ......\penalty 300
 ......\glue(\baselineskip) 5.05556
-......\hbox(6.94444+1.94444)x81.66664, glue set 46.8055fill, shifted 10.00002
+......\hbox(6.94444+1.94444)x81.66664, glue set 46.91656fill, shifted 10.00002
 .......\OT1/cmr/m/n/10 f
 .......\OT1/cmr/m/n/10 o
 .......\OT1/cmr/m/n/10 r
@@ -2585,9 +2583,9 @@ Completed box being shipped out [4]
 .........\glue 0.0 plus 1.0fil minus 1.0fil
 .......\kern 0.0
 .......\special{ps:SDict begin H.S end}
-.......\hbox(6.44444+0.0)x5.11108
+.......\hbox(6.44444+0.0)x5.00002
 ........\special{color push gray 0}
-........\OT1/cmr/m/it/10 1
+........\OT1/cmr/m/n/10 1
 ........\special{color pop}
 .......\hbox(0.0+0.0)x0.0, shifted -6.44444
 ........\special{ps:SDict begin H.R end}

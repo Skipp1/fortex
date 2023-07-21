@@ -2410,7 +2410,7 @@ Completed box being shipped out [4]
 .......\glue(\rightskip) 0.0 plus 1.0fil
 ......\penalty 300
 ......\glue(\baselineskip) 5.05556
-......\hbox(6.94444+1.94444)x81.66664, glue set 46.8055fill, shifted 10.00002
+......\hbox(6.94444+1.94444)x81.66664, glue set 46.91656fill, shifted 10.00002
 .......\OT1/cmr/m/n/10 f
 .......\OT1/cmr/m/n/10 o
 .......\OT1/cmr/m/n/10 r
@@ -2426,7 +2426,7 @@ Completed box being shipped out [4]
 .........\glue 0.0 plus 1.0fil minus 1.0fil
 .......\kern 0.0
 .......\pdfstartlink(*+*)x* attr{/Border[0 0 1]/H/I/C[1 0 0]} action goto name{page.1}
-.......\OT1/cmr/m/it/10 1
+.......\OT1/cmr/m/n/10 1
 .......\pdfendlink
 .......\penalty 10000
 .......\glue(\parfillskip) 0.0 plus 1.0fil

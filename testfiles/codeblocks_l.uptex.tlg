@@ -1993,6 +1993,8 @@ Completed box being shipped out [1]
 ....\special{color pop}
 .\kern 0.0
 .\kern 0.0
+runsystem(makeindex codeblocks_l.idx)...executed safely (allowed).
+(codeblocks_l.ind
 LaTeX Font Info:    Font shape `JT2/mc/m/n' will be
 (Font)              scaled to size 13.85594pt on input line ....
 LaTeX Font Info:    Font shape `JY2/mc/m/n' will be
@@ -2013,6 +2015,8 @@ LaTeX Font Info:    Kanji font shape `JY2/mc/m/it' undefined
 (Font)              No change on input line ....
 LaTeX Font Info:    Kanji font shape `JY2/mc/m/it' undefined
 (Font)              No change on input line ....
+)
+============================================================
 \BKM@file=\write...
 Completed box being shipped out [2]
 \vbox(682.0+0.0)x398.0
@@ -2050,221 +2054,213 @@ Completed box being shipped out [2]
 .....\special{color pop}
 ...\glue 25.0
 ...\glue(\lineskip) 0.0
-...\vbox(598.0+0.0)x345.0
-....\vbox(14.97214+0.0)x345.0
-.....\special{color push gray 0}
-.....\vbox(14.97214+0.0)x345.0
-......\penalty -300
-......\glue 15.0694 plus 4.30554 minus 0.86108
-......\glue(\parskip) 0.0
-......\glue(\parskip) 0.0
-......\hbox(9.99998+0.0)x345.0, glue set 305.02504fil
+...\vbox(598.0+0.0)x345.0, glue set 539.94232fil
+....\write-{}
+....\glue(\topskip) 0.00002
+....\hbox(9.99998+0.0)x345.0, glue set 305.02504fil
+.....\hbox(0.0+0.0)x0.0
+......\glue 0.0
+.....\hbox(0.0+0.0)x0.0
+......\kern 0.0
+......\special{ps:SDict begin H.S end}
+......\penalty 10000
+......\glue 0.0
+......\special{ps:SDict begin 18 H.A end}
+......\special{ps:SDict begin [/View [/XYZ H.V]/Dest (section*.1) cvn /DEST pdfmark \ETC.}
+......\penalty 10000
+......\glue 0.0 plus 1.0fil minus 1.0fil
+.....\OT1/cmr/bx/n/14.4 I
+.....\OT1/cmr/bx/n/14.4 n
+.....\OT1/cmr/bx/n/14.4 d
+.....\OT1/cmr/bx/n/14.4 e
+.....\OT1/cmr/bx/n/14.4 x
+.....\penalty 10000
+.....\glue(\parfillskip) 0.0 plus 1.0fil
+.....\glue(\rightskip) 0.0
+....\penalty 10000
+....\glue 9.90276 plus 0.86108
+....\glue -9.90276 plus -0.86108
+....\penalty 0
+....\glue 9.90276 plus 0.86108
+....\glue -9.90276 plus -0.86108
+....\glue 12.0 plus 4.0 minus 3.0
+....\kern 2.0
+....\hbox(22.0+1.94444)x345.0, glue set 17.5fil
+.....\vbox(22.0+1.94444)x155.0
+......\glue 0.0 plus -2.0
+......\glue(\splittopskip) 3.55556 plus 2.0
+......\hbox(6.44444+2.22223)x155.0, glue set 34.83362fil
 .......\hbox(0.0+0.0)x0.0
-........\glue 0.0
-.......\hbox(0.0+0.0)x0.0
-........\kern 0.0
-........\special{ps:SDict begin H.S end}
-........\penalty 10000
-........\glue 0.0
-........\special{ps:SDict begin 18 H.A end}
-........\special{ps:SDict begin [/View [/XYZ H.V]/Dest (section*.1) cvn /DEST pdfmark \ETC.}
-........\penalty 10000
-........\glue 0.0 plus 1.0fil minus 1.0fil
-.......\OT1/cmr/bx/n/14.4 I
-.......\OT1/cmr/bx/n/14.4 n
-.......\OT1/cmr/bx/n/14.4 d
-.......\OT1/cmr/bx/n/14.4 e
-.......\OT1/cmr/bx/n/14.4 x
+.......\setlanguage2 (hyphenmin 2,3)
+.......\OT1/cmtt/m/n/10 c
+.......\OT1/cmtt/m/n/10 a
+.......\OT1/cmtt/m/n/10 l
+.......\OT1/cmtt/m/n/10 c
+.......\OT1/cmtt/m/n/10 u
+.......\OT1/cmtt/m/n/10 l
+.......\OT1/cmtt/m/n/10 a
+.......\OT1/cmtt/m/n/10 t
+.......\OT1/cmtt/m/n/10 e
+.......\OT1/cmtt/m/n/10 _
+.......\OT1/cmtt/m/n/10 p
+.......\OT1/cmtt/m/n/10 i
+.......\setlanguage0 (hyphenmin 2,3)
+.......\OT1/cmr/m/n/10 ,
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.11108
+........\special{color push gray 0}
+........\OT1/cmr/m/it/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\OT1/cmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.00002
+........\special{color push gray 0}
+........\OT1/cmr/m/n/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
 .......\penalty 10000
 .......\glue(\parfillskip) 0.0 plus 1.0fil
-.......\glue(\rightskip) 0.0
-......\penalty 10000
-......\glue 9.90276 plus 0.86108
-......\glue -20.0 plus -2.0 minus -4.0
-.....\special{color pop}
-....\glue 12.0 plus 2.0 minus 2.0
-....\glue -12.0 plus -2.0 minus -2.0
-....\glue 20.0 plus 2.0 minus 4.0
-....\hbox(563.02786+0.0)x345.0, glue set 5.0fil
-.....\hbox(563.02786+0.0)x167.5
-......\vbox(563.02786+0.0)x167.5, glue set 516.97264fil
-.......\write-{}
-.......\glue(\topskip) 3.55556
-.......\hbox(6.44444+2.22223)x167.5, glue set 82.16722fil
-........\hbox(0.0+0.0)x0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\OT1/cmtt/m/n/10 c
-........\OT1/cmtt/m/n/10 a
-........\OT1/cmtt/m/n/10 l
-........\OT1/cmtt/m/n/10 c
-........\OT1/cmtt/m/n/10 u
-........\OT1/cmtt/m/n/10 l
-........\OT1/cmtt/m/n/10 a
-........\OT1/cmtt/m/n/10 t
-........\OT1/cmtt/m/n/10 e
-........\OT1/cmtt/m/n/10 _
-........\OT1/cmtt/m/n/10 p
-........\OT1/cmtt/m/n/10 i
-........\setlanguage0 (hyphenmin 2,3)
-........\OT1/cmr/m/n/10 ,
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.11108
-.........\special{color push gray 0}
-.........\OT1/cmr/m/it/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\OT1/cmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.00002
-.........\special{color push gray 0}
-.........\OT1/cmr/m/n/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue(\parskip) 0.0 plus 0.3
-.......\glue(\parskip) 0.0
-.......\glue(\baselineskip) 3.33333
-.......\hbox(6.44444+1.94444)x167.5, glue set 119.91672fil
-........\hbox(0.0+0.0)x0.0
-........\rule(*+*)x0.0
-........\penalty 10000
-........\glue 20.0
-........\glue 0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\OT1/cmtt/m/n/10 i
-........\setlanguage0 (hyphenmin 2,3)
-........\OT1/cmr/m/n/10 ,
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.11108
-.........\special{color push gray 0}
-.........\OT1/cmr/m/it/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\OT1/cmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.00002
-.........\special{color push gray 0}
-.........\OT1/cmr/m/n/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue(\parskip) 0.0 plus 0.3
-.......\glue(\parskip) 0.0
-.......\glue(\baselineskip) 3.61111
-.......\hbox(6.44444+1.94444)x167.5, glue set 104.16685fil
-........\hbox(0.0+0.0)x0.0
-........\rule(*+*)x0.0
-........\penalty 10000
-........\glue 20.0
-........\glue 0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\OT1/cmtt/m/n/10 m
-........\OT1/cmtt/m/n/10 a
-........\OT1/cmtt/m/n/10 i
-........\OT1/cmtt/m/n/10 n
-........\setlanguage0 (hyphenmin 2,3)
-........\OT1/cmr/m/n/10 ,
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.11108
-.........\special{color push gray 0}
-.........\OT1/cmr/m/it/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\OT1/cmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.00002
-.........\special{color push gray 0}
-.........\OT1/cmr/m/n/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue(\parskip) 0.0 plus 0.3
-.......\glue(\parskip) 0.0
-.......\glue(\baselineskip) 3.61111
-.......\hbox(6.44444+1.94444)x167.5, glue set 93.66695fil
-........\hbox(0.0+0.0)x0.0
-........\rule(*+*)x0.0
-........\penalty 10000
-........\glue 20.0
-........\glue 0.0
-........\setlanguage2 (hyphenmin 2,3)
-........\OT1/cmtt/m/n/10 r
-........\OT1/cmtt/m/n/10 e
-........\OT1/cmtt/m/n/10 t
-........\OT1/cmtt/m/n/10 v
-........\OT1/cmtt/m/n/10 a
-........\OT1/cmtt/m/n/10 l
-........\setlanguage0 (hyphenmin 2,3)
-........\OT1/cmr/m/n/10 ,
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.11108
-.........\special{color push gray 0}
-.........\OT1/cmr/m/it/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\OT1/cmr/m/n/10 ,
-........\kern 0.0
-........\glue 3.33333 plus 2.08331 minus 0.88889
-........\special{ps:SDict begin H.S end}
-........\hbox(6.44444+0.0)x5.00002
-.........\special{color push gray 0}
-.........\OT1/cmr/m/n/10 1
-.........\special{color pop}
-........\hbox(0.0+0.0)x0.0, shifted -6.44444
-.........\special{ps:SDict begin H.R end}
-........\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
-........\penalty 10000
-........\glue(\parfillskip) 0.0 plus 1.0fil
-........\glue(\rightskip) 0.0
-.......\glue -1.94444
-.......\glue 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+......\glue(\parskip) 0.0 plus 0.3
+......\glue(\parskip) 0.0
+......\glue(\baselineskip) 3.33333
+......\hbox(6.44444+1.94444)x155.0, glue set 53.70836fil
+.......\hbox(0.0+0.0)x0.0
+.......\rule(*+*)x0.0
+.......\penalty 10000
+.......\glue 20.0
 .......\glue 0.0
-.......\glue 0.0 plus 0.0001fil
-......\glue 0.0 plus 1.0fil minus 1.0fil
-.....\glue 0.0 plus 1.0fil
+.......\setlanguage2 (hyphenmin 2,3)
+.......\OT1/cmtt/m/n/10 i
+.......\setlanguage0 (hyphenmin 2,3)
+.......\OT1/cmr/m/n/10 ,
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.11108
+........\special{color push gray 0}
+........\OT1/cmr/m/it/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\OT1/cmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.00002
+........\special{color push gray 0}
+........\OT1/cmr/m/n/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\penalty 10000
+.......\glue(\parfillskip) 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
 .....\special{color push gray 0}
 .....\rule(*+*)x0.0
 .....\special{color pop}
-.....\glue 0.0 plus 1.0fil
-.....\hbox(563.02786+0.0)x167.5, glue set 167.5fil
-......\vbox(563.02786+0.0)x0.0, glue set 552.9688fil
-.......\write-{}
-.......\glue(\topskip) 10.0
-.......\vbox(0.0+0.0)x0.0
-.......\glue 0.0 plus 1.0fil
+.....\glue 0.0 plus 1.0fil minus 1.0fil
+.....\vbox(22.0+1.94444)x155.0
+......\glue 0.0 plus -2.0
+......\glue(\splittopskip) 3.55556 plus 2.0
+......\hbox(6.44444+1.94444)x155.0, glue set 45.83344fil
+.......\hbox(0.0+0.0)x0.0
+.......\rule(*+*)x0.0
+.......\penalty 10000
+.......\glue 20.0
 .......\glue 0.0
-.......\glue 0.0 plus 0.0001fil
+.......\setlanguage2 (hyphenmin 2,3)
+.......\OT1/cmtt/m/n/10 m
+.......\OT1/cmtt/m/n/10 a
+.......\OT1/cmtt/m/n/10 i
+.......\OT1/cmtt/m/n/10 n
+.......\setlanguage0 (hyphenmin 2,3)
+.......\OT1/cmr/m/n/10 ,
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.11108
+........\special{color push gray 0}
+........\OT1/cmr/m/it/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\OT1/cmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.00002
+........\special{color push gray 0}
+........\OT1/cmr/m/n/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\penalty 10000
+.......\glue(\parfillskip) 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+......\glue(\parskip) 0.0 plus 0.3
+......\glue(\parskip) 0.0
+......\glue(\baselineskip) 3.61111
+......\hbox(6.44444+1.94444)x155.0, glue set 40.58348fil
+.......\hbox(0.0+0.0)x0.0
+.......\rule(*+*)x0.0
+.......\penalty 10000
+.......\glue 20.0
+.......\glue 0.0
+.......\setlanguage2 (hyphenmin 2,3)
+.......\OT1/cmtt/m/n/10 r
+.......\OT1/cmtt/m/n/10 e
+.......\OT1/cmtt/m/n/10 t
+.......\OT1/cmtt/m/n/10 v
+.......\OT1/cmtt/m/n/10 a
+.......\OT1/cmtt/m/n/10 l
+.......\setlanguage0 (hyphenmin 2,3)
+.......\OT1/cmr/m/n/10 ,
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.11108
+........\special{color push gray 0}
+........\OT1/cmr/m/it/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\OT1/cmr/m/n/10 ,
+.......\kern 0.0
+.......\glue 3.33333 plus 2.08331 minus 0.88889
+.......\special{ps:SDict begin H.S end}
+.......\hbox(6.44444+0.0)x5.00002
+........\special{color push gray 0}
+........\OT1/cmr/m/n/10 1
+........\special{color pop}
+.......\hbox(0.0+0.0)x0.0, shifted -6.44444
+........\special{ps:SDict begin H.R end}
+.......\special{ps:SDict begin [/Color [1 0 0]/H /I/Border [0 0 1]BorderArrayPatch/Su\ETC.}
+.......\penalty 10000
+.......\glue(\parfillskip) 0.0 plus 1.0fil
+.......\glue(\rightskip) 0.0 plus 1.0fil
+.....\hbox(4.30554+1.94444)x0.0, glue set - 5.55557fil
+......\hbox(4.30554+1.94444)x5.55557
 ......\glue 0.0 plus 1.0fil minus 1.0fil
+....\kern -1.94444
+....\penalty 0
+....\penalty 10000
+....\penalty 0
+....\glue 12.0 plus 4.0 minus 3.0
+....\glue 0.0 plus 1.0fil
+....\glue 0.0
+....\glue 0.0 plus 0.0001fil
 ...\glue(\baselineskip) 23.55556
 ...\hbox(6.44444+0.0)x345.0
 ....\special{color push gray 0}
@@ -2278,8 +2274,6 @@ Completed box being shipped out [2]
 .\hbox(0.0+0.0)x0.0
 ..\special{PSfile=codeblocks_l.out.ps}
 .\kern 682.0
-)
-============================================================
 -------- codeblocks_l.c (start) ---------
 (codeblocks_l.c)
 ^^I#include <stdio.h>^^M
