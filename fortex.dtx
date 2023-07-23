@@ -96,14 +96,23 @@
   \endlist
 }
 
-\NewDocumentCommand { \optref }{ m }{ \hyperref [ doc/function//#1  ] { \texttt { #1 } } }
-\NewDocumentCommand { \cbref  }{ m }{ \hyperref [ code:codeblock/#1 ] { \texttt { #1 } } }
+\NewDocumentCommand { \optref } { m } { \hyperref [ doc/function//#1  ] { \texttt { #1 } } }
+\NewDocumentCommand { \cbref  } { m } { \hyperref [ code:codeblock/#1 ] { \texttt { #1 } } }
+\NewDocumentCommand { \csref  } { m } {
+  \hyperref [ doc/function//#1  ] { \tn { #1 } }
+}
 
 \cs_set_eq:NN \environment_aux:n \environment
 \RenewDocumentCommand{\environment}{v}{ 
   \label{doc/function//#1}
   \environment_aux:n {#1}
 }
+
+\cs_set_eq:NN \env_aux:n \env
+\RenewDocumentCommand { \env } { v } {
+ \hyperref [ doc/function//#1 ] { \env_aux:n { #1 } }
+}
+
 \ExplSyntaxOff
 
 % \setlength\parfillskip{0pt plus .75\linewidth}
@@ -146,7 +155,6 @@
 \sbox{\pdflogo}{
   \begin{tikzpicture}[very thick]
     \fill[red!30] (0,0) -- (1-.3,0) -- (1,-.3)[rounded corners=1pt] -- (1, -1.3) -- (0, -1.3) -- cycle;
-    % I don't know how Adobe trademark system works so lets just use MIT licenced fontawesome.
     \node at (0.5, -0.7) {\usefont{U}{fontawesomethree}{m}{n}\fontsize{30}{30}\selectfont\raisebox{9pt}{\symbol{64}}};
     \path[fill=red!30, rounded corners=1pt] (0,0) rectangle (0.7,-0.3);
     \path[fill=red!30, rounded corners=1pt] (0,0) rectangle (0.15,-1.3);
@@ -423,7 +431,7 @@
 % \end{center}
 %
 % The second difference is a consequence of the first. 
-% Unlike \texttt{codeblock}, nesting further \texttt{codeblock}/\texttt{codevar} inside a  \texttt{codevar} environment is not allowed. 
+% Unlike \env{codeblock}, nesting further \env{codeblock}/\texttt{codevar} inside a \texttt{codevar} environment is not allowed.
 % This is because it is ambiguous as to how to construct a nesting tree when multiple variables could act as a parent.
 %
 % \begin{examplefile}[left=1cm, breakable]{file.tex}{\texlogo}
@@ -696,7 +704,7 @@
 % The control sequence takes one argument that is a comma separated list of all the variables, each one a hyperref link. 
 %
 % \DescribeOption{delim}{\meta{string}}[\it{Engine Specific}]
-% \pkg{fortex} uses the \pkg{minted} option \texttt{escapeinside}, and the \pkg{listings} option \texttt{escapechar} in order to insert hyperlinks into code.
+% \pkg{fortex} uses the \pkg{minted} option \texttt{\optref{escapeinside}}, and the \pkg{listings} option \texttt{escapechar} in order to insert hyperlinks into code.
 % By default, \pkg{fortex} tried to work with every language, and so uses delimiters in non-printing Unicode.
 %
 % \DescribeOption{draft}{\meta{boolean}}[false]
@@ -732,15 +740,15 @@
 % Note that the control sequence should accept the text to be formatted as a single argument.
 %
 % \DescribeOption{idx actual}{\meta{single token}}[@]
-% Change the index actual printing seperator. \\
+% Change the index actual printing separator. \\
 % Note that this \emph{must} match the value in the index style file. 
 %
 % \DescribeOption{idx encap}{\meta{single token}}[\char`\|]
-% Change the index formatting seperator. \\
+% Change the index formatting separator. \\
 % Note that this \emph{must} match the value in the index style file. 
 %
 % \DescribeOption{idx level}{\meta{single token}}[!]
-% Change the index level seperator. \\
+% Change the index level separator. \\
 % Note that this \emph{must} match the value in the index style file. 
 %
 % \DescribeOption{ignore active}{\meta{active token}}
@@ -822,14 +830,14 @@
 % (Although I \emph{highly} recommend using a Unicode native engine (like \LuaTeX{}) if you want to use non-\textsc{ascii}.)
 % 
 % \DescribeOption{no ignore active}{\meta{active token}}
-% The opposite of the \texttt{ignore active}.
+% The opposite of the \texttt{\optref{ignore active}}.
 % This option should only be needed if \texttt{ignore active} has already been used, but you want to undo the effects. 
 % 
 % \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
 % \DescribeOption{imakeidx}{\meta{boolean}}[true]
 % \pkg{fortex} uses \pkg{imakeidx} to provide the index and the changelog.
 % If other indexing packages are desired then it is strongly suggested to set this option to \texttt{false} to disable the automatic import of \pkg{imakeidx}. \\
-% Note that due to syntax differing between indexing packages, it is likely you will need to customise the macros \tn{printindex}, \tn{makeindex}, and \tn{@@_index:nn}.
+% Note that due to syntax differing between indexing packages, it is likely you will need to customise the macros \tn{printindex}, \tn{makeindex}, and \csref{fortex_index:nx}.
 %
 % \DescribeOption{intext}{\meta{boolean}}[true]
 % Making use of \env{codeblock}, \env{codevar}, and regular expressions, \pkg{hyperref} links can be inserted into the code sections in the resulting |.pdf| file. 
@@ -841,7 +849,7 @@
 % \DescribeOption{lang}{\meta{string}}[text]
 % The source code language. Setting this option will tell \pkg{minted}/\pkg{listings} what language to use when applying syntax highlighting. 
 % This also sets the default output file extension (may be overridden with the \optref{ext} package option). 
-% e.g. setting |lang=bash| will cause the output file to by default be called \texttt{\meta{jobname}.sh}
+% e.g. setting \texttt{\optref{lang}=bash} will cause the output file to by default be called \texttt{\meta{jobname}.sh}
 %
 % \DescribeOption{outdir}{\meta{string}}[\it{Same directory as \texttt{\meta{jobname}.aux}}]
 % Output directory where the source code file will be placed.
@@ -849,7 +857,7 @@
 % \DescribeOption{print}{\meta{string}}[listings]
 % What backend package is being used to syntax highlight the source code in the generated |.pdf| file.
 % At the moment the only two supported backends are \pkg{minted} or \pkg{listings}. \\
-% There are a bunch of aliases that can be used in \texttt{print=\meta{backend}} to select these two backends.
+% There are a bunch of aliases that can be used in \texttt{\optref{print}=\meta{backend}} to select these two backends.
 % These are listed in the following table
 %
 % \begin{center}
@@ -880,7 +888,7 @@
 % Note that only a single control sequence may be used. 
 %
 % \DescribeOption{vindex idxnum fmt}{\meta{single control sequence}}[\char`\\ textrm]
-% How should the index page numbers be formatted when using \tn{vindex}.
+% How should the index page numbers be formatted when using \csref{vindex}.
 % Note that only a single control sequence may be used. 
 %
 % \endgroup
@@ -908,7 +916,7 @@
 % \begin{syntax}
 % \cs{UnMakeShortFortex}\Arg{character}
 % \end{syntax}
-% Undefines \meta{character} as a delimiter and restores previous behaviour, undoing the effects of \tn{MakeShortFortex}.
+% Undefines \meta{character} as a delimiter and restores previous behaviour, undoing the effects of \csref{MakeShortFortex}.
 % This is equivalent to the \pkg{listings} command \tn{lstDeleteShortInline}, but will work with the \pkg{minted} backend too.
 % \end{function}
 %
@@ -924,8 +932,10 @@
 %
 % For example:
 % \begin{center}
-% \texttt{\tn{vindex}\char`\{my\char`\_class!my\char`\_func\char`\}[@func\char`\|textsf]}\\
-% is equivalent to\\
+% \texttt{\tn{vindex}\char`\{my\char`\_class!my\char`\_func\char`\}[@func\char`\|textsf]}
+% \end{center}
+% \vspace{-0.7\baselineskip} is equivalent to
+% \begin{center}
 % \texttt{\tn{index}\char`\{\char`\\verb\,¤\,my\char`\_class\,¤\,!\char`\\verb\,¤\,my\char`\_func\,¤\,@func\char`\|textsf\char`\}} 
 % \end{center}
 % Where |¤| is the same delimiter specifed in the \optref{delim} option.
@@ -1009,6 +1019,8 @@
 % \noindent The solution is to rerun \LaTeX{} with the |-8bit| option to enable printing of all characters.
 %
 % \subsubsection*{Escapeinside}
+% As this option is only really used for compatibility, only the first character of \optref{escapeinside} is used.
+%
 % \subsubsection*{Windows and MacOS}
 % Dunno what to tell you, I don't own a machine with Windows or MacOS, so I cannot test them.
 % I will happily accept any bugs, though you may have to help test and verify things work. 
@@ -1031,7 +1043,7 @@
 % \noindent Do this by placing \tn{VerbatimEnvironment} as the first line, and a Comment \texttt{\char`\%} at the end of the code environment.
 %
 % \subsubsection*{Getting the Current Line Number}
-% The current line number can be accessed with the integer register \tn{fortexcurlineno}
+% The current line number can be accessed with the integer register \csref{fortexcurlineno}
 %
 % \subsubsection*{I don't want to use \pkg{imakeidx}}
 % When choosing a different indexing package, make sure that it has support for multiple indexes if you want to use both the Index and the Changelog at the same time.
@@ -1039,20 +1051,39 @@
 % In order to replace \pkg{imakeidx}, firstly set the package option \texttt{\optref{imakeidx}=false} to disable the automatic loading of \pkg{imakeidx}.
 % It is likely that this new indexing package will have a different syntax for how to choose what Index you want. 
 % As such you will likely need to modify the macro:
-% \cs{@@_index:nn}\Arg{what index}\Arg{index string} so that it uses the syntax appropriate for the package.
+% \csref{fortex_index:nx}\Arg{what index}\Arg{index string} so that it uses the syntax appropriate for the package.
 %
 % \subsubsection*{Changing the index separators}
+% There are unfortunately 2 different places that you seed to specify your new separators.
+% Once for \pkg{fortex}, and once for \pkg{makeindex}.
+% This is because sadly there is no way to reliably check what specifiers \pkg{makeindex} is going to use.
 %
-% \section {Things left to do}
+% As an example, let us replace the default level separator |!| with a new separator |>|.
+% Firstly we need to create a \pkg{makeindex} \texttt{.ist} style file with the contents:
 %
-% \begin{enumerate}
-% \item Finish off |.dtx| by adding Usage instructions
-% \item Sanitise regex
-% \item intext and noref should be constant, (in general, we need more consistency)
-% \item begin/end multichar escapeinside 
-% \item Allow customisation of the hyperref regex
-% \item Editing spelling and grammar 
-% \end{enumerate}
+% ^^A \begin{examplefile}[left=1cm, breakable]{file.ist}{\relax}
+% \begin{lstlisting}[numbers=none, gobble=1]
+% level '>'
+% \end{lstlisting}
+% ^^A \end{examplefile}
+%
+% This is the file that \pkg{makeindex} will read to decipher the index.
+% However, we also need to let \pkg{fortex} know about this change, as otherwise it will keep using |!| as the level separator.
+% To do this we need to set \texttt{\csref{setfortex}\char`\{\optref{idx level} = >\char`\}}.
+%
+% \subsubsection*{Changing matching regex}
+% As it currently stands the regex used to match and insert the hyperlinks is defined in \cs{fortex_search_regex:V} as:\quad "([^\w:]|^)#1\b"
+%
+% However, there is a chance that some esoteric language will not work with this regex.
+% I am not going to ``officially'' support changing the regex, but some general guidance proceed anyway:
+% \begin{itemize}
+% \item make sure there is 1 (and only 1) group.
+% \item make sure the group precedes |#1|.
+% \item be careful not to match any previously inserted text (e.g. |\bCode\b| will accidentally match the previously inserted |\fortexhyperref{code:MyCode}{MyCode}| and cause erroneous insertions).
+% \item make sure \cs{fortex_search_regex:V} is correctly \texttt{V} expanded.
+% \item make sure to delete the \texttt{.aux} file to clear the cache.
+% \item see Section \ref{sec:codeblock} for how the regex is used.
+% \end{itemize}
 %
 % \end{documentation}
 % \clearpage
@@ -1104,6 +1135,7 @@
 \cs_generate_variant:Nn \keys_set:nn { nf }
 \cs_generate_variant:Nn \prop_gput:Nnn { NVo }
 \cs_generate_variant:Nn \tl_replace_all:Nnn { Nnx }
+\cs_generate_variant:Nn \str_greplace_all:Nnn { Nxx }
 %    \end{macrocode}
 % \subsection{Package options}
 %
@@ -1248,7 +1280,7 @@
   , delim .str_gset:N  = \g_@@_code_delim_str
   , delim .initial:n   = {}
   , escapechar .meta:n = { delim = {#1} }
-  , escapeinside .code:n  = { 
+  , escapeinside .code:n  = {
      \exp_args:Nno \keys_set:nn { fortex } { \use_i:nn #1 }
     }
 %    \end{macrocode}
@@ -1349,7 +1381,7 @@
 % The numbers in the index can be formatted. 
 % Because I don't want to lock anyone into ``my way of styling things'', give some simple customisation.
 % 
-% One interesting thing of note is that makeindex doesn't take a control sequence, but rather the csname. 
+% One interesting thing of note is that \pkg{makeindex} doesn't take a control sequence, but rather the csname.
 % As such, we need to first get the csname, before passing it further down the line.
 %
 %    \begin{macrocode}
@@ -1395,7 +1427,7 @@
 % The numbers in the index can be formatted. 
 % Because I don't want to lock anyone into ``my way of styling things'', give some simple customisation.
 % 
-% One interesting thing of note is that makeindex doesn't take a control sequence, but rather the csname. 
+% One interesting thing of note is that \pkg{makeindex} doesn't take a control sequence, but rather the csname.
 % As such, we need to first get the csname, before passing it further down the line.
 %
 %    \begin{macrocode}
@@ -2123,7 +2155,7 @@
     { \tl_if_empty:nF { #1 } { [ { #1 } ] } }  
     { #2 }
 }
-\cs_generate_variant:Nn \@@_index:nn { nV, nx }
+\cs_generate_variant:Nn \@@_index:nn { nx }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2500,7 +2532,7 @@
 % \end{variable}
 %
 % \subsubsection{Codeblock}
-%
+% \label{sec:codeblock}
 % \changes{0.0.6$\alpha$}{2022/03/30}{Add macro-like environments}
 % \changes{0.0.7$\alpha$}{2022/06/04}{Finish automatic hyperref}
 % 
@@ -2594,6 +2626,21 @@
 \cs_set:Npn \@@_search_regex:n #1 {
   ([^\w:]|^)#1\b
 }
+\cs_generate_variant:Nn \@@_search_regex:n { V }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_sanitise_regex:n}
+% \begin{arguments}
+% \item Regex to sanitise
+% \end{arguments}
+%    \begin{macrocode}
+\cs_set:Npn \@@_sanitise_regex:N #1 {
+  \tl_map_inline:nn {
+    \c_left_brace_str \c_right_brace_str \c_backslash_str
+    \c_circumflex_str \c_dollar_str \c_space_tl [ ] ? * + ( ) | . -
+  } { \str_greplace_all:Nxx #1 { ##1 } { \c_backslash_str ##1 } }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2615,7 +2662,9 @@
 % Here we create the matching regex and the replacement text.
 % 
 %    \begin{macrocode}
-    \tl_set:No \l_tmpa_regex { \@@_search_regex:n { #1 } }
+    \tl_set:Nn \l_tmpa_regex { #1 }
+    \@@_sanitise_regex:N \l_tmpa_regex
+    \tl_set:Nf \l_tmpa_regex { \@@_search_regex:V \l_tmpa_regex }
 %    \end{macrocode}
 % The text that is getting replaced by looks complex, but simplifying is merely
 %
@@ -2731,7 +2780,7 @@
 % The first things that we want to do is to is load our optional args clist into the actual keyval interface that we previously specified. 
 %
 % |noindex| is used to prevent the function from being registered with the index.
-% |noref| is used to prevent the automatic insertion of hyperlinks. 
+% |noref| is used to prevent the automatic insertion of hyperlinks.
 % and \texttt{scope=\meta{scope}} is used to limit the highlighting to a specified region in the file.
 %    \begin{macrocode}
   \keys_set:nf { fortex/codeblock } 
@@ -2853,8 +2902,7 @@
       } { ##1 }
     } }
     \seq_use:Nn \l_tmpa_seq {,~}
-  }
-  }
+  } }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2992,9 +3040,7 @@
       \mode_if_math:TF {
         \token_to_str:N #3
       } {
-        { 
-          \@@_shortmint_cs#3##1#3 
-        }
+        { \@@_shortmint_cs#3##1#3 }
       }
     }
   }
