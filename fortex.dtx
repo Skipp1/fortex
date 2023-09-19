@@ -2339,8 +2339,107 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \subsubsection{Creating file with refs}
 %
+% \subsubsection{Regex Optimisaions}
+% \changes{0.0.15$\alpha$}{2023/08/05}{Custom regex}
+% One of the problems that I was facing when writing \pkg{fortex} was the speed of the regex engine.
+% As it is completely implemented in \LaTeX{} it is not the fastest regex engine in the world.
+% As such it would take a long time (if the cache was not populated) for the \texttt{.tex} document to compile.
+% This is obviously not ideal.
+%
+% One of the most powerful ways of speeding up the \LaTeX{} regex engine is to precompile the regex.
+% This is especially useful in our case as the same regex will be used to check multiple code environments.
+%
+% In previous versions of \pkg{fortex} this was impossible as we used the regex |([^\w:]|^)#1\b|
+% As is seen, this includes a capture group, and sadly capture groups get turned into non-capture groups when the regex is compiled.
+% However, the insertion regex just puts the captured group right back in at the start.
+%
+% One might notice that this is \emph{almost} equivalent to the definition of |\b|
+% The diffrence however, is that we are considering a colon |:| to be a word character.
+% If there was a way to modify the definition of |\b| such that it \emph{did} consider |:| to be a word character, then we could avoid the cpture group.
+% This in tern would significantly speed up the regex in 2 ways:
+% Firstly, we could precompile the regex, but equally importantly we have removed the need for a group simplifying the regex itself.
+%
+% The code in this section is designed to modify the precompiled regex such that we can do exactly this.
+% Note that instead of changing the \emph{syntax} of the regex itself (i.e. |\W|, |.*|, etc), we modify the precompiled regex, and add a new definition.
+% This way, any other package or user using the regex engine does not have any surprises, as there will be no way to reach these codepaths.
+%
+% Note, that this does come with some risk as because we are hooking into some \pkg{expl3} internals, these are not garenteed to be stable.
+% However, looking back though the \pkg{expl3} source code the defintions of the code I am using have not changed in at least 5 years so I imagine it is fine.
+%
+% \begin{macro}{\@@_regex_prop_bc:}
+%
+% The first thing that we need to to is define what characters our regex should match.
+% Note that this is (almost) the same definition as |\b|, However we also consider |:|.
+% The defintion of |\b|, on which this is based can be found as \cs{__regex_prop_b:}, in \file{l3regex.dtx}
+%
+% One interesting thing here is that the |:No| expansion will only expand \cs{__regex_prop_w:}, but will leave \cs{__regex_item_caseful_equal:n} untouched.
+% This just allows us to simplify the code and prevent redefining what |\W| already matches.
+%
+%    \begin{macrocode}
+\tl_set:No \@@_regex_prop_bc: {
+	\__regex_prop_w:
+	\__regex_item_caseful_equal:n { `: }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_regex_bc_test:}
+% We then need to define our test function.
+% This is the exact same defintion as \cs{__regex_b_test:} (the test function for |\b|).
+% The only diffrence is we replace \cs{__regex_prop_b:}, with our new matching characteristics.
+%
+%    \begin{macrocode}
+\cs_set_protected:Npn \@@_regex_bc_test: {
+	\group_begin:
+		\int_set_eq:NN \l__regex_curr_char_int \l__regex_last_char_int
+		\@@_regex_prop_bc:
+		\__regex_break_point:TF
+			{ \group_end: \__regex_item_reverse:n { \@@_regex_prop_bc: } }
+			{ \group_end: \@@_regex_prop_bc: }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_regex_prepend_bc:NN}
+% \begin{arguments}
+% \item Precompiled regex that is going to be used
+% \item Regex variable to write to
+% \end{arguments}
+%
+% Now that we have created our functions that deal with searching and matching, we need to prepend these to the compiled regex.
+% This is
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_regex_prepend_bc:NN #1#2 {
+	\group_begin:
+		\cs_set_eq:NN \__regex_branch:n \exp_not:n
+		\@@_regex_prepend_bc_aux:Nx #2 { #1 }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_regex_prepend_bc_aux:Nn}
+% \begin{arguments}
+% \item Regex variable to write to
+% \item Precompiled regex that is going to be appended
+% \end{arguments}
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_regex_prepend_bc_aux:Nn #1#2 {
+	\group_end:
+	\tl_set:Nn #1 {
+		\__regex_branch:n {
+			\__regex_assertion:Nn \c_true_bool { \@@_regex_bc_test: }
+			#2
+		}
+	}
+}
+\cs_generate_variant:Nn \@@_regex_prepend_bc_aux:Nn { Nx }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{Creating file with refs}
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
 % \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
 % \changes{0.0.12$\alpha$}{2022/02/20}{Add draft mode}
@@ -2625,6 +2724,7 @@
 }
 %    \end{macrocode}
 % \end{variable}
+%
 %
 % \changes{0.0.8$\alpha$}{2022/07/23}{Move \env{codeblock} implementation into aux macro}
 % \changes{0.0.8$\alpha$}{2022/08/11}{Update regex to allow matching the first string in the file}
