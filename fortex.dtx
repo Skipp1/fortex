@@ -1392,7 +1392,7 @@
 %
 % \changes{0.0.7$\alpha$}{2022/06/09}{Allow hyperrefed code to not be monospaced}
 % \changes{0.0.12$\alpha$}{2023/02/20}{Hyperref formatting is now part of setfortex}
-% \begin{macro}{\@@_hyperlink_fmt:n, hyperlink fmt}
+% \begin{macro}{\@@_hyperlink_fmt:, hyperlink fmt}
 % Because the code may not always be monospace. 
 % Some weird people don't like monospace code. 
 % However, The real reason is that listings isn't monospace by default (although everyone makes it as the first step).
@@ -2327,7 +2327,7 @@
 %    \begin{macrocode}
 \NewDocumentCommand \fortexhyperinsert { s m m } {
   \seq_clear_new:N \l_tmpa_seq
-  \tl_map_inline:nn { #3 } { \seq_put_right:Nn \l_tmpa_seq { ##1 } }
+  \tl_map_inline:nn { #3 } { \seq_put_right:NV \l_tmpa_seq { \tl_tail:n { ##1 } } }
   \bool_if:NF { #1 } {
     \@@_vindex_aux:Nx \l_tmpa_seq {
       \g_@@_idx_encap_str \g_@@_idxfmt_codecall_str
@@ -2350,13 +2350,13 @@
 % One of the most powerful ways of speeding up the \LaTeX{} regex engine is to precompile the regex.
 % This is especially useful in our case as the same regex will be used to check multiple code environments.
 %
-% In previous versions of \pkg{fortex} this was impossible as we used the regex |([^\w:]|^)#1\b|
+% In previous versions of \pkg{fortex} this was impossible as we used the regex "([^\w:]|^)#1\b"
 % As is seen, this includes a capture group, and sadly capture groups get turned into non-capture groups when the regex is compiled.
 % However, the insertion regex just puts the captured group right back in at the start.
 %
 % One might notice that this is \emph{almost} equivalent to the definition of |\b|
 % The diffrence however, is that we are considering a colon |:| to be a word character.
-% If there was a way to modify the definition of |\b| such that it \emph{did} consider |:| to be a word character, then we could avoid the cpture group.
+% If there was a way to modify the definition of |\b| such that it \emph{did} consider |:| to be a word character, then we could avoid the capture group.
 % This in tern would significantly speed up the regex in 2 ways:
 % Firstly, we could precompile the regex, but equally importantly we have removed the need for a group simplifying the regex itself.
 %
@@ -2364,39 +2364,88 @@
 % Note that instead of changing the \emph{syntax} of the regex itself (i.e. |\W|, |.*|, etc), we modify the precompiled regex, and add a new definition.
 % This way, any other package or user using the regex engine does not have any surprises, as there will be no way to reach these codepaths.
 %
-% Note, that this does come with some risk as because we are hooking into some \pkg{expl3} internals, these are not garenteed to be stable.
-% However, looking back though the \pkg{expl3} source code the defintions of the code I am using have not changed in at least 5 years so I imagine it is fine.
+% Note, that this does come with some risk as because we are hooking into some \pkg{expl3} internals, these are not garented to be stable.
+% However, looking back though the \pkg{expl3} source code the definitions of the code I am using have not changed in at least 5 years so I imagine it is fine.
+%
+% \paragraph{l3regex Implementation Details:}
+% It is worth understanding some implementation details about how \pkg{l3regex} is implemented.
+% Let us first look at what happens when some regex is compiled. 
+%\__regex_branch:n
+% Consider the following regex:
+% \begin{lstlisting}[language=TeX, numbers=none]
+%  \regex_set:Nn \l_tmpa_regex {A\b}
+% \end{lstlisting}
+%
+% Here we have two different regex elements that we wish to see how they are implemented.
+% The letter \textsf{A}, and a word boundary |\b|.
+% This regex is compiled into the following \pkg{expl3} code:
+%
+% \begin{lstlisting}[language=TeX, numbers=none]
+%  \__regex_branch:n {
+%    \__regex_class:NnnnN \c_true_bool 
+%                       { \__regex_item_caseful_equal:n {65} }
+%                       { 1 } { 0 } \c_false_bool
+%    \__regex_assertion:Nn \c_true_bool {\__regex_b_test: }
+%  }
+% \end{lstlisting}
+%
+% Importantly, \cs{__regex_b_test:} is the function that checks if we are on a word boundary. 
+% Looking at the definition of \cs{__regex_b_test:} we see it is defined as
+%
+% \begin{center}
+% \begin{lstlisting}[firstnumber=26022]
+%  \cs_new_protected:Npn \__regex_b_test: {
+%    \group_begin:
+%      \int_set_eq:NN \l__regex_curr_char_int \l__regex_last_char_int
+%      \__regex_prop_w:
+%      \__regex_break_point:TF
+%        { \group_end: \__regex_item_reverse:n { \__regex_prop_w: } }
+%        { \group_end: \__regex_prop_w: }
+%  }
+% \end{lstlisting}
+% Taken from \texttt{expl3-code.tex}
+% \end{center}
+%
+% As our goal is to create a new match similar to |\b| but considering |:| as a ``word character''.
+% As such it appears fairly straightforward that if we replace \cs{\__regex_prop_w:} with our own list, we can append our own matching function to the precompiled regex. 
 %
 % \begin{macro}{\@@_regex_prop_bc:}
 %
 % The first thing that we need to to is define what characters our regex should match.
 % Note that this is (almost) the same definition as |\b|, However we also consider |:|.
-% The defintion of |\b|, on which this is based can be found as \cs{__regex_prop_b:}, in \file{l3regex.dtx}
+% The definition of |\b|, on which this is based can be found as \cs{__regex_prop_b:}, in \file{l3regex.dtx}
 %
 % One interesting thing here is that the |:No| expansion will only expand \cs{__regex_prop_w:}, but will leave \cs{__regex_item_caseful_equal:n} untouched.
 % This just allows us to simplify the code and prevent redefining what |\W| already matches.
 %
+% One interesting thing of note, is that even though this claims to be a property list, it is actually not. 
+% As such it is safe for us to append as we do.
+%
+% Note that I am calling this |bc| to stand for ``|\b| with a colon''.
+%
 %    \begin{macrocode}
 \tl_set:No \@@_regex_prop_bc: {
-	\__regex_prop_w:
-	\__regex_item_caseful_equal:n { `: }
+  \__regex_prop_w:
+  \__regex_item_caseful_equal:n { `: }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\@@_regex_bc_test:}
 % We then need to define our test function.
-% This is the exact same defintion as \cs{__regex_b_test:} (the test function for |\b|).
-% The only diffrence is we replace \cs{__regex_prop_b:}, with our new matching characteristics.
+% This is the exact same definition as \cs{__regex_b_test:} (the test function for |\b|).
+% The only difference is we replace \cs{__regex_prop_b:}, with our new matching characteristics.
+%
+% We do not want to overwrite the definition of |\b| so we make sure to define our function with a new name. 
 %
 %    \begin{macrocode}
 \cs_set_protected:Npn \@@_regex_bc_test: {
-	\group_begin:
-		\int_set_eq:NN \l__regex_curr_char_int \l__regex_last_char_int
-		\@@_regex_prop_bc:
-		\__regex_break_point:TF
-			{ \group_end: \__regex_item_reverse:n { \@@_regex_prop_bc: } }
-			{ \group_end: \@@_regex_prop_bc: }
+  \group_begin:
+    \int_set_eq:NN \l__regex_curr_char_int \l__regex_last_char_int
+    \@@_regex_prop_bc:
+    \__regex_break_point:TF
+      { \group_end: \__regex_item_reverse:n { \@@_regex_prop_bc: } }
+      { \group_end: \@@_regex_prop_bc: }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2408,13 +2457,13 @@
 % \end{arguments}
 %
 % Now that we have created our functions that deal with searching and matching, we need to prepend these to the compiled regex.
-% This is
+% To achieve this we take the compiled regex, and then strip off the outer \cs{__regex_branch:n}. 
 %
 %    \begin{macrocode}
 \cs_set:Npn \@@_regex_prepend_bc:NN #1#2 {
-	\group_begin:
-		\cs_set_eq:NN \__regex_branch:n \exp_not:n
-		\@@_regex_prepend_bc_aux:Nx #2 { #1 }
+  \group_begin:
+    \cs_set_eq:NN \__regex_branch:n \exp_not:n
+    \@@_regex_prepend_bc_aux:Nx #2 { #1 }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2425,17 +2474,46 @@
 % \item Precompiled regex that is going to be appended
 % \end{arguments}
 %
+% We then add our brand new matching function \cs{@@_regex_bc_test:} and wrap it all back up with a \cs{__regex_branch:n}
+%
 %    \begin{macrocode}
 \cs_set:Npn \@@_regex_prepend_bc_aux:Nn #1#2 {
-	\group_end:
-	\tl_set:Nn #1 {
-		\__regex_branch:n {
-			\__regex_assertion:Nn \c_true_bool { \@@_regex_bc_test: }
-			#2
-		}
-	}
+  \group_end:
+  \tl_set:Nn #1 {
+    \__regex_branch:n {
+      \__regex_assertion:Nn \c_true_bool { \@@_regex_bc_test: }
+      #2
+    }
+  }
 }
 \cs_generate_variant:Nn \@@_regex_prepend_bc_aux:Nn { Nx }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{variable}{\g_@@_precompiled_match_regex_seq, \g_@@_precompiled_replace_regex_seq}
+% \begin{macro}{\fortex@compile@regex, \@@_compile_regex:n}
+%    \begin{macrocode}
+\seq_new:N \g_@@_precompiled_match_regex_seq 
+\seq_new:N \g_@@_precompiled_replace_regex_seq 
+\tl_set:Nn \fortex@compile@regex { \@@_compile_regex:n }
+\cs_set:Npn \@@_compile_regex:n #1 { 
+  \@@_compile_regex_aux:nn #1 
+  \cs_gset_eq:NN \fortex@compile@regex \use_none:n 
+}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\@@_compile_regex_aux:nn}
+%    \begin{macrocode}
+\cs_set:Npn \@@_compile_regex_aux:nn #1#2 {
+  \str_if_eq:nnF { #1 } { #2 } {
+    \regex_set:Nn \l_tmpa_regex { #1 }
+    \@@_regex_prepend_bc:NN \l_tmpa_regex \l_tmpa_regex
+    \seq_gput_right:No \g_@@_precompiled_match_regex_seq { \l_tmpa_regex }
+    \seq_gput_right:Nn \g_@@_precompiled_replace_regex_seq { #2 }
+    \@@_compile_regex_aux:nn 
+  }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2477,7 +2555,7 @@
 %    \end{macrocode}
 %    \begin{macrocode}  
   \bool_lazy_all:nT { { \quark_if_no_value_p:N \l_@@_ref_tl }
-                      { \tl_if_exist_p:N \fortex@codeblock@unscoped@regex }
+                      { \tl_if_exist_p:N \fortex@codeblock@scoped@regex }
                       { \bool_not_p:n \g_@@_draft_bool } } {
     \@@_reference_code_aux:Nn \l_@@_ref_tl { #1 }
 %    \end{macrocode}
@@ -2531,7 +2609,7 @@
 %
 %    \begin{macrocode}
   \bool_lazy_and:nnTF
-    { \tl_if_empty_p:N { \fortex@codeblock@unscoped@regex } }
+    { \seq_if_empty_p:N { \g_@@_precompiled_match_regex_seq } }
     { \tl_if_empty_p:N { \fortex@codeblock@scoped@regex   } }
   {
     \tl_gset:Nn #1 { #2 }
@@ -2569,9 +2647,9 @@
 % Instead, \cs{l_tmpb_tl} contains the \emph{name} of the variable getting read using the \textellipsis|:c| style functions.
 %
 %    \begin{macrocode}
+    \tl_set:Nn \l_tmpb_tl { g_@@_codeblock_ \l_tmpa_tl _scope_tl }
     \seq_map_inline:Nn \g_@@_codenest_seq {
       \tl_set:NV \l_tmpa_tl { \l_tmpa_tl / ##1 }
-      \tl_set:Nn \l_tmpb_tl { g_@@_codeblock_ \l_tmpa_tl _scope_tl }
       \tl_set:Nf \l_tmpa_regex {
         \tl_if_exist:cT \l_tmpb_tl {
           \tl_use:c \l_tmpb_tl
@@ -2584,8 +2662,8 @@
 % These should come last to make sure the scoped versions have precedence.
 %
 %    \begin{macrocode}
-    \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl
-                                       \fortex@codeblock@unscoped@regex 
+%     \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl
+%                                        \fortex@codeblock@unscoped@regex 
 %    \end{macrocode}
 % Behold the slowest part in the code. 
 % As mentioned elsewhere in this document I have tried a few different methods to speed this up including \cs{seq_map_indexed_inline:Nn}, but that just made things slower. 
@@ -2593,11 +2671,27 @@
 % 
 %    \begin{macrocode}
     \tl_set:Nn \l_@@_data_tl { #2 }
-    \exp_args:NV \regex_replace_case_all:nN {
-      \l_@@_regex_tl
-    } \l_@@_data_tl
-    \tl_gset:No #1 \l_@@_data_tl 
+    \@@_seq_to_tl_weave:NNN \g_@@_precompiled_match_regex_seq
+                            \g_@@_precompiled_replace_regex_seq 
+                            \l_@@_regex_tl
+    \group_begin:
+      \cs_set_eq:NN \__regex_compile_use:n \use:n
+      \exp_args:NV \regex_replace_case_all:nN {
+        \l_@@_regex_tl
+      } \l_@@_data_tl
+      \tl_gset:No #1 \l_@@_data_tl 
+    \group_end:
+  \iow_term:V \l_@@_data_tl
   }
+}
+\cs_set:Npn \@@_seq_to_tl_weave:NNN #1#2#3 { 
+  \tl_clear_new:N \l_tmpa_tl
+  \seq_mapthread_function:NNN #1 #2 \@@_seq_to_tl_weave:nn
+  \tl_set_eq:NN #3 \l_tmpa_tl
+}
+\cs_set:Npn \@@_seq_to_tl_weave:nn #1#2 {
+  \tl_set:No \l_tmpa_tl { \l_tmpa_tl { #1 } }
+  \tl_set:No \l_tmpa_tl { \l_tmpa_tl { #2 } }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2754,10 +2848,11 @@
 %
 % \begin{macro}{\@@_search_regex}
 %    \begin{macrocode}
-\cs_set:Npn \@@_search_regex:n #1 {
-  ([^\w:]|^)#1\b
+\cs_set:Npn \@@_search_regex:Nn #1#2 {
+  \tl_set:Nn #1 { #2 }
+  \@@_sanitise_regex:N #1
+  \tl_set:No #1 { #1 \b }
 }
-\cs_generate_variant:Nn \@@_search_regex:n { V }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2793,9 +2888,7 @@
 % Here we create the matching regex and the replacement text.
 % 
 %    \begin{macrocode}
-    \tl_set:Nn \l_tmpa_regex { #1 }
-    \@@_sanitise_regex:N \l_tmpa_regex
-    \tl_set:Nf \l_tmpa_regex { \@@_search_regex:V \l_tmpa_regex }
+    \@@_search_regex:Nn \l_@@_match_regex { #1 }
 %    \end{macrocode}
 % The text that is getting replaced by looks complex, but simplifying is merely
 %
@@ -2807,13 +2900,12 @@
 %
 % It should be noted that the escapes on the |\{| and |\\| are required as this is going into a regex engine, and these are ``special'' characters.
 %    \begin{macrocode}
-    \str_set:Nx \l_tmpa_str {
-      \exp_not:n { \1 }
+    \str_set:Nx \l_@@_replace_regex_str {
       \g_@@_code_delim_str
       \exp_not:n { \\ }
       fortexhyperinsert \bool_if:NT { #4 } { * }
                         \{ #1 \} 
-                        \{ \{ \seq_use:Nn \g_@@_codenest_seq { \}\{ } \} \}
+                        \{ \{ :\seq_use:Nn \g_@@_codenest_seq { \}\{: } \} \}
       \g_@@_code_delim_str
     }
 %    \end{macrocode}
@@ -2842,11 +2934,11 @@
 %    \begin{macrocode}
     \tl_if_empty:NTF { #2 } { 
       \seq_gpush:Nx \g_@@_codeblock_regex_unscoped_toaux_seq
-                   { { \exp_not:V \l_tmpa_regex } { \exp_not:V \l_tmpa_str } }
+                   { { \exp_not:V \l_@@_match_regex } { \exp_not:V \l_@@_replace_regex_str } }
     }{
       \seq_gpush:Nx \g_@@_codeblock_regex_scoped_toaux_seq
                    { { / \exp_not:V { #2 } } 
-                   = { { \exp_not:V \l_tmpa_regex } { \exp_not:V \l_tmpa_str } } }
+                   = { { \exp_not:V \l_@@_match_regex } { \exp_not:V \l_@@_replace_regex_str } } }
     }
 %    \end{macrocode}
 % Finally, we add the bits of code that can be linked back to. 
@@ -2884,8 +2976,8 @@
 %    \begin{macrocode}
 \hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
   \iow_now:cx { @auxout } {
-     \exp_not:n { \gdef\fortex@codeblock@unscoped@regex }
-     { \seq_use:Nn \g_@@_codeblock_regex_unscoped_toaux_seq { } } ^^J
+     \exp_not:n { \fortex@compile@regex }
+     { \seq_use:Nn \g_@@_codeblock_regex_unscoped_toaux_seq { } { \relax } { \relax } } ^^J
      \exp_not:n { \gdef\fortex@codeblock@scoped@regex }
      { \seq_use:Nn \g_@@_codeblock_regex_scoped_toaux_seq {,} }
   }
@@ -3580,6 +3672,7 @@
   \tl_replace_all:Nnx \l_tmpa_tl { @ d5>]G<s3 @ }
                                  { \char_generate:nn {13} {12} }
   \prop_gput:Nno \g_@@_ref_cache_prop { #1 } { \l_tmpa_tl }
+  \iow_term:V \l_tmpa_tl
 }
 %    \end{macrocode}
 % \end{macro}
