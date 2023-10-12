@@ -135,6 +135,12 @@
 \def\lmold#1{{\fontencoding{T1}\fontfamily{lmr}\selectfont \oldstylenums{#1}}}
 \def\textttbf#1{{\fontencoding{T1}\fontfamily{lmtt}\fontseries{b}\selectfont #1}}
 
+% Simple todo command
+\NewDocumentCommand\TODO{m}{{
+  \csname @latex@warning\endcsname{TODO:~#1}
+  \color{red}TODO:~#1
+}}
+
 \ExplSyntaxOff
 
 % Only use when the index title is orphaned. 
@@ -1962,6 +1968,11 @@
 % \subsection{hyperref}
 % \changes{0.0.10$\alpha$}{2022/12/21}{Only use hyperref if it is already imported}
 % \begin{macro}{\@@_hyperref:nn}
+% \begin{arguments}
+% \item Hyperref path 
+% \item Hyperref name 
+% \end{arguments}
+%
 % Ideally \pkg{hyperref} should be an optional dependency, as it can conflict with a lot of packages. 
 % However, it is common practice to place \pkg{hyperref} at the end of the \tn{usepackage} list, and so detecting its presence becomes a little troublesome. 
 %
@@ -2124,7 +2135,11 @@
 % \changes{0.0.6$\alpha$}{2022/03/21}{Move \cs{vindex} implementation into aux function}
 % \changes{0.0.11$\alpha$}{2022/12/15}{\pdfTeX{} no longer crashes when using vindex}
 %
-%  \begin{macro}{\@@_vindex_aux:nn}
+% \begin{macro}{\@@_vindex_aux:Nn}
+% \begin{arguments}
+% \item Function Path
+% \item Index formatting
+% \end{arguments}
 % This is the implementation of \cs{vindex}. 
 % The reason that we use this aux function is to get around the restrictions of using verbatim commands inside other commands. 
 % We use this function in both \cs{vindex} and the \env{codeblock}/\env{codevar} environments. 
@@ -2218,6 +2233,10 @@
 %
 % \changes{0.0.14$\alpha$}{2023/04/30}{Implement changelog}
 % \begin{macro}{\makechanges}
+% \begin{arguments}
+% \item \tn{makeindex} optional arguments 
+% \end{arguments}
+%
 % Must be run during the preamble.
 % \pkg{imakeidx}'s implementation of \tn{makeindex} accepts a whole lot of optional arguments as described in the \pkg{imakeidx} manual.
 %
@@ -2302,6 +2321,11 @@
 %
 % \changes{0.0.7$\alpha$}{2022/06/05}{Add calls of a function to the index.}
 % \begin{macro}[int]{\fortexhyperinsert}
+% \begin{arguments}
+% \item $\ast$ Disable indexing of function
+% \item function name 
+% \item tokenlist of function path 
+% \end{arguments}
 % Because we have a few things that we want to do at the location of the regex insertion, we create our own macro to handle them.
 %
 % Here 3 things happen, the function gets registered into the index. 
@@ -2434,7 +2458,7 @@
 % \begin{macro}{\@@_regex_bc_test:}
 % We then need to define our test function.
 % This is the exact same definition as \cs{__regex_b_test:} (the test function for |\b|).
-% The only difference is we replace \cs{__regex_prop_b:}, with our new matching characteristics.
+% The only difference is we replace \cs{__regex_prop_w:}, with our new matching characteristics.
 %
 % We do not want to overwrite the definition of |\b| so we make sure to define our function with a new name. 
 %
@@ -2490,32 +2514,75 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% As previously stated, one of the goals with the new unofficial regex is to remove the need for capture groups.
+% One of the problems with using capture groups (beyond general slowness) is that they are unable to be precompiled. 
+% This means that the regex was being compiled anew on every code environment. 
+%
+% As we have now removed the need for groups, we can now precompile the regex. 
+% But in doing so we need to take into account a few considerations. 
+%
+% Firstly, as previously seen precompiled regex is still a mass of random \pkg{expl3} commands. 
+% Even after trying, I was unable to get it successfully written out to the aux file. 
+% Even with writing out |\ExplSyntaxOn/Off|. 
+%
+% As such, I decided that precompilation can happen at the start of every \LaTeX{} run. 
+% Even though it is still happening every run, at least it is not happening on every code environment (potentially dozens).
+%
+% Consequently, we use our previous idea of writing out the raw uncompiled regex (without our prepended custom match). 
+% Then when the aux file is executed, we run the regex compilation function.
+%
 % \begin{variable}{\g_@@_precompiled_match_regex_seq, \g_@@_precompiled_replace_regex_seq}
-% \begin{macro}{\fortex@compile@regex, \@@_compile_regex:n}
+% We use the variables \cs{g_@@_precompiled_match_regex_seq} and \cs{g_@@_precompiled_replace_regex_seq} to store the precompiled regex and its associated replacement.
+%
 %    \begin{macrocode}
 \seq_new:N \g_@@_precompiled_match_regex_seq 
 \seq_new:N \g_@@_precompiled_replace_regex_seq 
-\tl_set:Nn \fortex@compile@regex { \@@_compile_regex:n }
-\cs_set:Npn \@@_compile_regex:n #1 { 
-  \@@_compile_regex_aux:nn #1 
+%    \end{macrocode}
+% \begin{macro}[int]{\fortex@compile@regex, \@@_compile_regex:n}
+% \begin{arguments}
+% \item Tokenlist of alternating match and replacement.
+% \end{arguments}
+%
+% As previously mentioned, the aux file does not inherit the \pkg{expl3} catcode environment.
+% as such we need to define the compilation function to have an old \LaTeXe{} style name. 
+% Note that we need to make sure the final elements are recursion limiters.
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_compile_unscoped_regex:n #1 {
+  \@@_compile_regex:NNnn \g_@@_precompiled_match_regex_seq
+                         \g_@@_precompiled_replace_regex_seq
+                         #1 { \q_nil } { \q_nil }
   \cs_gset_eq:NN \fortex@compile@regex \use_none:n 
 }
+\cs_set_eq:NN \fortex@compile@regex \@@_compile_unscoped_regex:n
 %    \end{macrocode}
 % \end{macro}
 % 
 % \begin{macro}{\@@_compile_regex_aux:nn}
+% \begin{arguments} 
+% \item regex match 
+% \item regex replacement
+% \end{arguments}
+%
+% We use some fancy recursion to process each item of the token list in pairs. 
+% This function is the function that both compiles the regex and prepends our custom match. 
+%
+% As a note, we can guarantee the final tokens are \cs{q_recursion_tail}. 
+%
 %    \begin{macrocode}
-\cs_set:Npn \@@_compile_regex_aux:nn #1#2 {
-  \str_if_eq:nnF { #1 } { #2 } {
-    \regex_set:Nn \l_tmpa_regex { #1 }
+\cs_set:Npn \@@_compile_regex:NNnn #1#2#3#4 {
+  \quark_if_nil:nF { #4 } {
+    \regex_set:Nn \l_tmpa_regex { #3 }
     \@@_regex_prepend_bc:NN \l_tmpa_regex \l_tmpa_regex
-    \seq_gput_right:No \g_@@_precompiled_match_regex_seq { \l_tmpa_regex }
-    \seq_gput_right:Nn \g_@@_precompiled_replace_regex_seq { #2 }
-    \@@_compile_regex_aux:nn 
+    \seq_gput_right:No #1 { \l_tmpa_regex }
+    \seq_gput_right:Nn #2 { #4 }
+    \@@_compile_regex:NNnn #1 #2
   }
 }
+\cs_generate_variant:Nn \@@_compile_regex:NNnn { ccnn }
 %    \end{macrocode}
 % \end{macro}
+% \end{variable}
 %
 % \subsubsection{Creating file with refs}
 % \changes{0.0.6$\alpha$}{2022/03/21}{Create automatic insertions of hyperref into minted/listings}
@@ -2541,9 +2608,12 @@
 % Note that this will only happen if the \TeX{} engine has changed, but we are still using the same |.aux| file. 
 % Hopefully, this should not occur too often, but we should not get in the way when it does.
 %
-%    \begin{macrocode}  
-  \str_if_eq:NNF \fortex@old@code@delim \g_@@_code_delim_str {
-    \cs_undefine:N \fortex@codeblock@unscoped@regex
+%    \begin{macrocode}
+  \bool_set:Nn \l_@@_same_code_delims_bools 
+             { \str_if_eq_p:NN \fortex@old@code@delim \g_@@_code_delim_str }
+  \bool_if:NF \l_@@_same_code_delims_bools {
+    \seq_clear:N \g_@@_precompiled_match_regex_seq
+    \seq_clear:N \g_@@_precompiled_replace_regex_seq
     \cs_undefine:N \fortex@codeblock@scoped@regex
   }
 %    \end{macrocode}
@@ -2553,10 +2623,11 @@
 %    \begin{macrocode}  
   \prop_get:NnN \g_@@_ref_cache_toaux_prop { #2 } \l_@@_ref_tl  
 %    \end{macrocode}
-%    \begin{macrocode}  
+% \TODO{fix scoping} 
+%    \begin{macrocode}
   \bool_lazy_all:nT { { \quark_if_no_value_p:N \l_@@_ref_tl }
-                      { \tl_if_exist_p:N \fortex@codeblock@scoped@regex }
-                      { \bool_not_p:n \g_@@_draft_bool } } {
+                      { \bool_not_p:n \g_@@_draft_bool }
+                      { \l_@@_same_code_delims_bools } } {
     \@@_reference_code_aux:Nn \l_@@_ref_tl { #1 }
 %    \end{macrocode}
 % Here we add the referenced code to two property lists, the list going to the aux file, and the list that gets read out from the aux file. 
@@ -2583,7 +2654,8 @@
 % \changes{0.0.12$\alpha$}{2022/02/08}{Remove all temporary files}
 % \begin{macro}{\@@_reference_code_aux:Nn}
 % \begin{arguments}
-% \item{Token list to insert references}
+% \item Output variable
+% \item Token list to insert references 
 % \end{arguments}
 % This Macro does the hard work of doing the actual regexing and substituting, before writing the contents back out to a file. 
 % 
@@ -2608,9 +2680,10 @@
 % This is a rather laborious task of gathering all these token lists and putting them into a single variable.
 %
 %    \begin{macrocode}
-  \bool_lazy_and:nnTF
-    { \seq_if_empty_p:N { \g_@@_precompiled_match_regex_seq } }
-    { \tl_if_empty_p:N { \fortex@codeblock@scoped@regex   } }
+%   \bool_lazy_and:nnTF
+%     { \seq_if_empty_p:N { \g_@@_precompiled_match_regex_seq } }
+%     { \tl_if_empty_p:N  { \fortex@codeblock@scoped@regex    } }
+  \seq_if_empty:NTF \g_@@_precompiled_match_regex_seq
   {
     \tl_gset:Nn #1 { #2 }
   }{
@@ -2647,9 +2720,14 @@
 % Instead, \cs{l_tmpb_tl} contains the \emph{name} of the variable getting read using the \textellipsis|:c| style functions.
 %
 %    \begin{macrocode}
-    \tl_set:Nn \l_tmpb_tl { g_@@_codeblock_ \l_tmpa_tl _scope_tl }
     \seq_map_inline:Nn \g_@@_codenest_seq {
       \tl_set:NV \l_tmpa_tl { \l_tmpa_tl / ##1 }
+      \tl_set:Nx \l_tmpb_tl { g_@@_codeblock_ \l_tmpa_tl _scope_tl }
+      \iow_term:V \l_tmpb_tl
+      \tl_if_exist:cT \l_tmpb_tl {
+        \exp_args:Nv \iow_term:n \l_tmpb_tl
+        \iow_term:n {------------}
+      }
       \tl_set:Nf \l_tmpa_regex {
         \tl_if_exist:cT \l_tmpb_tl {
           \tl_use:c \l_tmpb_tl
@@ -2662,13 +2740,16 @@
 % These should come last to make sure the scoped versions have precedence.
 %
 %    \begin{macrocode}
-%     \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl
+%     \tl_concat:NNN \l_@@_regex_tl \l_@@_regex_tl \TODO{scopeing}
 %                                        \fortex@codeblock@unscoped@regex 
 %    \end{macrocode}
+%
 % Behold the slowest part in the code. 
 % As mentioned elsewhere in this document I have tried a few different methods to speed this up including \cs{seq_map_indexed_inline:Nn}, but that just made things slower. 
 % This does mean that we are locked to \TeX{}Live 2022 as a minimum version though. 
 % 
+% One problem with the \TODO{docs}
+%
 %    \begin{macrocode}
     \tl_set:Nn \l_@@_data_tl { #2 }
     \@@_seq_to_tl_weave:NNN \g_@@_precompiled_match_regex_seq
@@ -2681,15 +2762,40 @@
       } \l_@@_data_tl
       \tl_gset:No #1 \l_@@_data_tl 
     \group_end:
-  \iow_term:V \l_@@_data_tl
   }
 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_seq_to_tl_weave:NNN}
+% \begin{arguments}
+% \item Input sequence\textsubscript1
+% \item Input sequence\textsubscript2
+% \item Output token list
+% \end{arguments}
+% \TODO{docs}
+% 
+% Note: \cs{seq_mapthread_function:NNN} is deprecated. 
+% As of May '23 the function has been stabilised and renamed to \cs{seq_map_pairwise_function:NNN}. 
+%
+%    \begin{macrocode}
 \cs_set:Npn \@@_seq_to_tl_weave:NNN #1#2#3 { 
   \tl_clear_new:N \l_tmpa_tl
-  \seq_mapthread_function:NNN #1 #2 \@@_seq_to_tl_weave:nn
+  \seq_mapthread_function:NNN #1 #2 \@@_seq_to_tl_weave_aux:nn
   \tl_set_eq:NN #3 \l_tmpa_tl
 }
-\cs_set:Npn \@@_seq_to_tl_weave:nn #1#2 {
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_seq_to_tl_weave_aux:nn}
+% \begin{arguments}
+% \item Item from sequence\textsubscript1
+% \item Item from sequence\textsubscript2
+% \end{arguments}
+% \TODO{docs}
+%
+%    \begin{macrocode}
+\cs_set:Npn \@@_seq_to_tl_weave_aux:nn #1#2 {
   \tl_set:No \l_tmpa_tl { \l_tmpa_tl { #1 } }
   \tl_set:No \l_tmpa_tl { \l_tmpa_tl { #2 } }
 }
@@ -2720,39 +2826,58 @@
 % In this way, the scope and the regex are kept together. 
 % When the |.aux| file is then loaded, this information is passed to a prop to interpret the \texttt{\meta{scope}} key and the regex value. 
 % 
+% \begin{macro}{\@@_load_regex:nn}
+% \begin{arguments}
+% \item scope
+% \item match/replacement token list pair 
+% \end{arguments}
+%
 % One question that then arises is how to avoid an $O(n^2)$ search through all of the scoped regexes at every \env{code} environment.
 % Doing a na\"ive search though all possible scoped regexes is going to be slow. 
 % 
 % This was resolved by getting \cs{@@_reference_code_aux:Nn} to only search the direct scope branch by using dynamic variable naming. 
 %
-% Note that we need to run this at |begin{document}|, as the |.aux| file needs to be read in for \tn{fortex@codeblock@scoped@regex} to exist.
-%
 %    \begin{macrocode}
-\hook_gput_code:nnn { begindocument/end } { fortex } {
-  \cs_set:Npn \@@_load_regex:nn #1#2 { 
+\cs_set:Npn \@@_load_scoped_regex:nn #1#2 { 
 %    \end{macrocode}
 % Here we append all of the \texttt{\Arg{regex}\Arg{replacement}} pairs into a token list called \cs{g_@@_codeblock_\meta{scope}_scope_tl}. 
 %
 % Note that a \texttt{:c} variable needs to actually exist before it can be used by any other \texttt{:c} variable.
 %
 %    \begin{macrocode}
-    \tl_set:Nn \l_tmpa_tl { g_@@_codeblock_ #1 _scope_tl }
-    \tl_if_exist:cF \l_tmpa_tl { \tl_new:c \l_tmpa_tl }
-    \tl_set:cf \l_tmpa_tl { \tl_use:c \l_tmpa_tl #2 }
-  }
+  \tl_set:Nn \l_tmpa_tl { g_@@_codeblock_ #1 _scope_match_seq   }
+  \tl_set:Nn \l_tmpb_tl { g_@@_codeblock_ #1 _scope_replace_seq }
+%    \end{m2acrocode}
+%    \begin{macrocode}
+  \tl_if_exist:cF \l_tmpa_tl { \tl_new:c \l_tmpa_tl }
+  \tl_if_exist:cF \l_tmpb_tl { \tl_new:c \l_tmpb_tl }
+%    \end{m2acrocode}
+%    \begin{macrocode}
+  \@@_compile_regex:ccnn \l_tmpa_tl \l_tmpb_tl #1 { \q_nil } { \q_nil }
+  \iow_term:x { \seq_use:cn \l_tmpa_tl {,~} }
+  \iow_term:x { \seq_use:cn \l_tmpb_tl {,~} }
+}
 %    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_compile_scoped_regex:n}
+% \begin{arguments}
+% \item keyval where key is the scope and value is match/replacement pair 
+% \end{arguments}
+%
 % property lists could not be used in this case because multiple \texttt{\meta{value}} have the same \texttt{\meta{key}}. 
 % Keyvals allow this and when parsing will feed them all in regardless. 
 % Props on the other hand require that all the keys be unique.
 % As the keys we are using is the scope of the regex, there will be multiple regexes that we want to use that will have the same scope.  
 %
 %    \begin{macrocode}
-  \tl_if_exist:NT \fortex@codeblock@scoped@regex {
-    \exp_args:NnnV \keyval_parse:NNn \use_none:n \@@_load_regex:nn
-                      \fortex@codeblock@scoped@regex
-  } 
-}
+\cs_set:Npn \@@_compile_scoped_regex:n #1 {
+  \keyval_parse:NNn \use_none:n \@@_load_scoped_regex:nn { #1 }
+  \cs_set_eq:NN \fortex@compile@scoped@regex \use_none:n 
+} 
+\cs_set_eq:NN \fortex@compile@scoped@regex \@@_compile_scoped_regex:n
 %    \end{macrocode}
+% \end{macro}
 % \end{variable}
 %
 % \subsubsection{Codeblock}
@@ -2784,9 +2909,9 @@
 %
 %    \begin{macrocode}
 \keys_define:nn { fortex/codeblock } {
-  noref .bool_set:N = \l_@@_codeblock_noref_bool,
-  noref .default:n  = { true  },
-  noref .initial:n  = { false },
+  , noref .bool_set:N = \l_@@_codeblock_noref_bool
+  , noref .default:n  = { true  }
+  , noref .initial:n  = { false }
 %    \end{macrocode}
 % \end{variable}
 %
@@ -2798,9 +2923,9 @@
 % For example, there might be half a dozen globals, and it makes more sense to add a |\index{globals}| than it does to give every global its own index. 
 %
 %    \begin{macrocode}
-  noindex .bool_set:N = \l_@@_codeblock_noidx_bool,
-  noindex .default:n  = { true  },
-  noindex .initial:n  = { false },
+  , noindex .bool_set:N = \l_@@_codeblock_noidx_bool
+  , noindex .default:n  = { true  }
+  , noindex .initial:n  = { false }
 %    \end{macrocode}
 % \end{variable}
 %
@@ -2813,8 +2938,8 @@
 % It should be noted that this also speeds up the regex matching as there are now fewer variables to search through.
 %
 %    \begin{macrocode}
-  scope .str_set:N = \l_@@_codeblock_scope_str,
-  scope .initial:n = { },
+  , scope .str_set:N = \l_@@_codeblock_scope_str
+  , scope .initial:n = { }
 }
 %    \end{macrocode}
 % \end{variable}
@@ -2846,7 +2971,12 @@
 % \end{tabular}
 % \end{table}
 %
-% \begin{macro}{\@@_search_regex}
+% \begin{macro}{\@@_search_regex:Nn}
+% \begin{arguments}
+% \item token list to store regex in
+% \item variable that we want to search for
+% \end{arguments}
+% \TODO{docs}
 %    \begin{macrocode}
 \cs_set:Npn \@@_search_regex:Nn #1#2 {
   \tl_set:Nn #1 { #2 }
@@ -2856,10 +2986,11 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\@@_sanitise_regex:n}
+% \begin{macro}{\@@_sanitise_regex:N}
 % \begin{arguments}
 % \item Regex to sanitise
 % \end{arguments}
+% \TODO{docs}
 %    \begin{macrocode}
 \cs_set:Npn \@@_sanitise_regex:N #1 {
   \tl_map_inline:nn {
@@ -2959,7 +3090,6 @@
 % \end{macro}
 %
 % \changes{0.0.11$\alpha$}{2022/12/21}{Add scoping to hyperref}
-% \begin{variable}[int]{\fortex@codeblock@unscoped@regex, \fortex@codeblock@scoped@regex}
 % Because we are adding the functions we want to track as they are defined, we are unable to add a hyperref usage before the definition. 
 % 
 % For this reason, we don't bother hyperrefing on the first passthrough and instead, just generate the regex for the next. 
@@ -2973,17 +3103,21 @@
 % On the other hand, the scoped regex requires some additional processing to ensure that only the relevant regex is used. 
 % As such we insert commas between all the \texttt{\Arg{scope}=\char`\{\Arg{regex}\Arg{replacement}\char`\}}, so that it can be easily processed using the |\prop_|\textellipsis series of commands.
 % 
+% One important thing of node is that this regex gets compiled when the aux file gets read back in. 
+% Precompiling the regex once per run allows us to avoid going it in every code environment. 
+% As part of that compilation process, we need to extract the match regex that is interleaved with the replacement regex. 
+% This process can be seen in \tn{fortex@compile@regex}.
+%
 %    \begin{macrocode}
 \hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
   \iow_now:cx { @auxout } {
      \exp_not:n { \fortex@compile@regex }
-     { \seq_use:Nn \g_@@_codeblock_regex_unscoped_toaux_seq { } { \relax } { \relax } } ^^J
-     \exp_not:n { \gdef\fortex@codeblock@scoped@regex }
+     { \seq_use:Nn \g_@@_codeblock_regex_unscoped_toaux_seq { } } ^^J
+     \exp_not:n { \fortex@compile@scoped@regex }
      { \seq_use:Nn \g_@@_codeblock_regex_scoped_toaux_seq {,} }
   }
 }
 %    \end{macrocode}
-% \end{variable}
 %
 % \changes{0.0.8$\alpha$}{2022/07/23}{Move \env{codeblock} implementation into aux macro}
 % \changes{0.0.12$\alpha$}{2023/03/16}{Move \texttt{\char`\\ aftercodeblock} into keyvals }
@@ -3616,7 +3750,7 @@
 % The first is that it is stored as \texttt{\meta{hash}@\meta{code}}. 
 % Here we are using |@| as a delimiter. 
 % Whilst this may seem like a problem due to |@| being a fairly common term, it is actually fine. 
-% This is because \cs{@@_hashmap_split_lines_aux:nn} has a function signature |#1@#2\q_nil|, as such only the \emph{first} |@| is actually used as the delimiter.
+% This is because \cs{@@_hashmap_split_lines_aux:nn} has a function signature |#1@#2\q_stop|, as such only the \emph{first} |@| is actually used as the delimiter.
 % Because I can guarantee that no |@| will occur inside the hash, it is fine. 
 %
 % The second thing of note is that we are using |@d5>]G<s3@| as a newline delimiter. 
@@ -3638,7 +3772,7 @@
 %    \begin{macrocode}
 \cs_set:Npn \@@_hashmap_split_lines:n #1 { 
   \str_if_eq:NNT \fortex@old@code@delim \g_@@_code_delim_str {
-    \@@_hashmap_split_lines_aux:nn #1\q_nil
+    \@@_hashmap_split_lines_aux:nn #1\q_stop
   } 
 }
 %    \end{macrocode}
@@ -3652,11 +3786,11 @@
 % \item The code itself
 % \end{arguments}
 %
-% Note that the function signature here is delimited by the control sequence \cs{q_nil}.
-% Because in this form it is a \emph{control sequence}, this means that any phrases of |\q_nil| inserted into the body of the code will not match as they are not a \emph{control sequence}.
+% Note that the function signature here is delimited by the control sequence \cs{q_stop}.
+% Because in this form it is a \emph{control sequence}, this means that any phrases of |\q_stop| inserted into the body of the code will not match as they are not a \emph{control sequence}.
 %
 %    \begin{macrocode}
-\cs_set:Npn \@@_hashmap_split_lines_aux:nn #1@#2\q_nil { 
+\cs_set:Npn \@@_hashmap_split_lines_aux:nn #1@#2\q_stop { 
   \tl_set:Nn \l_tmpa_tl { #2 }
 %    \end{macrocode}
 % The first thing that we do now we have the hashmap data is to write it back out to the aux file. 
@@ -3672,7 +3806,6 @@
   \tl_replace_all:Nnx \l_tmpa_tl { @ d5>]G<s3 @ }
                                  { \char_generate:nn {13} {12} }
   \prop_gput:Nno \g_@@_ref_cache_prop { #1 } { \l_tmpa_tl }
-  \iow_term:V \l_tmpa_tl
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3684,6 +3817,10 @@
 \hook_gput_code:nnn { enddocument/afterlastpage } { fortex } {
 %    \end{macrocode}
 % \begin{macro}{\@@_write_fmt:nn}
+% \begin{arguments}
+% \item Code \textsc{md}\lmold5 hash
+% \item Code to same to aux
+% \end{arguments}
 % As we are storing our keyval hashmap data in a property list, we need to make sure that it is written back out to the aux file in our \texttt{\meta{hash}@\meta{code}} format.
 % This requires a small auxiliary function to format the data as needed. 
 %
