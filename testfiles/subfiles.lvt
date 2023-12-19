@@ -21,6 +21,7 @@
  (of a different language even)
  
  \begin{subfile}{fortran}{subfiles.f90}
+   \AutogenWarning*{\*}{*\}
    \begin{code}
      program subfile
        print *, "Hello from subfile1.f90"

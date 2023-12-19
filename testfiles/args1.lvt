@@ -24,6 +24,8 @@
 \showoutput
 \AddToHook{shipout/background}{\TIMO}
 
+\AutogenWarning{//}
+
 Let us first import the libraries needed for 
 printing to stdout.
 
